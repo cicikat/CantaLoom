@@ -5,18 +5,15 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {z} from 'zod';
+import {createPlanner} from './planner.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const app=express();app.disable('x-powered-by');app.use(express.json({limit:'24mb'}));
 const ffmpeg=process.env.FFMPEG_PATH||'ffmpeg';
 function run(command,args,cwd,timeout=120000){return new Promise((resolve,reject)=>{const child=spawn(command,args,{cwd,windowsHide:true,stdio:['ignore','ignore','pipe']});let stderr='';const timer=setTimeout(()=>{child.kill();reject(Error('编码超时，请稍后重试'))},timeout);child.stderr.on('data',x=>{stderr=(stderr+x.toString()).slice(-4000)});child.on('error',e=>{clearTimeout(timer);reject(e)});child.on('close',code=>{clearTimeout(timer);if(code===0)resolve();else reject(Error(`编码进程失败 (${code})：${stderr.slice(-700)}`))})})}
 let ffmpegReady=false;try{await run(ffmpeg,['-version'],root,5000);ffmpegReady=true}catch{/* optional service */}
-app.get('/api/health',(_req,res)=>res.json({ffmpeg:ffmpegReady,llm:!!process.env.LLM_API_KEY,vocal:'demo-vowel',images:'procedural'}));
-const planInput=z.object({idea:z.string().min(1).max(200),style:z.enum(['海盐汽水','深夜漫游','橘子摇滚'])});
-const planOutput=z.object({title:z.string().min(1).max(30),mood:z.string().min(1).max(60),lyrics:z.array(z.string().min(1).max(40)).length(4)});
-app.post('/api/plan',async(req,res)=>{const parsed=planInput.safeParse(req.body);if(!parsed.success)return res.status(400).json({error:'灵感格式无效'});if(!process.env.LLM_API_KEY)return res.status(503).json({error:'未配置 LLM_API_KEY，请使用本地规则模式'});try{
- const response=await fetch(`${(process.env.LLM_BASE_URL||'https://api.openai.com/v1').replace(/\/$/,'')}/chat/completions`,{method:'POST',signal:AbortSignal.timeout(30000),headers:{'Content-Type':'application/json',Authorization:`Bearer ${process.env.LLM_API_KEY}`},body:JSON.stringify({model:process.env.LLM_MODEL||'gpt-4.1-mini',response_format:{type:'json_object'},messages:[{role:'system',content:'你是中文原创短歌策划。只输出 JSON：title（30字内歌名），mood（60字内氛围描述），lyrics（恰好四句中文原创歌词，每句5到16字）。依据用户灵感与风格创作，不引用已有歌曲。不要自称生成音频。'},{role:'user',content:JSON.stringify(parsed.data)}],temperature:.85})});
- if(!response.ok)throw Error(`上游服务返回 HTTP ${response.status}`);const body=await response.json();const output=planOutput.parse(JSON.parse(body.choices?.[0]?.message?.content??''));res.json(output);
- }catch(e){console.error('LLM request failed:',e.name);res.status(502).json({error:'LLM 暂不可用或返回格式无效，请稍后重试；现有工程已保留。'})}});
+const planner=createPlanner();
+app.get('/api/health',(_req,res)=>res.json({ffmpeg:ffmpegReady,llm:!!process.env.LLM_API_KEY,llmStatus:planner.status(),vocal:'demo-vowel',images:'procedural'}));
+app.post('/api/plan',planner.handle);
 const b64=z.string().regex(/^[A-Za-z0-9+/]+={0,2}$/);
 const exportInput=z.object({wav:b64.max(16000000),scenes:z.array(z.object({png:b64.max(2500000),duration:z.number().min(.5).max(30)})).length(4),duration:z.number().min(15).max(35),lyrics:z.array(z.object({text:z.string().max(100),start:z.number().min(0).max(35),end:z.number().min(0).max(35)})).max(32),style:z.enum(['cinema','poster','minimal']),title:z.string().max(200)});
 function assTime(t){const cent=Math.round(t*100);return `${Math.floor(cent/360000)}:${String(Math.floor(cent/6000)%60).padStart(2,'0')}:${String(Math.floor(cent/100)%60).padStart(2,'0')}.${String(cent%100).padStart(2,'0')}`}

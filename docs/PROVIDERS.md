@@ -22,7 +22,7 @@
 
 ## LLM 与图像
 
-- LLM：当前只规划歌名、氛围、四句歌词，服务端请求 OpenAI-compatible chat/completions，严格校验 JSON，密钥不进入浏览器。尚无真实密钥验证记录。
+- LLM：P2.1 同时生成歌名、氛围、四句歌词及经过共享 Zod 严格校验的 SongPlan，实际控制和弦、鼓点、旋律与段落能量。服务端请求 OpenAI-compatible chat/completions，密钥不进入浏览器；配置状态与有效调用状态分别标注。尚无真实密钥验证记录，夹具测试不算模型验收。
 - Composer：本地确定性种子规则作曲，不包装成音乐大模型。随机数只用于实际音符变化，变化会进入 PCM 音频。
 - ImageProvider：原创程序化海岛画面，不使用任何 AI 图像服务或他人歌曲素材。
 - VisualPlanner：从歌词提取有限关键词、选择分段配色，属于本地规则，并非 LLM 意象理解。

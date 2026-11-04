@@ -2,9 +2,15 @@
 
 面向零音乐基础用户的本地音乐创作工作台。由 V3「创意积木」原型演进为 React + TypeScript 应用，原始 `03_patchlab_playful.html` 保留作视觉参考。
 
-**交付范围：P0 + P1 完整链路，以及 P3 的元音演示、真实混音与静止歌词 PV 导出。P2 的服务端 LLM 适配已实现，未配置密钥、未验证真实模型调用。**
+**交付范围：P0 + P1 完整链路、P2.1 可执行 SongPlan 引导编曲，以及 P3 的元音演示、真实混音与静止歌词 PV 导出。LLM 计划接口已实现并通过夹具测试；本机未配置密钥，未验证真实模型调用。**
+
+P2.1 的字段、实际音乐变化、锁定兼容策略与验收边界见 [AI-Guided Composition](docs/P21.md)。
 
 ## 启动
+
+Windows 推荐双击根目录的 `start.bat`。脚本会检查 Node/端口、首次缺依赖时自动安装、构建最新源码，并在页面和 API 就绪后打开浏览器。保持窗口开启，按 Ctrl+C 停止；失败时窗口保留错误。`start.bat --check` 可验证完整启动后自动停止，`--no-open` 可关闭自动打开浏览器。
+
+这是单仓库的前后端分层架构：`src/` 负责界面、浏览器作曲/合成与本地存档；`server/` 负责 LLM 请求、密钥和 FFmpeg；`shared/` 只共享数据校验契约。开发时前后端两个进程经 `/api` 通信，构建后一个 Express 服务同时提供页面和 API。开发约定见 [AGENT.md](AGENT.md)。
 
 需要 Node.js 22.12+（本机使用 22.23.1）、npm。视频导出需要 PATH 内的 FFmpeg（带 libx264、libass）。不需要 Python，不需要付费账户，不需要下载音库。
 
@@ -48,14 +54,19 @@ npm start
 | PV | 原创 Canvas 海岛背景、分段配色、慢缩放/平移、三种字幕排版；自动字幕按歌词 beat 转为秒 |
 | 导出 | 真正混音 WAV；Node + FFmpeg 编码 H.264/AAC 720p MP4，字幕烧录；完整工程 JSON |
 | 保存 | 浏览器 localStorage 自动保存；JSON 导入时校验格式、ID、音符与段落时间范围 |
-| AI | 未配置时为本地规则/模板；可选 OpenAI-compatible 服务端 LLM 生成歌名、氛围和四句歌词；不声称生成 AI 音频 |
+| AI 引导编曲 | 自然语言 → 有限且经过校验的 SongPlan → 实际音符；调性、和弦、鼓点密度、旋律走势和段落能量共同控制音乐。无 Key 使用本地规则；有 Key 可请求真实 LLM 计划，配置状态与成功调用分别标注 |
 | 移动端 | 响应式布局、触控 TAP、底部播放器；已做 390px 浏览器模拟检查，真实手机及 Safari 音频仍需设备验收 |
 
 ## 数据与结构
 
 ```text
 src/model.ts       SongProject、稳定 ID、版本、锁定、依赖、导入校验
-src/composer.ts    Composer / LyricsWriter、本地编曲、单轨重生成、量化
+src/composer.ts    原有 Composer / LyricsWriter、单轨重生成、量化
+src/guided-composer.ts  SongPlan 驱动和弦、节奏、旋律、演示元音
+src/composition.ts  原子应用方案、锁定/手写保护、LLM 与本地入口
+src/song-plan.ts    本地意图规则、旧工程调式、可读创作说明
+shared/song-plan.mjs    前后端共用严格 Zod 契约
+server/planner.mjs  服务端 LLM 请求、严格输出校验与运行时状态
 src/providers.ts   IdeaAnalyzer / VisualPlanner、轻量创作协调器契约
 src/audio.ts       VocalProvider、真实音频合成、音频时钟、WAV 编码
 src/visual.ts      ImageProvider、PV Canvas、同步字幕选择
@@ -73,7 +84,7 @@ JSON 工程不包含 API 密钥、音频文件或商业素材，音频可从音�
 
 ## 可选 LLM 配置
 
-复制 `.env.example` 为 `.env`，填写 `LLM_API_KEY`、`LLM_BASE_URL` 和 `LLM_MODEL`，重启服务。Key 只在 Node 进程中读取，禁止使用 `VITE_` 前缀。外部请求超时 30 秒，返回值经 Zod 校验，失败保留原工程并提示错误。只检测是否配置密钥，不把“已配置”当成“已验证可用”。
+复制 `.env.example` 为 `.env`，填写 `LLM_API_KEY`、`LLM_BASE_URL` 和 `LLM_MODEL`，重启服务。Key 只在 Node 进程中读取，禁止使用 `VITE_` 前缀。外部请求超时 30 秒，返回值经 Zod 校验，失败保留原工程并提示错误。明确区分本地规则、LLM 已配置但未验证、真实调用返回有效方案三种状态。成功调用及共享 Schema 校验后，才显示最近方案已校验；失败不覆盖工程，并提供明确的本地规则生成入口。
 
 FFmpeg 不在 PATH 时设置 `FFMPEG_PATH` 为可执行文件绝对路径。服务一次仅编码一个视频，临时数据在导出结束/失败后清理。Windows 使用 Microsoft YaHei；Linux 建议安装 Noto Sans CJK 字体并调整 ASS 字体名。Google Fonts 只用于可选界面字体，网络不可用时回退到本机中文字体，核心链路不依赖它。
 
@@ -93,7 +104,7 @@ npm run test:e2e
 ## 当前阻塞与下一步
 
 1. **最值得优先接通：有明确授权的中文歌声引擎与音库**，用 VocalProvider 消费已有歌词、音节、音高和时值，产出真正发歌词音的单句 WAV。当前缺少已授权的音库和已验证推理服务。
-2. 配置并实测 LLM 结构化创作计划，补充对真实创作意图的理解。现阶段音符仍由本地 Composer 生成；不把文字接口包装成音乐模型。
+2. 配置并实测 P2.1 LLM SongPlan，做真实提示的对照试听、延迟与成本记录。计划已经能驱动音符；当前尚无真实 LLM 调用验收，不把计划接口包装成音乐音频模型。
 3. 之后再评估图像 API。当前程序化画面足以稳定演示字幕 PV，避免把图像接口变为核心链路单点依赖。
 
 歌声方案的官方资料和许可边界见 [PROVIDERS.md](docs/PROVIDERS.md)。本项目未下载或分发第三方商业音库，没有预录歌曲，也没有训练模型。

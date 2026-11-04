@@ -4,7 +4,7 @@
     "dev": "concurrently -k \"node --env-file-if-exists=.env server/index.mjs\" \"vite --host 0.0.0.0\"",
     "build": "tsc -b && vite build",
     "start": "node --env-file-if-exists=.env server/index.mjs",
-    "test": "tsx --test tests/core.test.ts",
+    "test": "tsx --test tests/*.test.ts tests/*.test.mjs",
     "test:e2e": "playwright test"
   },
   "dependencies": { "react": "^19.2.0", "react-dom": "^19.2.0", "lucide-react": "^0.468.0", "express": "^5.1.0", "zod": "^4.1.0" },
