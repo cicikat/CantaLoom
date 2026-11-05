@@ -1,3 +1,4 @@
+import {freeInputSchema,freeResultSchema,type FreeInput} from '../../shared/contracts/free-composition.mjs';
 import {melodyRequestSchema,melodyResponseSchema,type MelodyRequest} from '../../shared/contracts/melody.mjs';
 import type {z} from 'zod';
 import * as c from '../../shared/contracts/index.mjs';
@@ -34,6 +35,7 @@ export function createApiClient({baseUrl='',mode='real',request=fetch,timeoutMs,
   mode,mock,
   health:()=>json('/api/health',c.healthSchema),
   plan:(input:z.infer<typeof c.planInputSchema>)=>json('/api/plan',c.planResponseSchema,c.planInputSchema.parse(input),35000,'plan'),
+  compose:(input:FreeInput)=>json('/api/compose',freeResultSchema,freeInputSchema.parse(input),290000,'plan'),
   melody:(input:MelodyRequest)=>json('/api/melody',melodyResponseSchema,melodyRequestSchema.parse(input),190000,'plan'),
   engines:()=>json('/api/engines',c.enginesSchema),
   dictionary:()=>json('/api/singing/dictionary',c.dictionarySchema),

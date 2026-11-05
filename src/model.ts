@@ -2,7 +2,7 @@ import {melodyDraftSchema,performanceSchema,type MelodyDraft,type Performance} f
 import {songPlanSchema,planningSchema,type SongPlan,type Planning} from '../shared/song-plan.mjs';
 import type {MidiTrackKind,MidiNote} from '../shared/midi.mjs';
 export type TrackKind = MidiTrackKind;
-export type Style = '海盐汽水'|'深夜漫游'|'橘子摇滚';
+export type Style = '海盐汽水'|'深夜漫游'|'橘子摇滚'|'自由创作';
 export type SubtitleStyle = 'cinema'|'poster'|'minimal';
 export interface Note extends MidiNote {id:string;syllable?:string;locked?:boolean}
 export interface Section { id:string; name:string; start:number; beats:number }
@@ -10,6 +10,7 @@ export interface Track { id:string; sectionId:string; kind:TrackKind; version:nu
 export interface Lyric { id:string; sectionId:string; text:string; start:number; end:number; notes:Note[]; version:number; locked:boolean; source:'manual'|'local-template'|'llm' }
 export interface SongProject { schemaVersion:1; id:string; metadata:{title:string; idea:string; createdAt:string; updatedAt:string}; bpm:number; timeSignature:[4,4]; style:Style; mood:string; sections:Section[]; tracks:Track[]; lyrics:Lyric[]; vocalPreset:'澄音'|'星羽'|'雾歌'; visualScenes:{id:string; sectionId:string; theme:number; source:'procedural'}[]; assetReferences:{id:string; type:string; source:string}[]; versions:{at:string; action:string}[]; subtitleStyle:SubtitleStyle; tapTimes:number[] }
 export interface Lyric {performance?:Performance}
+export interface SongProject {mode?:'free';creationRequestId?:string}
 export interface SongProject {melodyDraft?:MelodyDraft}
 export interface SongProject {songPlan?:SongPlan;planning?:Planning;rhythmCompletion?:boolean;}
 export interface VocalAsset {audioUrl:string;dependency:string;providerId:string;voiceId:string;voiceVersion:string;startSeconds:number;durationSeconds:number;isDemo:boolean;mock?:true;projectVersion:string}
@@ -27,7 +28,7 @@ export function estimateBpm(taps:number[]){if(taps.length<4)throw Error('请先�
 export function quantizeTaps(taps:number[],bpm:number){const first=taps[0]??0;return [...new Set(taps.map(t=>Math.round((t-first)/1000*bpm/60*4)%16))].sort((a,b)=>a-b);}
 export function validateProject(data:unknown):SongProject {
  const p=data as SongProject;
- if(!p||p.schemaVersion!==1||typeof p.id!=='string'||!p.metadata||typeof p.metadata.title!=='string'||p.metadata.title.length>200||typeof p.metadata.idea!=='string'||!Number.isFinite(p.bpm)||p.bpm<40||p.bpm>240||!['海盐汽水','深夜漫游','橘子摇滚'].includes(p.style)||!['澄音','星羽','雾歌'].includes(p.vocalPreset)||!['cinema','poster','minimal'].includes(p.subtitleStyle)||!Array.isArray(p.sections)||p.sections.length!==4||!Array.isArray(p.tracks)||p.tracks.length>40||!Array.isArray(p.lyrics)||p.lyrics.length>32||!Array.isArray(p.visualScenes)||p.visualScenes.length!==4||!Array.isArray(p.versions)||!Array.isArray(p.tapTimes)||!Array.isArray(p.assetReferences))throw Error('不是有效的声屿 v1 工程');
+ if(!p||p.schemaVersion!==1||typeof p.id!=='string'||!p.metadata||typeof p.metadata.title!=='string'||p.metadata.title.length>200||typeof p.metadata.idea!=='string'||!Number.isFinite(p.bpm)||p.bpm<40||p.bpm>240||!['海盐汽水','深夜漫游','橘子摇滚','自由创作'].includes(p.style)||!['澄音','星羽','雾歌'].includes(p.vocalPreset)||!['cinema','poster','minimal'].includes(p.subtitleStyle)||!Array.isArray(p.sections)||p.sections.length!==4||!Array.isArray(p.tracks)||p.tracks.length>40||!Array.isArray(p.lyrics)||p.lyrics.length>32||!Array.isArray(p.visualScenes)||p.visualScenes.length!==4||!Array.isArray(p.versions)||!Array.isArray(p.tapTimes)||!Array.isArray(p.assetReferences))throw Error('不是有效的声屿 v1 工程');
  let end=0;const ids=new Set<string>();const checkId=(id:string)=>{if(typeof id!=='string'||ids.has(id))throw Error('工程含重复或无效 ID');ids.add(id)};
  p.sections.forEach(s=>{checkId(s.id);if(s.start!==end||!Number.isInteger(s.beats)||s.beats<4||s.beats>64||typeof s.name!=='string')throw Error('段落时间轴无效');end+=s.beats;});
  if(duration(p)>35||duration(p)<15)throw Error('仅支持 15–35 秒短篇工程');
