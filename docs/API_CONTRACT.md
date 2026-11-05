@@ -26,3 +26,6 @@
 开发响应可带 `mock:true`；Mock 歌声音频必须同时 `isDemo:true`，真实绮萱必须 `isDemo:false`。Mock plan 的 source 保持旧 wire 格式以复用现有 Schema，但显式带 mock/model 标记；应用工程时记为 `source:local-rules, mock:true`，UI 显示固定测试方案，不记录真实 LLM 成功。Mock export 响应是明确标注的 JSON 状态回执。生产构建强制使用真实模式，不能通过 `VITE_API_MODE=mock` 冒充实际推理。
 
 变更流程见 [TEAM_WORKFLOW.md](TEAM_WORKFLOW.md) 和 [共享变更记录](../shared/contracts/CHANGELOG.md)。
+
+## v0.3.1 自由创作
+POST `/api/compose` 使用 shared/contracts/free-composition；接口、原子应用与前端待办见 [交接文档](V031_FRONTEND_HANDOFF.md)，实际测试边界见 [后端验收](V031_BACKEND_ACCEPTANCE.md)。新模式不调用旧 plan 模板，后台阶段仅表示真实执行阶段，不是声库任务完成或主观音质通过。

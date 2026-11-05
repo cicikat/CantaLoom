@@ -12,6 +12,7 @@ export function localComposition(idea:string,style:Style):PlanOutput {
 
 // Transaction: validate everything before cloning, publish one completed project.
 export function applySongPlan(project:SongProject,input:PlanOutput,style:Style,idea:string,origin:Pick<Planning,'source'|'model'|'mock'>):SongProject {
+ if(project.mode==='free')throw Error('自由工程请使用统一创作入口，不能重新应用旧规划覆盖旋律');
  const output=planOutputSchema.parse(input),next=structuredClone(project),protectedIds=protectedSections(project),compatibility:string[]=[];
  next.songPlan=output.songPlan;
  if(protectedIds.size){
@@ -39,6 +40,7 @@ export function applySongPlan(project:SongProject,input:PlanOutput,style:Style,i
 }
 
 export async function composeFromIdea(p:SongProject,idea:string,style:Style,useLLM:boolean,request?:typeof fetch){
+ if(style==='自由创作')throw Error('自由创作请使用 api.compose 与 projectFromComposition');
  if(!useLLM)return applySongPlan(p,localComposition(idea,style),style,idea,{source:'local-rules'});
  const data=await (request?createApiClient({request}):api).plan({idea,style});
  return applySongPlan(p,{title:data.title,mood:data.mood,lyrics:data.lyrics,songPlan:data.songPlan},style,idea,{source:data.mock?'local-rules':data.source,model:data.model,...(data.mock?{mock:true as const}:{})});
