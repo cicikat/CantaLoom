@@ -83,3 +83,9 @@
 - `external/runtime/exports/qixuan-acceptance` 已交付请求的 USTX、单句 WAV、伴奏 WAV、人声 WAV、混音 WAV、25 秒 H.264/AAC MP4 与 acceptance-report.md；另有 SHA256、推理、GPU 采样和 LLM 记录。MP4 解码与混音 WAV 的相关性 0.999970。
 - 原测试按钮增加就近结果、忙碌提示、超时处理；实测已有配置可达。不是把“已配置”当作“完整音乐方案已验证”。
 - 主观听感、多音字与长句覆盖仍待进一步试听；GPU 全卡采样含其他作业，不能当作本模型专属峰值。完整限制和路径见 [QIXUAN.md](QIXUAN.md)。
+
+# 2026-11-05 SONGYU v0.2.1 · 前后端协作解耦
+
+- 交付入口、职责、契约、Mock、Git 工作流与本轮完整验收记录见 [V021_ACCEPTANCE.md](V021_ACCEPTANCE.md)。
+- 构建通过、31/31 单元与接口、11/11 真实模式 E2E、2/2 无后端 Mock E2E、独立 3102 端口启动检查通过。
+- 绮萱 CPU 实际重唱、缓存保护、FluidSynth 及 25 秒 H.264/AAC MP4 已测试；本轮没有新增真实上游 LLM 调用，不以 Mock 或接口夹具替代真实推理。

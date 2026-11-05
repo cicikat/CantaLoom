@@ -1,7 +1,10 @@
 node_modules/
 dist/
 .env
+.env.local
+.env.*.local
 test-results/
+mock-test-results/
 playwright-report/
 exports/
 *.tsbuildinfo

@@ -14,5 +14,5 @@ export const songPlanSchema = z.strictObject({
 });
 export const planInputSchema=z.strictObject({idea:z.string().trim().min(1).max(200),style:z.enum(['海盐汽水','深夜漫游','橘子摇滚'])});
 export const planOutputSchema=z.strictObject({title:z.string().trim().min(1).max(30),mood:z.string().trim().min(1).max(60),lyrics:z.array(z.string().trim().min(1).max(40)).length(4),songPlan:songPlanSchema});
-export const planResponseSchema=planOutputSchema.extend({source:z.literal('llm'),model:z.string().min(1).max(100)});
-export const planningSchema=z.strictObject({source:z.enum(['llm','local-rules']),model:z.string().max(100).optional(),appliedAt:z.string().datetime(),compatibility:z.array(z.string().max(200)).max(8)});
+export const planResponseSchema=planOutputSchema.extend({source:z.literal('llm'),model:z.string().min(1).max(100),mock:z.literal(true).optional()});
+export const planningSchema=z.strictObject({source:z.enum(['llm','local-rules']),model:z.string().max(100).optional(),appliedAt:z.string().datetime(),compatibility:z.array(z.string().max(200)).max(8),mock:z.literal(true).optional()});

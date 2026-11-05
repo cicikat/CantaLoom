@@ -1,4 +1,5 @@
-import {planOutputSchema,planResponseSchema,type PlanOutput,type Planning} from '../shared/song-plan.mjs';
+import {api,createApiClient} from './api/client';
+import {planOutputSchema,type PlanOutput,type Planning} from '../shared/song-plan.mjs';
 import {type SongProject,type Style,record,validateProject} from './model';
 import {localComposer,localLyrics,lyricNotes,syncVocal} from './composer';
 import {localSongPlan,effectivePlan} from './song-plan';
@@ -10,7 +11,7 @@ export function localComposition(idea:string,style:Style):PlanOutput {
 }
 
 // Transaction: validate everything before cloning, publish one completed project.
-export function applySongPlan(project:SongProject,input:PlanOutput,style:Style,idea:string,origin:Pick<Planning,'source'|'model'>):SongProject {
+export function applySongPlan(project:SongProject,input:PlanOutput,style:Style,idea:string,origin:Pick<Planning,'source'|'model'|'mock'>):SongProject {
  const output=planOutputSchema.parse(input),next=structuredClone(project),protectedIds=protectedSections(project),compatibility:string[]=[];
  next.songPlan=output.songPlan;
  if(protectedIds.size){
@@ -37,10 +38,8 @@ export function applySongPlan(project:SongProject,input:PlanOutput,style:Style,i
  return validateProject(record(next,origin.source==='llm'?'应用已校验 LLM 音乐方案':'应用本地规则音乐方案'));
 }
 
-export async function composeFromIdea(p:SongProject,idea:string,style:Style,useLLM:boolean,request:typeof fetch=fetch){
+export async function composeFromIdea(p:SongProject,idea:string,style:Style,useLLM:boolean,request?:typeof fetch){
  if(!useLLM)return applySongPlan(p,localComposition(idea,style),style,idea,{source:'local-rules'});
- const response=await request('/api/plan',{method:'POST',signal:AbortSignal.timeout(35000),headers:{'Content-Type':'application/json'},body:JSON.stringify({idea,style})});
- if(!response.ok)throw Error('LLM 请求失败，工程已保留；可以选择本地规则继续创作。');
- const data=planResponseSchema.parse(await response.json());
- return applySongPlan(p,{title:data.title,mood:data.mood,lyrics:data.lyrics,songPlan:data.songPlan},style,idea,{source:data.source,model:data.model});
+ const data=await (request?createApiClient({request}):api).plan({idea,style});
+ return applySongPlan(p,{title:data.title,mood:data.mood,lyrics:data.lyrics,songPlan:data.songPlan},style,idea,{source:data.mock?'local-rules':data.source,model:data.model,...(data.mock?{mock:true as const}:{})});
 }

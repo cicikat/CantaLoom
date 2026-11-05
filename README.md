@@ -1,5 +1,14 @@
 # 声屿 SONGYU
 
+## v0.2.1 前后端协作
+
+- 前端独立开发：`npm ci` → `npm run dev:mock`，无需绮萱、OpenUtau、DiffSinger、FluidSynth、FFmpeg 或后端。
+- 后端独立开发：`npm ci` → `npm run dev:backend`，无需修改 React。
+- 真实联调：`npm run dev:frontend` + `npm run dev:backend`，或 `npm run dev`。Vite 的 API 目标由 `.env.development.local` 中的 `VITE_API_PROXY_TARGET` 配置。
+- Mock 提供固定计划、任务状态、声库及测试音；页面与工程显式标记，不代表模型推理。Mock PV 下载 JSON 测试回执；真实模式仍导出 MP4。
+- [团队分工、目录与依赖图、Git / PR 规范](docs/TEAM_WORKFLOW.md) · [API 契约](docs/API_CONTRACT.md) · [修改前审计](docs/DECOUPLING_AUDIT.md) · [本轮验收](docs/V021_ACCEPTANCE.md)
+
+
 **v0.2 已接入绮萱真实中文演唱**：在「虚拟歌姬」中逐句生成、重唱和比较历史版本；CPU / DirectML 调用官方 OpenUtau 的 DiffSinger 组件。25 秒真实混音与 MP4 已验收，安装、缓存和授权边界见 [绮萱接入说明](docs/QIXUAN.md)。
 
 新增本地[后台管理面板](docs/ADMIN.md)：启动后打开 `http://127.0.0.1:3001/admin`，可配置 URL / API Key / 模型与引擎路径、测试连接、查看生成任务、扫描资源及维护声库注册表。密钥由 Windows DPAPI 加密保存于仓库外，不回显。
@@ -16,7 +25,7 @@ P2.1 的字段、实际音乐变化、锁定兼容策略与验收边界见 [AI-G
 
 Windows 推荐双击根目录的 `start.bat`。脚本会检查 Node/端口、首次缺依赖时自动安装、构建最新源码，并在页面和 API 就绪后打开浏览器。保持窗口开启，按 Ctrl+C 停止；失败时窗口保留错误。`start.bat --check` 可验证完整启动后自动停止，`--no-open` 可关闭自动打开浏览器。
 
-这是单仓库的前后端分层架构：`src/` 负责界面、浏览器作曲/合成与本地存档；`server/` 负责 LLM 请求、密钥和 FFmpeg；`shared/` 只共享数据校验契约。开发时前后端两个进程经 `/api` 通信，构建后一个 Express 服务同时提供页面和 API。开发约定见 [AGENT.md](AGENT.md)。
+这是单仓库的前后端分层架构：`src/` 负责界面、浏览器作曲/合成与本地存档；`server/` 负责 LLM 请求、密钥、器乐/歌声与 FFmpeg；`shared/` 只共享数据校验契约。开发时前后端两个进程经 `/api` 通信，构建后一个 Express 服务同时提供页面和 API。开发约定见 [AGENT.md](AGENT.md)。
 
 需要 Node.js 22.12+（本机使用 22.23.1）、npm。视频导出需要 PATH 内的 FFmpeg（带 libx264、libass）。不需要 Python，不需要付费账户，不需要下载音库。
 
@@ -26,7 +35,7 @@ npm install
 npm run dev
 ```
 
-打开 http://localhost:5173 。Vite 在 5173，Node API 在 127.0.0.1:3001，Vite 代理 `/api`。API 仅监听本机。无 API 服务时，前端仍可创作、试听、保存与导出 WAV；MP4 和 LLM 功能会不可用。
+打开 http://localhost:5173 。Vite 在 5173，Node API 在 127.0.0.1:3001，Vite 代理 `/api`。API 仅监听本机。无 API 服务时，前端仍可创作、试听、保存与导出 WAV；真实 MP4 和 LLM 功能会不可用。完整无引擎交互开发请使用 `npm run dev:mock`。
 
 构建并以单一 Node 服务启动：
 

@@ -8,8 +8,8 @@ export interface SongPlan {
  reasons:{decision:'key'|'harmony'|'drums'|'melody'|'energy';reason:string}[];
 }
 export interface PlanOutput {title:string;mood:string;lyrics:string[];songPlan:SongPlan}
-export interface PlanResponse extends PlanOutput {source:'llm';model:string}
-export interface Planning {source:'llm'|'local-rules';model?:string;appliedAt:string;compatibility:string[]}
+export interface PlanResponse extends PlanOutput {source:'llm';model:string;mock?:true}
+export interface Planning {source:'llm'|'local-rules';model?:string;appliedAt:string;compatibility:string[];mock?:true}
 export const songPlanSchema:z.ZodType<SongPlan>;
 export const planInputSchema:z.ZodType<{idea:string;style:'海盐汽水'|'深夜漫游'|'橘子摇滚'}>;
 export const planOutputSchema:z.ZodType<PlanOutput>;

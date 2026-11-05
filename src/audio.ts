@@ -1,3 +1,4 @@
+import {api} from './api/client';
 import {type SongProject,type TrackKind,type Note,duration,beatsToSeconds} from './model';
 import {instrumentAudio,currentVocalAsset} from './external-audio';
 export interface VocalProvider {id:string; label:string; isDemo:boolean; schedule(ctx:BaseAudioContext,destination:AudioNode,note:Note,start:number,length:number,preset:string):void}
@@ -23,9 +24,9 @@ export async function renderAudio(p:SongProject,options:{trackId?:string;lyricId
  if(lyric){from=beatsToSeconds(p,lyric.start);to=beatsToSeconds(p,lyric.end)}else if(track){const s=p.sections.find(s=>s.id===track.sectionId)!;from=beatsToSeconds(p,s.start);to=beatsToSeconds(p,s.start+s.beats)}
  if(lyric&&p.vocalMode==='external'){const asset=currentVocalAsset(p,lyric);from=asset.startSeconds;to=from+asset.durationSeconds}
  const relevantAssets=(lyric?[lyric]:p.lyrics.filter(l=>p.tracks.some(t=>t.kind==='vocal'&&!t.muted&&t.sectionId===l.sectionId&&(!options.trackId||t.id===options.trackId)))).map(l=>p.vocalAssets?.[l.id]).filter(a=>a?.providerId==='openutau-diffsinger');
- if(p.vocalMode==='external'&&relevantAssets.length){const response=await fetch('/api/singing/qixuan');if(!response.ok)throw Error('无法核对真实歌声引擎版本');const voice=await response.json();if(relevantAssets.some(a=>a!.engineVersion!==voice.engineVersion))throw Error('歌声引擎版本已改变，请重新演唱受影响的句子');}
+ if(p.vocalMode==='external'&&relevantAssets.length){const voice=await api.qixuan();if(!voice.available||relevantAssets.some(a=>a!.engineVersion!==voice.engineVersion))throw Error('歌声引擎版本已改变，请重新演唱受影响的句子');}
  const ctx=new OfflineAudioContext(2,Math.ceil((to-from)*24000),24000);const master=ctx.createGain();master.gain.value=.8;const compressor=ctx.createDynamicsCompressor();compressor.threshold.value=-12;compressor.ratio.value=5;master.connect(compressor).connect(ctx.destination);
- const addWav=async(url:string,start:number)=>{const response=await fetch(url);if(!response.ok)throw Error('音频缓存缺失，请重新生成／导入');const buffer=await ctx.decodeAudioData(await response.arrayBuffer());const source=ctx.createBufferSource();source.buffer=buffer;source.connect(master);source.start(Math.max(0,start-from),Math.max(0,from-start));};
+ const addWav=async(url:string,start:number)=>{const buffer=await ctx.decodeAudioData(await api.audio(url));const source=ctx.createBufferSource();source.buffer=buffer;source.connect(master);source.start(Math.max(0,start-from),Math.max(0,from-start));};
  const addLyric=async(l:SongProject['lyrics'][number])=>{if(p.vocalMode==='external'){const a=currentVocalAsset(p,l);await addWav(a.audioUrl,a.startSeconds)}else l.notes.forEach(n=>schedule(ctx,master,n,'vocal',beatsToSeconds(p,n.beat)-from,beatsToSeconds(p,n.duration),p.vocalPreset))};
  if(lyric)await addLyric(lyric);
  else for(const t of p.tracks.filter(t=>!t.muted&&(!options.trackId||t.id===options.trackId))){

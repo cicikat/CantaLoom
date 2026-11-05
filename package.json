@@ -1,14 +1,18 @@
 {
   "name": "songyu-studio",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k \"node --env-file-if-exists=.env server/index.mjs\" \"vite --host 0.0.0.0\"",
+    "dev": "concurrently -k \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build": "tsc -b && vite build",
     "start": "node --env-file-if-exists=.env server/index.mjs",
     "test": "tsx --test tests/*.test.ts tests/*.test.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "dev:frontend": "vite --host 127.0.0.1",
+    "dev:backend": "node --env-file-if-exists=.env --watch server/index.mjs",
+    "dev:mock": "vite --host 127.0.0.1 --mode mock",
+    "test:e2e:mock": "playwright test --config playwright.mock.config.ts"
   },
   "dependencies": {
     "express": "^5.1.0",

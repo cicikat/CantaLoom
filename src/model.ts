@@ -1,14 +1,15 @@
 import {songPlanSchema,planningSchema,type SongPlan,type Planning} from '../shared/song-plan.mjs';
-export type TrackKind = 'drums'|'bass'|'guitar'|'keys'|'melody'|'vocal';
+import type {MidiTrackKind,MidiNote} from '../shared/midi.mjs';
+export type TrackKind = MidiTrackKind;
 export type Style = '海盐汽水'|'深夜漫游'|'橘子摇滚';
 export type SubtitleStyle = 'cinema'|'poster'|'minimal';
-export interface Note { id:string; beat:number; duration:number; midi:number; velocity:number; sound?:'kick'|'snare'|'hat'; syllable?:string }
+export interface Note extends MidiNote {id:string;syllable?:string}
 export interface Section { id:string; name:string; start:number; beats:number }
 export interface Track { id:string; sectionId:string; kind:TrackKind; version:number; locked:boolean; muted:boolean; notes:Note[]; dependencies:string[]; source:'local-composer'|'demo-vowel'; manuallyEdited?:boolean; }
 export interface Lyric { id:string; sectionId:string; text:string; start:number; end:number; notes:Note[]; version:number; locked:boolean; source:'manual'|'local-template'|'llm' }
 export interface SongProject { schemaVersion:1; id:string; metadata:{title:string; idea:string; createdAt:string; updatedAt:string}; bpm:number; timeSignature:[4,4]; style:Style; mood:string; sections:Section[]; tracks:Track[]; lyrics:Lyric[]; vocalPreset:'澄音'|'星羽'|'雾歌'; visualScenes:{id:string; sectionId:string; theme:number; source:'procedural'}[]; assetReferences:{id:string; type:string; source:string}[]; versions:{at:string; action:string}[]; subtitleStyle:SubtitleStyle; tapTimes:number[] }
 export interface SongProject {songPlan?:SongPlan;planning?:Planning;rhythmCompletion?:boolean;}
-export interface VocalAsset {audioUrl:string;dependency:string;providerId:string;voiceId:string;voiceVersion:string;startSeconds:number;durationSeconds:number;isDemo:false;projectVersion:string}
+export interface VocalAsset {audioUrl:string;dependency:string;providerId:string;voiceId:string;voiceVersion:string;startSeconds:number;durationSeconds:number;isDemo:boolean;mock?:true;projectVersion:string}
 export interface VocalAsset {engineVersion?:string;renderParameters?:{runner:'CPU'|'DirectML';steps:number;depth:number};take?:number;createdAt?:string}
 export interface SongProject {singingRunner?:'CPU'|'DirectML';vocalHistory?:Record<string,VocalAsset[]>}
 export interface SongProject {instrumentMode?:'synth'|'fluidsynth';soundfont?:string;instrumentPrograms?:Partial<Record<TrackKind,number>>;vocalMode?:'demo'|'external';vocalAssets?:Record<string,VocalAsset>}
@@ -34,7 +35,7 @@ export function validateProject(data:unknown):SongProject {
  if(p.instrumentMode!==undefined&&!['synth','fluidsynth'].includes(p.instrumentMode)||p.vocalMode!==undefined&&!['demo','external'].includes(p.vocalMode))throw Error('音源设置无效');
  if(p.soundfont!==undefined&&(typeof p.soundfont!=='string'||p.soundfont.length>200))throw Error('音源名称无效');
  if(p.instrumentPrograms!==undefined&&(!p.instrumentPrograms||Object.entries(p.instrumentPrograms).some(([k,v])=>!kinds.includes(k as TrackKind)||!Number.isInteger(v)||v!<0||v!>127)))throw Error('乐器预设无效');
- if(p.vocalAssets!==undefined){if(!p.vocalAssets||typeof p.vocalAssets!=='object'||Array.isArray(p.vocalAssets)||Object.keys(p.vocalAssets).length>32)throw Error('人声资产无效');for(const a of Object.values(p.vocalAssets)){if(!a||typeof a.audioUrl!=='string'||!/^\/api\/audio\/[a-f0-9]{64}\.wav$/.test(a.audioUrl)||typeof a.dependency!=='string'||a.dependency.length>100000||!['openutau-exchange','diffsinger','openutau-diffsinger'].includes(a.providerId)||typeof a.voiceId!=='string'||typeof a.voiceVersion!=='string'||!Number.isFinite(a.startSeconds)||!Number.isFinite(a.durationSeconds)||a.durationSeconds<=0||a.durationSeconds>35||a.isDemo!==false)throw Error('人声资产引用无效')}}
+ if(p.vocalAssets!==undefined){if(!p.vocalAssets||typeof p.vocalAssets!=='object'||Array.isArray(p.vocalAssets)||Object.keys(p.vocalAssets).length>32)throw Error('人声资产无效');for(const a of Object.values(p.vocalAssets)){if(!a||typeof a.audioUrl!=='string'||!/^\/api\/audio\/[a-f0-9]{64}\.wav$/.test(a.audioUrl)||typeof a.dependency!=='string'||a.dependency.length>100000||!['openutau-exchange','diffsinger','openutau-diffsinger'].includes(a.providerId)||typeof a.voiceId!=='string'||typeof a.voiceVersion!=='string'||!Number.isFinite(a.startSeconds)||!Number.isFinite(a.durationSeconds)||a.durationSeconds<=0||a.durationSeconds>35||(a.isDemo!==false&&!(a.mock===true&&a.isDemo===true)))throw Error('人声资产引用无效')}}
  const validNotes=(notes:Note[],start:number,stop:number)=>{if(!Array.isArray(notes)||notes.length>512)throw Error('音符数量无效');notes.forEach(n=>{checkId(n.id);if(!Number.isFinite(n.beat)||n.beat<start||n.beat>=stop||!Number.isFinite(n.duration)||n.duration<=0||n.beat+n.duration>stop+.001||!Number.isInteger(n.midi)||n.midi<0||n.midi>127||!Number.isFinite(n.velocity)||n.velocity<0||n.velocity>1||n.sound&&!['kick','snare','hat'].includes(n.sound))throw Error('音符数据无效');});};
  p.tracks.forEach(t=>{checkId(t.id);const s=p.sections.find(s=>s.id===t.sectionId);if(!s||!kinds.includes(t.kind)||!Number.isInteger(t.version)||typeof t.locked!=='boolean'||typeof t.muted!=='boolean')throw Error('音轨数据无效');validNotes(t.notes,s.start,s.start+s.beats)});
  p.lyrics.forEach(l=>{checkId(l.id);const s=p.sections.find(s=>s.id===l.sectionId);if(!s||typeof l.text!=='string'||l.text.length>100||!Number.isFinite(l.start)||!Number.isFinite(l.end)||l.start<s.start||l.end>s.start+s.beats||l.start>=l.end)throw Error('歌词时间轴无效');validNotes(l.notes,l.start,l.end)});
