@@ -1,3 +1,4 @@
+import {performanceSchema} from './melody.mjs';
 import {z} from 'zod';
 export {planInputSchema,planResponseSchema} from '../song-plan.mjs';
 
@@ -16,7 +17,7 @@ export const qixuanStatusSchema=z.discriminatedUnion('available',[
  z.object({available:z.literal(true),id:z.string(),version:z.string(),providerId:z.literal('openutau-diffsinger'),label:z.string(),engineVersion:z.string(),parameters,runners:z.array(runner).optional(),...mockFields}),
  z.object({available:z.literal(false),id:z.string(),version:z.string(),message:z.string(),...mockFields}),
 ]);
-export const qixuanInput=z.object({lyricId:z.string().max(150),lyrics:z.string().min(1).max(100),start:z.number().min(0).max(256),end:z.number().positive().max(256),bpm:z.number().min(40).max(240),notes:z.array(note.omit({sound:true}).extend({syllable:z.string().max(20).optional()})).min(1).max(100),runner:runner.default('CPU'),take:z.number().int().min(0).max(10000).default(0),engineVersion:z.string().max(100)}).strict();
+export const qixuanInput=z.object({lyricId:z.string().max(150),lyrics:z.string().min(1).max(100),start:z.number().min(0).max(256),end:z.number().positive().max(256),bpm:z.number().min(40).max(240),notes:z.array(note.omit({sound:true}).extend({syllable:z.string().max(20).optional()})).min(1).max(100),runner:runner.default('CPU'),take:z.number().int().min(0).max(10000).default(0),engineVersion:z.string().max(100),performance:performanceSchema.optional()}).strict();
 export const qixuanResultSchema=audioResultSchema.extend({voiceId:z.string(),voiceVersion:z.string(),providerId:z.literal('openutau-diffsinger'),engineVersion:z.string(),renderParameters:parameters.extend({runner}),take:z.number().int(),isDemo:z.boolean(),cached:z.boolean(),startSeconds:z.number().nonnegative(),durationSeconds:z.number().positive().max(35),createdAt:z.string()}).refine(v=>v.isDemo===!!v.mock,{message:'Mock 音频必须显式标记 isDemo / mock'});
 export const enginesSchema=z.object({instruments:z.object({installed:z.boolean(),ready:z.boolean(),soundfonts:z.array(z.string()),version:z.string().optional()}),singing:z.string(),...mockFields});
 export const dictionarySchema=z.record(z.string(),z.string());

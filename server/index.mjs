@@ -1,3 +1,4 @@
+import {mountMelody} from './routes/melody.mjs';
 import {createVideoService} from './services/export.mjs';
 import {mountExport} from './routes/export.mjs';
 import {mountPlanning} from './routes/planning.mjs';
@@ -18,6 +19,7 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const settings=await createConfigStore({directory:path.join(externalRoot,'runtime/config')});
 const app=express();app.disable('x-powered-by');app.use(express.json({limit:'24mb'}));
 const jobs=createJobs();app.use(jobs.middleware);
+mountMelody(app);
 mountInstruments(app);
 mountSinging(app);
 mountQixuan(app);
