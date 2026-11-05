@@ -14,7 +14,7 @@ export function createPlanner({env=process.env,request=fetch}={}){
    try{
     const model=env.LLM_MODEL||'gpt-4.1-mini';
     const response=await request(`${(env.LLM_BASE_URL||'https://api.openai.com/v1').replace(/\/$/,'')}/chat/completions`,{
-     method:'POST',signal:AbortSignal.timeout(30000),
+     method:'POST',redirect:'error',signal:AbortSignal.timeout(30000),
      headers:{'Content-Type':'application/json',Authorization:`Bearer ${env.LLM_API_KEY}`},
      body:JSON.stringify({model,response_format:{type:'json_object'},temperature:.85,messages:[
       {role:'system',content:`你是中文原创短歌策划。根据用户的灵感和风格，决定可以真正执行的音乐方案。只输出符合以下 JSON Schema 的 JSON 对象，不要 Markdown：${JSON.stringify(z.toJSONSchema(planOutputSchema))}\n和弦数组为所选调式内的四个自然音阶级数，每小节一个；minor 为自然小调。情绪强度控制音符密度与力度。sectionEnergy 控制四段力度与节奏密度。reasons 用普通中文解释具体字段选择与用户描述的关系，不给代码或自由指令。歌词每句5到16字，不引用已有歌曲。你规划的是音符合成，不是生成歌唱音频。`},

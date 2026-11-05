@@ -6,14 +6,30 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {z} from 'zod';
 import {createPlanner} from './planner.mjs';
+import {mountInstruments} from './instruments.mjs';
+import {mountSinging} from './singing.mjs';
+import {externalRoot,InstrumentRenderer,runProcess} from './instruments.mjs';
+import {createConfigStore} from './admin-config.mjs';
+import {mountAdmin,createJobs} from './admin.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const settings=await createConfigStore({directory:path.join(externalRoot,'runtime/config')});
 const app=express();app.disable('x-powered-by');app.use(express.json({limit:'24mb'}));
-const ffmpeg=process.env.FFMPEG_PATH||'ffmpeg';
+const jobs=createJobs();app.use(jobs.middleware);
+mountInstruments(app);
+mountSinging(app);
+let ffmpeg=process.env.FFMPEG_PATH||'ffmpeg';
 function run(command,args,cwd,timeout=120000){return new Promise((resolve,reject)=>{const child=spawn(command,args,{cwd,windowsHide:true,stdio:['ignore','ignore','pipe']});let stderr='';const timer=setTimeout(()=>{child.kill();reject(Error('编码超时，请稍后重试'))},timeout);child.stderr.on('data',x=>{stderr=(stderr+x.toString()).slice(-4000)});child.on('error',e=>{clearTimeout(timer);reject(e)});child.on('close',code=>{clearTimeout(timer);if(code===0)resolve();else reject(Error(`编码进程失败 (${code})：${stderr.slice(-700)}`))})})}
 let ffmpegReady=false;try{await run(ffmpeg,['-version'],root,5000);ffmpegReady=true}catch{/* optional service */}
-const planner=createPlanner();
+let planner=createPlanner();
+mountAdmin(app,{store:settings,jobs,root:externalRoot,publicDirectory:path.join(root,'server/public'),onConfig:async()=>{planner=createPlanner();ffmpeg=process.env.FFMPEG_PATH||'ffmpeg';try{await run(ffmpeg,['-version'],root,5000);ffmpegReady=true}catch{ffmpegReady=false}},diagnostics:async()=>{
+ const instruments=await new InstrumentRenderer().status();
+ const probe=async(command,args)=>{try{return {available:true,version:(await runProcess(command,args,externalRoot,10000)).split(/\r?\n/)[0]}}catch{return {available:false,message:'未安装、路径错误或运行失败'}}};
+ const python=process.env.DIFFSINGER_PYTHON||path.join(externalRoot,'DiffSinger/.venv/Scripts/python.exe');
+ const openutau=process.env.OPENUTAU_PATH||path.join(externalRoot,'OpenUtau/OpenUtau.exe');let openUtauInstalled=false;try{await access(openutau);openUtauInstalled=true}catch{}
+ return {instruments,ffmpeg:await probe(ffmpeg,['-version']),python:await probe(python,['--version']),diffSingerDependencies:await probe(python,['-c','import torch,librosa,pyworld; print("PyTorch " + torch.__version__ + "; CUDA " + str(torch.cuda.is_available()))']),openUtau:{installed:openUtauInstalled,mode:'GUI 工程交换；未提供无界面 API'},gpu:await probe('nvidia-smi',['--query-gpu=name,memory.total,memory.used,driver_version','--format=csv,noheader'])};
+}});
 app.get('/api/health',(_req,res)=>res.json({ffmpeg:ffmpegReady,llm:!!process.env.LLM_API_KEY,llmStatus:planner.status(),vocal:'demo-vowel',images:'procedural'}));
-app.post('/api/plan',planner.handle);
+app.post('/api/plan',(req,res)=>planner.handle(req,res));
 const b64=z.string().regex(/^[A-Za-z0-9+/]+={0,2}$/);
 const exportInput=z.object({wav:b64.max(16000000),scenes:z.array(z.object({png:b64.max(2500000),duration:z.number().min(.5).max(30)})).length(4),duration:z.number().min(15).max(35),lyrics:z.array(z.object({text:z.string().max(100),start:z.number().min(0).max(35),end:z.number().min(0).max(35)})).max(32),style:z.enum(['cinema','poster','minimal']),title:z.string().max(200)});
 function assTime(t){const cent=Math.round(t*100);return `${Math.floor(cent/360000)}:${String(Math.floor(cent/6000)%60).padStart(2,'0')}:${String(Math.floor(cent/100)%60).padStart(2,'0')}.${String(cent%100).padStart(2,'0')}`}

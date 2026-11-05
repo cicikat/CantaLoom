@@ -1,4 +1,5 @@
 import {type SongProject,type TrackKind,type Note,duration,beatsToSeconds} from './model';
+import {instrumentAudio,currentVocalAsset} from './external-audio';
 export interface VocalProvider {id:string; label:string; isDemo:boolean; schedule(ctx:BaseAudioContext,destination:AudioNode,note:Note,start:number,length:number,preset:string):void}
 function envelope(ctx:BaseAudioContext,dest:AudioNode,start:number,length:number,volume:number){const g=ctx.createGain();g.gain.setValueAtTime(0,start);g.gain.linearRampToValueAtTime(volume,start+.012);g.gain.exponentialRampToValueAtTime(Math.max(.001,volume*.6),start+length*.65);g.gain.linearRampToValueAtTime(0,start+length);g.connect(dest);return g;}
 const freq=(m:number)=>440*2**((m-69)/12);
@@ -21,8 +22,14 @@ export async function renderAudio(p:SongProject,options:{trackId?:string;lyricId
  let from=0,to=duration(p);const lyric=p.lyrics.find(l=>l.id===options.lyricId);const track=p.tracks.find(t=>t.id===options.trackId);
  if(lyric){from=beatsToSeconds(p,lyric.start);to=beatsToSeconds(p,lyric.end)}else if(track){const s=p.sections.find(s=>s.id===track.sectionId)!;from=beatsToSeconds(p,s.start);to=beatsToSeconds(p,s.start+s.beats)}
  const ctx=new OfflineAudioContext(2,Math.ceil((to-from)*24000),24000);const master=ctx.createGain();master.gain.value=.8;const compressor=ctx.createDynamicsCompressor();compressor.threshold.value=-12;compressor.ratio.value=5;master.connect(compressor).connect(ctx.destination);
- if(lyric)lyric.notes.forEach(n=>schedule(ctx,master,n,'vocal',beatsToSeconds(p,n.beat)-from,beatsToSeconds(p,n.duration),p.vocalPreset));
- else p.tracks.filter(t=>!t.muted&&(!options.trackId||t.id===options.trackId)).forEach(t=>t.notes.forEach(n=>schedule(ctx,master,n,t.kind,beatsToSeconds(p,n.beat)-from,beatsToSeconds(p,n.duration),p.vocalPreset)));
+ const addWav=async(url:string,start:number)=>{const response=await fetch(url);if(!response.ok)throw Error('音频缓存缺失，请重新生成／导入');const buffer=await ctx.decodeAudioData(await response.arrayBuffer());const source=ctx.createBufferSource();source.buffer=buffer;source.connect(master);source.start(Math.max(0,start-from),Math.max(0,from-start));};
+ const addLyric=async(l:SongProject['lyrics'][number])=>{if(p.vocalMode==='external'){const a=currentVocalAsset(p,l);await addWav(a.audioUrl,a.startSeconds)}else l.notes.forEach(n=>schedule(ctx,master,n,'vocal',beatsToSeconds(p,n.beat)-from,beatsToSeconds(p,n.duration),p.vocalPreset))};
+ if(lyric)await addLyric(lyric);
+ else for(const t of p.tracks.filter(t=>!t.muted&&(!options.trackId||t.id===options.trackId))){
+  if(t.kind==='vocal'&&p.vocalMode==='external'){for(const l of p.lyrics.filter(l=>l.sectionId===t.sectionId))await addLyric(l)}
+  else if(t.kind!=='vocal'&&p.instrumentMode==='fluidsynth'){if(t.notes.length){const a=await instrumentAudio(p,t);await addWav(a.audioUrl,0)}}
+  else t.notes.forEach(n=>schedule(ctx,master,n,t.kind,beatsToSeconds(p,n.beat)-from,beatsToSeconds(p,n.duration),p.vocalPreset));
+ }
  return {buffer:await ctx.startRendering(),from};
 }
 export class AudioEngine {

@@ -1,5 +1,9 @@
 # 声屿 SONGYU
 
+新增本地[后台管理面板](docs/ADMIN.md)：启动后打开 `http://127.0.0.1:3001/admin`，可配置 URL / API Key / 模型与引擎路径、测试连接、查看生成任务、扫描资源及维护声库注册表。密钥由 Windows DPAPI 加密保存于仓库外，不回显。
+
+器乐新增可选 FluidSynth，支持标准 MIDI、OpenUtau USTX、单句 DiffSinger DS 和外部歌声 WAV 回导；真实中文声库尚未完成演唱验收。当前完整能力和限制以 [后台说明](docs/ADMIN.md) 为准，下文 P2.1 描述保留原阶段边界。
+
 面向零音乐基础用户的本地音乐创作工作台。由 V3「创意积木」原型演进为 React + TypeScript 应用，原始 `03_patchlab_playful.html` 保留作视觉参考。
 
 **交付范围：P0 + P1 完整链路、P2.1 可执行 SongPlan 引导编曲，以及 P3 的元音演示、真实混音与静止歌词 PV 导出。LLM 计划接口已实现并通过夹具测试；本机未配置密钥，未验证真实模型调用。**

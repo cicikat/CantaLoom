@@ -8,6 +8,8 @@
 
 ## 架构与职责边界
 
+补充（本地引擎与后台）：`server/admin-config.mjs` 负责仓库外原子配置与 Windows DPAPI；`server/admin.mjs` 负责仅限本机的管理 API、任务与资源台；`server/public/` 为无构建管理页面。管理 API 不得返回密钥、记录请求体或上游原始错误，不能回退明文存储。`server/instruments.mjs` / `server/singing.mjs` 负责外部引擎，`src/singing.ts` 负责工程交换与依赖，`src/audio.ts` 仍为试听与全部导出的统一混音入口。详见 `docs/ADMIN.md`。下文“不需要 Python / 不需要音库”仅适用于原有 Web Audio 模式。
+
 这是**单仓库、前后端分层、浏览器端承担创作计算的轻量 Web 架构**。不是大型 Agent 系统，没有数据库、登录或微服务。
 
 - `src/` 是 React + TypeScript 前端。UI、SongProject、节奏录入、本地作曲、Web Audio 合成、Canvas 预览、localStorage、WAV 和工程 JSON 导出都在浏览器执行。
