@@ -1,3 +1,4 @@
+import type {Performance} from './melody.mjs';
 import type {z} from 'zod';
 import type {MidiNote} from '../midi.mjs';
 export {planInputSchema,planResponseSchema} from '../song-plan.mjs';
@@ -11,7 +12,7 @@ export type Runner='CPU'|'DirectML';
 export interface VoiceParameters {steps:number;depth:number}
 export interface AvailableQixuan extends MockTag {available:true;id:string;version:string;providerId:'openutau-diffsinger';label:string;engineVersion:string;parameters:VoiceParameters;runners?:Runner[]}
 export type QixuanStatus=AvailableQixuan|({available:false;id:string;version:string;message:string}&MockTag);
-export interface QixuanInput {lyricId:string;lyrics:string;start:number;end:number;bpm:number;notes:RenderNote[];runner?:Runner;take?:number;engineVersion:string}
+export interface QixuanInput {lyricId:string;lyrics:string;start:number;end:number;bpm:number;notes:RenderNote[];runner?:Runner;take?:number;engineVersion:string;performance?:Performance}
 export interface QixuanResult extends AudioResult {voiceId:string;voiceVersion:string;providerId:'openutau-diffsinger';engineVersion:string;renderParameters:VoiceParameters&{runner:Runner};take:number;isDemo:boolean;cached:boolean;startSeconds:number;durationSeconds:number;createdAt:string}
 export interface Engines extends MockTag {instruments:{installed:boolean;ready:boolean;soundfonts:string[];version?:string};singing:string}
 export interface ImportInput {wav:string;voice:{id:string;version:string;providerId:'openutau-exchange'|'diffsinger';label:string}}

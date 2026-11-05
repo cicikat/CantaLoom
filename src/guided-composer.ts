@@ -47,14 +47,20 @@ export function generateGuided(p:SongProject,t:Track,random:()=>number):Note[]{
 }
 
 export function guidedLyricNotes(l:Lyric,p:SongProject,preset:string,version:number):Note[]{
- const plan=effectivePlan(p),chars=Array.from(l.text).filter(c=>!/[\s，。！？、,.!?]/.test(c));
- const section=p.sections.find(s=>s.id===l.sectionId)!,step=(l.end-l.start)/Math.max(1,chars.length),energy=sectionEnergy(p,l.sectionId);
- return chars.map((c,i)=>{const beat=l.start+i*step;return {id:uid(),beat,duration:step*.82,midi:pitch(plan,(beat-section.start)/Math.max(1,section.beats-step),beat,(version%3-1)*.35)+(preset==='雾歌'?-12:0),velocity:.28*(.6+plan.intensity*.4)*(.6+energy*.4),syllable:c}});
+ if(l.notes.some(n=>n.locked))return structuredClone(l.notes);
+ const plan=effectivePlan(p),chars=Array.from(l.text).filter(c=>/[\p{L}\p{N}]/u.test(c));
+ const section=p.sections.find(s=>s.id===l.sectionId)!,energy=sectionEnergy(p,l.sectionId),weights=chars.map((_,i)=>[1,1,2,.5,1.5,1][((i+version-1)%6+6)%6]);
+ const pauses=chars.map((_,i)=>i>0&&i%4===0?.5:0),total=weights.reduce((a,b)=>a+b,0)+pauses.reduce<number>((a,b)=>a+b,0),unit=(l.end-l.start)*.94/Math.max(1,total);
+ let beat=l.start;const notes:Note[]=[];
+ chars.forEach((c,i)=>{beat+=pauses[i]*unit;const position=(beat-section.start)/Math.max(1,section.beats-unit);let midi=pitch(plan,position,beat,(version%3-1)*.35)+(preset==='雾歌'?-12:0);
+  if(i%6===1&&Math.abs(beat/2-Math.round(beat/2))>.001)midi=notes[i-1].midi;
+  notes.push({id:uid(),beat,duration:weights[i]*unit,midi,velocity:.28*(.6+plan.intensity*.4)*(.6+energy*.4)*(i%4===0?1:.86),syllable:c});beat+=weights[i]*unit;
+ });return notes;
 }
 
 // Do not infer a key from arbitrary manual notes or reharmonize locked melodies.
 // A protected pitched event freezes its whole pitched section; drums do not.
 export function protectedSections(p:SongProject){return new Set([
- ...p.tracks.filter(t=>t.kind!=='drums'&&t.notes.length>0&&(t.locked||t.manuallyEdited)).map(t=>t.sectionId),
- ...p.lyrics.filter(l=>l.locked&&l.notes.length>0).map(l=>l.sectionId),
+ ...p.tracks.filter(t=>t.kind!=='drums'&&t.notes.length>0&&(t.locked||t.manuallyEdited||t.notes.some(n=>n.locked))).map(t=>t.sectionId),
+ ...p.lyrics.filter(l=>(l.locked||l.notes.some(n=>n.locked))&&l.notes.length>0).map(l=>l.sectionId),
 ]);}

@@ -1,5 +1,17 @@
 # SONGYU 开发约定
 
+## 双人分工：所有 Agent 必须遵守
+
+先读 `docs/TEAM_WORKFLOW.md` 和本轮工单；本地若有 `协作.md` 也先阅读，明确自己代表谁。没有明确 Owner 时先按当前工单范围工作，不接管另一人的区域。
+
+- **红茶 / Backend / Agent**：server、引擎桥接 scripts、音乐核心计算、音频缓存/混音/FFmpeg、后端测试。本轮 `cc-tasks/1.md` 属于红茶。
+- **小由 / Frontend / UX**：App.tsx、components、hooks、*Panel.tsx、CSS、钢琴卷帘与调教交互、前端 Mock、前端 E2E。红茶不得顺手改这些文件，不以修构建、优化架构或完善功能为由扩大范围。
+- 前端 Agent 同样不得自行改真实 LLM、作曲算法、声库、推理、服务端缓存和桥接器。
+- **共享边界**：shared、src/model.ts、src/api/client.ts 及跨层业务适配。先在 shared/contracts/CHANGELOG.md 写字段、兼容性、调用点和测试说明，经双方或用户明确授权后再改。本轮用户已授权红茶按工单统一确认新契约；这不授权改小由 UI。
+- 开始、提交、推送前检查 git status / diff；只暂存本轮拥有的文件。保留其他人的未提交改动与工单，不执行全仓 git add、reset、clean、覆盖还原或强推。
+- 各自使用 feature/frontend-* / feature/backend-* 分支；main 保持稳定。跨区发现问题写交接说明，不擅自代改。测试失败若属于另一方工作，报告具体影响和证据。
+- 完成时写清实际实现、契约接入方式、真实与 Mock 测试边界、交接项和提交；不得把后端接口完成说成小由 UI 已接通。
+
 ## 产品与范围
 
 v0.2 更新：已实际调用用户后台配置的 LLM 并校验两组 SongPlan；已接入绮萱 v2.7.0 真实中文演唱，CPU / DirectML、网页单句重唱、缓存保护及 25 秒 WAV / MP4 实测通过。`server/qixuan.mjs` 调用 `scripts/openutau-bridge/`，桥接器复用未修改的官方 OpenUtau 0.1.576 程序集与声码器，不使用 Python checkpoint 路线、不转换模型。下文旧阶段“真实歌声未接入 / 无真实 Key 验收”已由此更新。细节与后续听感边界见 `docs/QIXUAN.md`。

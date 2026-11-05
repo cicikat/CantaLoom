@@ -1,8 +1,9 @@
+import {notePerformance,performanceCurves,resolvePerformance} from '../shared/performance.mjs';
 import {pinyin} from 'pinyin-pro';
 import type {Lyric,SongProject} from './model';
 export interface SingingVoice {id:string;version:string;providerId:'openutau-exchange'|'diffsinger'|'openutau-diffsinger';label:string;engineVersion?:string;renderParameters?:{runner:'CPU'|'DirectML';steps:number;depth:number}}
 // IDs, timestamps and sibling lines are deliberately excluded from the dependency key.
-export function singingDependency(p:SongProject,l:Lyric,voice:SingingVoice){return JSON.stringify({bpm:p.bpm,start:l.start,end:l.end,text:l.text,notes:l.notes.map(n=>[n.beat,n.duration,n.midi,n.syllable]),voice:{id:voice.id,version:voice.version,providerId:voice.providerId,...(voice.engineVersion?{engineVersion:voice.engineVersion}:{}),...(voice.renderParameters?{renderParameters:voice.renderParameters}:{})}});}
+export function singingDependency(p:SongProject,l:Lyric,voice:SingingVoice){return JSON.stringify({bpm:p.bpm,start:l.start,end:l.end,text:l.text,notes:l.notes.map(n=>[n.beat,n.duration,n.midi,n.syllable]),...(l.performance?{performance:resolvePerformance(l.performance)}:{}),voice:{id:voice.id,version:voice.version,providerId:voice.providerId,...(voice.engineVersion?{engineVersion:voice.engineVersion}:{}),...(voice.renderParameters?{renderParameters:voice.renderParameters}:{})}});}
 export function alignedNotes(l:Lyric){
  const chars=Array.from(l.text).filter(c=>/[\p{L}\p{N}]/u.test(c));let index=0;
  const notes=[...l.notes].sort((a,b)=>a.beat-b.beat).map(n=>{
@@ -16,7 +17,7 @@ export function openUtauProject(p:SongProject,lines=p.lyrics,voice?:{singer:stri
  name:p.metadata.title,comment:`SONGYU ${p.id} · ${p.metadata.updatedAt}`,ustx_version:'0.6',resolution:480,
  tempos:[{position:0,bpm:p.bpm}],time_signatures:[{bar_position:0,beat_per_bar:4,beat_unit:4}],
  tracks:[{track_name:'SONGYU vocal',singer:voice?.singer??'',phonemizer:voice?.phonemizer??'OpenUtau.Plugin.Builtin.ChineseCVVPhonemizer',renderer_settings:{renderer:voice?.renderer??'CLASSIC'}}],
- voice_parts:lines.map(l=>({name:p.sections.find(s=>s.id===l.sectionId)?.name??l.id,comment:l.text,track_no:0,position:Math.round(l.start*480),duration:Math.round((l.end-l.start)*480),notes:alignedNotes(l).map(n=>({position:Math.round((n.beat-l.start)*480),duration:Math.round(n.duration*480),tone:n.midi,lyric:n.syllable,pitch:{data:[{x:-40,y:0,shape:"io"},{x:40,y:0,shape:"io"}],snap_first:true},vibrato:{length:0,period:175,depth:25,in:10,out:10,shift:0,drift:0},phoneme_expressions:[],phoneme_overrides:[]})),curves:[]})),wave_parts:[]
+ voice_parts:lines.map(l=>({name:p.sections.find(s=>s.id===l.sectionId)?.name??l.id,comment:l.text,track_no:0,position:Math.round(l.start*480),duration:Math.round((l.end-l.start)*480),notes:alignedNotes(l).map((n,i)=>({position:Math.round((n.beat-l.start)*480),duration:Math.round(n.duration*480),tone:n.midi,lyric:n.syllable,pitch:{data:[{x:-40,y:0,shape:"io"},{x:40,y:0,shape:"io"}],snap_first:true},vibrato:{length:0,period:175,depth:25,in:10,out:10,shift:0,drift:0},phoneme_expressions:[],phoneme_overrides:[],...(l.performance?notePerformance(alignedNotes(l),i,p.bpm,l.performance):{})})),curves:l.performance?performanceCurves(l.notes,l.start,l.end,l.performance):[]})),wave_parts:[]
 };}
 export function diffSingerInput(p:SongProject,l:Lyric,dictionary:Record<string,string>){
  const notes=alignedNotes(l),words:string[]=[],phones:string[]=[],counts:number[]=[],pitches:string[]=[],durations:number[]=[],slurs:number[]=[];
