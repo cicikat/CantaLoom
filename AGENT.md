@@ -2,6 +2,8 @@
 
 ## 产品与范围
 
+v0.2 更新：已实际调用用户后台配置的 LLM 并校验两组 SongPlan；已接入绮萱 v2.7.0 真实中文演唱，CPU / DirectML、网页单句重唱、缓存保护及 25 秒 WAV / MP4 实测通过。`server/qixuan.mjs` 调用 `scripts/openutau-bridge/`，桥接器复用未修改的官方 OpenUtau 0.1.576 程序集与声码器，不使用 Python checkpoint 路线、不转换模型。下文旧阶段“真实歌声未接入 / 无真实 Key 验收”已由此更新。细节与后续听感边界见 `docs/QIXUAN.md`。
+
 声屿 SONGYU 是面向零音乐基础用户的本地音乐创作 Web Demo。保留 V3 创意积木的统一视觉，维持 Intro / Verse / Chorus / Outro、每段六轨和约 24 秒作品流程。
 
 当前实现：P0/P1 工作台与真实音符合成；P2.1 AI-Guided Composition 的可执行音乐计划；元音演示及静止歌词 PV 导出。真实中文歌声未接入。本机尚无真实 LLM Key 验收，测试夹具通过不能宣称真实服务已接通。

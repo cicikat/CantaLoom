@@ -1,5 +1,7 @@
 # 声屿 SONGYU
 
+**v0.2 已接入绮萱真实中文演唱**：在「虚拟歌姬」中逐句生成、重唱和比较历史版本；CPU / DirectML 调用官方 OpenUtau 的 DiffSinger 组件。25 秒真实混音与 MP4 已验收，安装、缓存和授权边界见 [绮萱接入说明](docs/QIXUAN.md)。
+
 新增本地[后台管理面板](docs/ADMIN.md)：启动后打开 `http://127.0.0.1:3001/admin`，可配置 URL / API Key / 模型与引擎路径、测试连接、查看生成任务、扫描资源及维护声库注册表。密钥由 Windows DPAPI 加密保存于仓库外，不回显。
 
 器乐新增可选 FluidSynth，支持标准 MIDI、OpenUtau USTX、单句 DiffSinger DS 和外部歌声 WAV 回导；真实中文声库尚未完成演唱验收。当前完整能力和限制以 [后台说明](docs/ADMIN.md) 为准，下文 P2.1 描述保留原阶段边界。

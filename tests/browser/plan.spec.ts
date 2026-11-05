@@ -23,6 +23,7 @@ test('no API: inspiration changes audible PCM at the same seed, and six tracks r
 });
 
 test('planning preserves a locked pitched section and reports the compatibility decision',async({page})=>{
+ await page.route('**/api/health',route=>route.fulfill({json:{llm:false,llmStatus:'local',ffmpeg:true}}));
  await page.goto('/');await page.getByRole('navigation').getByRole('button',{name:/音乐积木/}).click();await page.getByRole('button',{name:'锁定吉他',exact:true}).click();const before=await stored(page),verse=before.sections[1].id;
  await page.getByRole('navigation').getByRole('button',{name:/灵感空间/}).click();await page.getByRole('textbox',{name:'一句话灵感'}).fill('孤独安静的小调，旋律缓缓落下');await page.getByRole('button',{name:'让灵感发芽'}).click();await expect(page.locator('.compatibility-note')).toContainText('保留整段带音高轨道');
  const after=await stored(page);expect(after.tracks.filter((t:any)=>t.sectionId===verse&&t.kind!=='drums')).toEqual(before.tracks.filter((t:any)=>t.sectionId===verse&&t.kind!=='drums'));expect(after.songPlan.key).toEqual(before.songPlan.key);

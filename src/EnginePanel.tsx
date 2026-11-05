@@ -2,7 +2,7 @@ import {useEffect,useRef,useState} from 'react';
 import {type SongProject,kinds} from './model';
 import {midiFile,gmPrograms} from '../shared/midi.mjs';
 import {openUtauProject,diffSingerInput,singingDependency,type SingingVoice} from './singing';
-import {importSinging} from './external-audio';
+import {importSinging,assetVoice} from './external-audio';
 import {download} from './visual';
 import {stringify as yamlStringify} from 'yaml';
 export function EnginePanel({project:p,onChange}:{project:SongProject;onChange:(p:SongProject)=>void}){
@@ -24,5 +24,5 @@ export function EnginePanel({project:p,onChange}:{project:SongProject;onChange:(
  <label>实际声库 <input aria-label="实际声库" placeholder="不指定默认歌姬" value={voiceId} onChange={e=>setVoiceId(e.target.value)}/></label><label>声库版本 <input aria-label="声库版本" value={version} onChange={e=>setVersion(e.target.value)}/></label>
  <label>歌声引擎 <select value={provider} onChange={e=>setProvider(e.target.value as SingingVoice['providerId'])}><option value="openutau-exchange">OpenUtau 文件交换</option><option value="diffsinger">DiffSinger</option></select></label></div>
  <p>USTX 在 OpenUtau 选定声库后导出单句 WAV；WAV 从本句起点开始，保留休止并与本句总时长一致。DS 使用服务端配置的声库音素词典，需先运行 variance 再运行 acoustic。</p>
- {p.lyrics.map((l,i)=>{const asset=p.vocalAssets?.[l.id];const valid=asset&&asset.dependency===singingDependency(p,l,{id:asset.voiceId,version:asset.voiceVersion,label:asset.voiceId,providerId:asset.providerId as SingingVoice['providerId']});return <div className="engine-line" key={l.id}><span>第 {i+1} 句 · {asset?`${valid?'有效':'已过期'} / ${asset.providerId} / ${asset.voiceId} ${asset.voiceVersion}`:'尚未导入真实人声'}</span><button onClick={()=>void ds(l.id)}>导出本句 DS</button><button onClick={()=>{try{save(openUtauProject(p,[l]),`songyu-${i+1}.ustx`)}catch(e){setMessage((e as Error).message)}}}>本句 USTX</button><label>导入本句 WAV <input aria-label={`导入第${i+1}句 WAV`} type="file" accept=".wav" disabled={l.locked||p.tracks.some(t=>t.sectionId===l.sectionId&&t.kind==='vocal'&&t.locked)} onChange={e=>void upload(l.id,e.target.files?.[0])}/></label></div>})}<p role="status">{message}</p></details>;
+ {p.lyrics.map((l,i)=>{const asset=p.vocalAssets?.[l.id];const valid=asset&&asset.dependency===singingDependency(p,l,assetVoice(asset));return <div className="engine-line" key={l.id}><span>第 {i+1} 句 · {asset?`${valid?'有效':'已过期'} / ${asset.providerId} / ${asset.voiceId} ${asset.voiceVersion}`:'尚未导入真实人声'}</span><button onClick={()=>void ds(l.id)}>导出本句 DS</button><button onClick={()=>{try{save(openUtauProject(p,[l]),`songyu-${i+1}.ustx`)}catch(e){setMessage((e as Error).message)}}}>本句 USTX</button><label>导入本句 WAV <input aria-label={`导入第${i+1}句 WAV`} type="file" accept=".wav" disabled={l.locked||p.tracks.some(t=>t.sectionId===l.sectionId&&t.kind==='vocal'&&t.locked)} onChange={e=>void upload(l.id,e.target.files?.[0])}/></label></div>})}<p role="status">{message}</p></details>;
 }

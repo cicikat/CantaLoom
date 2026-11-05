@@ -74,3 +74,12 @@
 - `start.bat --check` 在独立 3307 端口通过，页面、构建资产与 API 均就绪并自行停止。本机回归使用现存 FFmpeg：`D:\aii\ffmpeg-master-latest-win64-gpl-shared\bin\ffmpeg.exe`；该机器路径不固化为源码默认值，可在后台填写。
 - 真实 LLM、真实中文演唱、OpenUtau GUI 导入及听感仍未验收。工程交换与 WAV 夹具测试不能替代这些验收。
 - 配置管理与后续后台需求见 [ADMIN.md](ADMIN.md)。第三方权重与密钥不进入 Git。
+# 2026-11-05 SONGYU v0.2 · 绮萱真实演唱
+
+- 最终 `npm run build`、`npm test`（25/25）、`npm run test:e2e`（11/11）通过；`start.bat --check` 在独立 3307 端口通过。原有锁定回归固定为本地规则夹具，防止后台配置真实 Key 后产生意外调用。
+- 绮萱 v2.7.0、官方 2025.02 声码器与未修改的 OpenUtau 0.1.576 程序集实际推理成功；CPU 21.686 秒、DirectML 16.861 秒生成“海风吹过我的窗”。编辑器实际识别 DIFFS ZH、DIFFSINGER 和绮萱。
+- 网页真实按钮验证单句生成、试听、修改第二句后新音频、第一句缓存不变、历史对比、完整混音及 MP4 下载。首次约 3.3 分钟（含模型加载与全曲合成），后续依赖相同复用缓存。
+- 真实 LLM 两组意图严格校验成功，13.048 / 11.844 秒，2327 / 2266 tokens；锁定鼓轨保留；输出 281 / 664 个器乐音符及不同的非静音 WAV。密钥未输出。
+- `external/runtime/exports/qixuan-acceptance` 已交付请求的 USTX、单句 WAV、伴奏 WAV、人声 WAV、混音 WAV、25 秒 H.264/AAC MP4 与 acceptance-report.md；另有 SHA256、推理、GPU 采样和 LLM 记录。MP4 解码与混音 WAV 的相关性 0.999970。
+- 原测试按钮增加就近结果、忙碌提示、超时处理；实测已有配置可达。不是把“已配置”当作“完整音乐方案已验证”。
+- 主观听感、多音字与长句覆盖仍待进一步试听；GPU 全卡采样含其他作业，不能当作本模型专属峰值。完整限制和路径见 [QIXUAN.md](QIXUAN.md)。

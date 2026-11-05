@@ -25,6 +25,7 @@ export function createPlanner({env=process.env,request=fetch}={}){
     const body=await response.json(),output=planOutputSchema.parse(JSON.parse(body.choices?.[0]?.message?.content??''));
     const result=planResponseSchema.parse({...output,source:'llm',model});
     // A configured key is never proof of a working provider.
+    if(res.locals){res.locals.metrics={model,promptTokens:Number(body.usage?.prompt_tokens)||0,completionTokens:Number(body.usage?.completion_tokens)||0,totalTokens:Number(body.usage?.total_tokens)||0};}
     status='verified';return res.json(result);
    }catch(e){status='unverified';console.error('LLM planning failed:',e.name);return res.status(502).json({error:'LLM 暂不可用或音乐方案校验失败；现有工程已保留，可选择本地规则继续创作。'});}
   },
