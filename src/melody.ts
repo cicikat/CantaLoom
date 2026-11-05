@@ -1,3 +1,5 @@
+import {automaticPhrase} from '../shared/performance.mjs';
+import {buildFreeScore} from '../shared/free-score.mjs';
 import {freeResultSchema,type FreeResult} from '../shared/contracts/free-composition.mjs';
 import {kinds} from './model';
 import {melodyRequestSchema,performanceSchema,type MelodyDraft,type MelodyRequest,type Performance} from '../shared/contracts/melody.mjs';
@@ -25,16 +27,14 @@ export function applyMelodyDraft(p:SongProject,request:MelodyRequest,draft:Melod
  for(const phrase of verified.phrases){const line=next.lyrics.find(l=>l.id===phrase.id)!;if(line.locked||current.phrases.find(l=>l.id===line.id)!.locked||request.targetIds&&!request.targetIds.includes(line.id))continue;line.text=phrase.text;line.notes=structuredClone(phrase.notes);line.version++;if(line.source!=='manual')line.source=draft.source==='llm'?'llm':'local-template';if(phrase.performance)line.performance=phrase.performance;sections.add(line.sectionId)}
  next.melodyDraft=verified;sections.forEach(id=>syncVocal(next,id));return validateProject(record(next,'应用结构化乐句旋律'));
 }
-export function setPhrasePerformance(p:SongProject,id:string,input:Performance){const performance=performanceSchema.parse(input),line=p.lyrics.find(l=>l.id===id);if(!line||line.locked||p.tracks.some(t=>t.kind==='vocal'&&t.sectionId===line.sectionId&&t.locked))throw Error('乐句已锁定');const next=structuredClone(p);next.lyrics.find(l=>l.id===id)!.performance=performance;return record(next,'只调整单句演唱表现')}
+export function setPhrasePerformance(p:SongProject,id:string,input:Performance){const performance=performanceSchema.parse(input),line=p.lyrics.find(l=>l.id===id);if(!line||line.locked||line.performance?.locked||p.tracks.some(t=>t.kind==='vocal'&&t.sectionId===line.sectionId&&t.locked))throw Error('乐句已锁定');const next=structuredClone(p);if(line.performance)next.performanceHistory={...next.performanceHistory,[id]:[line.performance,...(next.performanceHistory?.[id]||[])].slice(0,3)};next.lyrics.find(l=>l.id===id)!.performance=performance;return record(next,'只调整单句演唱表现')}
 
 function emptyFreeProject(intent:string,bpm:number,sections:SongProject['sections']):SongProject{
  const now=new Date().toISOString();return {schemaVersion:1,mode:'free',id:uid(),metadata:{title:'自由创作',idea:intent,createdAt:now,updatedAt:now},bpm,timeSignature:[4,4],style:'自由创作',mood:'待真实规划',sections,tracks:[],lyrics:[],vocalPreset:'澄音',visualScenes:sections.map(s=>({id:uid(),sectionId:s.id,theme:0,source:'procedural'})),assetReferences:[],versions:[],subtitleStyle:'cinema',tapTimes:[]};
 }
 export function projectFromComposition(raw:FreeResult):SongProject{
- const result=freeResultSchema.parse(raw),p=emptyFreeProject(result.input.intent,result.plan.bpm,result.sections);
- p.creationRequestId=result.requestId;p.songPlan=result.plan.songPlan;p.metadata.title=result.plan.title;p.mood=result.plan.mood;p.planning={source:'llm',model:result.model,appliedAt:new Date().toISOString(),compatibility:[]};
- p.lyrics=result.draft.phrases.map(phrase=>{const section=p.sections.find(s=>phrase.start>=s.start&&phrase.end<=s.start+s.beats);if(!section)throw Error('乐句越过段落');return {id:phrase.id,sectionId:section.id,text:phrase.text,start:phrase.start,end:phrase.end,notes:structuredClone(phrase.notes),version:1,locked:!!phrase.locked,source:result.input.lyrics?'manual':'llm',performance:phrase.performance||{preset:'natural'}}});
- validateMelody({intent:result.input.intent,bpm:p.bpm,songPlan:p.songPlan!,phrases:result.draft.phrases.map(l=>({id:l.id,text:l.text,start:l.start,end:l.end,notes:[]}))},result.draft);
- p.melodyDraft=result.draft;p.tracks=p.sections.flatMap(s=>kinds.map(kind=>{const track:SongProject['tracks'][number]={id:uid(),sectionId:s.id,kind,version:1,locked:false,muted:false,notes:[],dependencies:['songPlan',s.id],source:kind==='vocal'?'demo-vowel':'local-composer'};if(kind!=='vocal')track.notes=localComposer.generate(p,track);return track}));
- p.sections.forEach(s=>syncVocal(p,s.id));return validateProject(record(p,'完成本次真实自由创作'));
+ const result=freeResultSchema.parse(raw);validateMelody({intent:result.input.intent,bpm:result.plan.bpm,songPlan:result.plan.songPlan,phrases:result.draft.phrases.map(l=>({id:l.id,text:l.text,start:l.start,end:l.end,notes:[]}))},result.draft);return validateProject(buildFreeScore(result,uid));
 }
+
+export function autoTuneProject(p:SongProject,id?:string){const next=structuredClone(p);for(const l of next.lyrics){if(id&&id!==l.id||l.performance?.locked||l.locked||next.tracks.some(t=>t.kind==='vocal'&&t.sectionId===l.sectionId&&t.locked))continue;const old=l.performance;if(old)next.performanceHistory={...next.performanceHistory,[l.id]:[old,...(next.performanceHistory?.[l.id]||[])].slice(0,3)};const section=next.sections.findIndex(s=>s.id===l.sectionId);const energy=next.songPlan?.sectionEnergy[(['intro','verse','chorus','outro'] as const)[section]]??.6;l.performance=automaticPhrase(l.text,l.notes.map(n=>({...n,syllable:n.syllable||''})),energy,old||{preset:'natural'})}return record(next,'自动规划演唱表现')}
+export function restorePerformance(p:SongProject,id:string){const next=structuredClone(p),line=next.lyrics.find(l=>l.id===id),history=next.performanceHistory?.[id];if(!line||line.locked||line.performance?.locked||next.tracks.some(t=>t.kind==='vocal'&&t.sectionId===line.sectionId&&t.locked)||!history?.length)throw Error('无可恢复调教或已锁定');line.performance=history.shift()!;return record(next,'恢复上一版调教')}

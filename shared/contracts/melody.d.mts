@@ -1,6 +1,6 @@
 import type {z} from 'zod';
 import type {SongPlan} from '../song-plan.mjs';
-export interface Performance {preset:'natural'|'soft'|'strong';transitionMs?:number;vibratoDepth?:number;dynamics?:number;consonantMs?:number}
+export interface Performance {mode?:'auto'|'manual';energy?:number;locked?:boolean;overrides?:({index:number;origin?:'auto'|'manual';locked?:boolean}&Omit<Performance,'overrides'|'mode'|'energy'|'preset'>)[];preset:'natural'|'soft'|'strong';transitionMs?:number;vibratoDepth?:number;dynamics?:number;consonantMs?:number}
 export interface MelodyNote {id:string;beat:number;duration:number;midi:number;velocity:number;syllable:string;locked?:boolean}
 export interface PhrasePlan {id:string;text:string;start:number;end:number;notes:MelodyNote[];motif:string;variationOf?:string;locked?:boolean;performance?:Performance}
 export interface MelodyDraft {version:1;source:'llm'|'local-rules';phrases:PhrasePlan[]}

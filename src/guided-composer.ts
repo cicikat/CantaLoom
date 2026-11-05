@@ -1,3 +1,4 @@
+import {freeArrangement as sharedFreeArrangement} from '../shared/free-score.mjs';
 import type {SongProject,Track,Note,Lyric} from './model';
 import {uid,quantizeTaps} from './model';
 import {effectivePlan} from './song-plan';
@@ -19,7 +20,7 @@ function pitch(plan:SongPlan,position:number,beat:number,variation=0){
 export function sectionEnergy(p:SongProject,sectionId:string){const i=p.sections.findIndex(s=>s.id===sectionId);return effectivePlan(p).sectionEnergy[(['intro','verse','chorus','outro'] as const)[i]];}
 
 export function generateGuided(p:SongProject,t:Track,random:()=>number):Note[]{
- if(p.mode==='free')return freeArrangement(p,t);
+ if(p.mode==='free')return sharedFreeArrangement(p,t,uid);
  const plan=effectivePlan(p),s=p.sections.find(x=>x.id===t.sectionId)!,energy=sectionEnergy(p,s.id),notes:Note[]=[];
  const strength=(.55+plan.intensity*.45)*(.45+energy*.55);
  const add=(at:number,midi:number,duration:number,velocity:number,sound?:Note['sound'])=>{if(at>=s.beats)return;notes.push({id:uid(),beat:s.start+at,midi,duration:Math.min(duration,s.beats-at),velocity:Math.min(1,velocity*strength),...(sound?{sound}:{})});};
@@ -47,18 +48,6 @@ export function generateGuided(p:SongProject,t:Track,random:()=>number):Note[]{
  return notes;
 }
 
-function freeArrangement(p:SongProject,t:Track):Note[]{
- const s=p.sections.find(s=>s.id===t.sectionId)!,plan=effectivePlan(p),energy=sectionEnergy(p,s.id),notes:Note[]=[];
- const add=(beat:number,midi:number,length:number,velocity:number,sound?:Note['sound'])=>{if(beat<s.start+s.beats)notes.push({id:uid(),beat,midi,duration:Math.min(length,s.start+s.beats-beat),velocity:Math.min(1,velocity*(.5+energy*.5)),...(sound?{sound}:{})})};
- for(let beat=s.start;beat<s.start+s.beats;beat+=4){const chord=chordAt(plan,beat),singing=p.lyrics.some(l=>l.start<beat+4&&l.end>beat),gap=!p.lyrics.some(l=>l.notes.some(n=>n.beat<beat+2&&n.beat+n.duration>beat));
-  if(t.kind==='bass'){add(beat,chord[0]-12,1.6,.45);if(energy>.5)add(beat+2,chord[0]-12,1,.38)}
-  if(t.kind==='keys'&&(gap||energy>.35))chord.forEach(n=>add(beat,n,3.4,singing?.12:.23));
-  if(t.kind==='guitar'&&energy>.5)for(const offset of [1.5,3])chord.forEach((n,i)=>add(beat+offset+i*.015,n+12,.3,singing?.08:.15));
-  // Do not double the singer with an unrelated continuous scale exercise.
-  if(t.kind==='melody'&&!singing){const motif=[chord[2]+12,chord[2]+12,chord[1]+12];[0,1,2.5].forEach((offset,i)=>add(beat+offset,motif[i],[.5,1,.75][i],.18))}
-  if(t.kind==='drums'){add(beat,36,.2,.6,'kick');if(energy>.4)add(beat+2,36,.2,.48,'kick');add(beat+3,38,.15,.32,'snare');const step=plan.drumDensity==='sparse'?2:plan.drumDensity==='busy'&&energy>.65?.5:1;for(let at=0;at<4;at+=step)add(beat+at,42,.06,.13,'hat')}
- }return notes;
-}
 
 export function guidedLyricNotes(l:Lyric,p:SongProject,preset:string,version:number):Note[]{
  if(l.notes.some(n=>n.locked))return structuredClone(l.notes);

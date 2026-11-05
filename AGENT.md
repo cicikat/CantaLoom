@@ -62,6 +62,8 @@ v0.2 更新：已实际调用用户后台配置的 LLM 并校验两组 SongPlan�
 
 ## 音频与 PV 边界
 
+检查或运行 OpenUtau 仅使用无窗口 Bridge、程序探测及本机管理诊断 API，不通过电脑操控 OpenUtau GUI；缺少状态时补诊断接口，保留后台安全限制。
+
 - 元音人声是按音符合成的演示，不会读出中文歌词；不得将 TTS、预录歌曲、示例声音或测试夹具包装成真实歌唱/AI 音频生成。
 - 背景是原创程序化 Canvas，不宣称 AI 生图；不得下载或分发未授权声库、歌曲或素材。
 - `src/audio.ts`、`src/visual.ts`、`server/services/export.mjs` 与 `server/routes/export.mjs` 的字幕和 FFmpeg 导出路径是现有稳定链路，修改需有明确需求并做真实导出回归。

@@ -29,3 +29,10 @@
 
 ## v0.3.1 自由创作
 POST `/api/compose` 使用 shared/contracts/free-composition；接口、原子应用与前端待办见 [交接文档](V031_FRONTEND_HANDOFF.md)，实际测试边界见 [后端验收](V031_BACKEND_ACCEPTANCE.md)。新模式不调用旧 plan 模板，后台阶段仅表示真实执行阶段，不是声库任务完成或主观音质通过。
+
+## v0.3.2 自动制作
+
+POST `/api/production` 接受 FreeInput，返回202任务；GET `/api/production/:id` 轮询真实阶段；POST `/api/production/:id/retry/:phraseId` 重试缺失句。契约见 shared/contracts/production，前端使用统一 Client。`ready-for-mix` 不代表视频已导出。自动调教、人工覆盖、分轨与混音接入见 [V032_FRONTEND_HANDOFF.md](V032_FRONTEND_HANDOFF.md)，实测边界见 [V032_BACKEND_ACCEPTANCE.md](V032_BACKEND_ACCEPTANCE.md)。
+
+## v0.3.2
+制作状态、Auto/Manual 表达、混音设置及分轨接口见 [V032_FRONTEND_HANDOFF.md](V032_FRONTEND_HANDOFF.md)；真实运行与未完成的人耳/正式网页验收见 [V032_BACKEND_ACCEPTANCE.md](V032_BACKEND_ACCEPTANCE.md)。
