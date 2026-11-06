@@ -1,5 +1,42 @@
 # 公共契约变更
 
+## 工单 5 A1 · 自由创作 Mock 来源提案（2026-11-07）
+
+状态：提案，待 toge 对下列限定范围确认；尚未修改运行时契约或实现 Mock。
+关联任务：[工单 5 A1](../../CC-Tasks/5-toge-free-creation.md)。Owner / Frontend reviewer：toge；Backend reviewer：待红茶 review，或由 toge 按团队规则明确授权本任务范围。提出 A1 实施不视为已确认本提案的共享字段。
+
+### 标记和工程来源
+
+- 沿用已有 `mock:true`，不新增 `source=mock` 枚举，也不伪造模型用量。为 `FreeResult`、`MelodyResponse`、`MelodyDraft`、`ProductionJob` 增加可选 `mock?:true`，运行时 Zod 与相邻 `.d.mts` 同步；真实响应和旧工程无须补字段。
+- Mock compose / production 的 composition 仍使用兼容的 `source:'llm'` 响应格式，但必须带 `mock:true` 和 `model:'mock-fixture-no-inference'`；这是模拟接口形状，不是实际调用证据。Mock draft 使用 `source:'local-rules', mock:true`，melody 响应外层同样带 `mock:true`。创建、轮询、失败和重试返回的 Mock job 都带该标记。
+- `buildFreeScore` 只增加来源传递分支：Mock 结果写为 `planning.source:'local-rules', planning.mock:true`，保留 draft 的 Mock 标记；未提供手写歌词时，歌词来源写为 `local-template`，提供时仍为 `manual`。真实分支保持原有来源与全部音乐计算。
+- Mock project 即使尚无歌声音频，也能依靠 `planning.mock` / `melodyDraft.mock` 被识别；测试歌声沿用 `mock:true, isDemo:true`。手写词、锁定和非目标句仍按现有校验保护。
+- Client 校验前后拒绝真实模式收到的顶层及已知嵌套 Mock 标记，检查 job 的 project / composition、draft、planning 和歌声资产/历史，防止外层漏标或 Zod 剥离标记后误接收。Mock 模式的新三类响应要求显式标记。
+- 工程导入及启动恢复沿用上述已知来源检查；真实模式拒绝 Mock 工程。继续使用隔离的 localStorage key、`.mock` 文件名和 JSON PV 回执。
+
+### 限定改动范围与兼容
+
+| 文件 / 调用点 | 本次允许实施的变更（待确认） |
+|---|---|
+| `shared/contracts/free-composition.mjs` / `.d.mts` | 仅 FreeResult 可选 Mock 标记 |
+| `shared/contracts/melody.mjs` / `.d.mts` | 仅 MelodyResponse / MelodyDraft 可选 Mock 标记，不改请求和音乐约束 |
+| `shared/contracts/production.mjs` / `.d.mts` | 仅 ProductionJob 可选 Mock 标记，不改 state/stage 和任务语义 |
+| `shared/free-score.mjs` | 仅 Mock 来源传递；不改伴奏、音符、时间轴或自动调教算法 |
+| `src/api/client.ts` | 仅新 Mock 响应来源检查与真实模式拒收；沿用原有 API、超时、校验与错误保护 |
+| `src/features/project/files.ts`、必要的前端来源检查 helper | 仅 Mock 工程导入/恢复隔离；不重写或删除已有存档 |
+| `src/api/mock.ts`、必要的前端 Mock helper 与前端测试 | compose / melody / production 的本地固定数据、任务状态及重试；未知路由继续 404 |
+
+不修改 server、真实 LLM / 声库 / 桥接、`src/melody.ts`、`src/model.ts` 或音乐算法。不接 A2 新页面、调教控件或混音控件，不推送或部署。
+
+### 拟验证与交接
+
+- 契约保留 Mock 标记，真实响应与旧工程继续通过，Mock 工程应用/保存/恢复后不变成真实 LLM 来源。
+- compose 保留 1–8 行手写歌词；melody 保留非目标句、锁定及手写内容；测试数据也走既有音乐校验，不放宽约束。
+- production 覆盖创建、处理中、成功、失败、404/任务丢失与单句重试，重试保留已完成资产；故障场景通过仅测试端可控入口选择，不往真实请求新增字段。
+- 真实 Client 拒绝顶层/嵌套 Mock 数据；Mock 全流程不调用网络、引擎或后台；测试音明确标记。
+- 实施后执行 build、相关定向测试和现有 Mock 页面回归；结果写回工单与迭代日志。A1 完成不代表 A2 页面接通、真实引擎或人工听感验收。
+- 示例由前端依据已核对契约编写并标注为夹具；红茶实际调用示例与环境仍跟踪[工单 4](../../CC-Tasks/4-blacktea-integration.md)。关联 PR：未创建。
+
 2026-11-06 文档说明：下文 v0.3–v0.3.2 的授权是对应历史任务记录，不适用于新字段或新任务；本次只整理说明，未修改任何 Schema、类型、Client 或 Mock。现行流程见[团队工作流](../../docs/TEAM_WORKFLOW.md)，当前缺口见[Toge 工单](../../CC-Tasks/5-toge-free-creation.md)。
 
 ## v0.2.1
