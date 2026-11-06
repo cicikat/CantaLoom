@@ -33,6 +33,18 @@
 | `03_patchlab_playful.html` | 视觉原型参考，不是当前应用入口 |
 | `dist/`、`node_modules/`、测试输出 | 可生成的本机产物，忽略提交；不自行清理他人文件 |
 
+<a id="launch"></a>
+
+## 日常启动与制作准备
+
+「打开声屿.bat」是面向使用者的入口，转交现有 start.bat，保留所有参数与退出码；本机桌面「声屿」快捷方式指向它，不维护第二套构建/启动脚本。既有启动器负责环境/端口检查、按 lockfile 补依赖、构建、启动同源服务、确认页面与资产后打开浏览器。`--check` 不打开浏览器并在检查后退出，`--no-open` 保持服务但不打开浏览器。原型保留原内容并增加设计参考提示。
+
+useProductionReadiness 通过既有 health / engines / qixuan Client 只读检查本机配置与资源；在进入页面、回到窗口及点击「重新检查」时刷新，使用代次保护丢弃过期检查结果。它接管原 useStudio 的 health 刷新，不新增 API 或改服务端设置。当前 production 服务要求 LLM、伴奏音源、歌声服务和 FFmpeg；缺项/未连接时前端禁用自动制作提交，给出本机设置入口及可立即进入的本地积木。详情默认折叠，不要求使用者分辨开发模式或输入命令。
+
+正式构建使用同源 `/admin`，开发联调沿用原有后端 loopback 管理地址；管理限制不变。前置检查不调用 LLM、渲染器或下载资源；llmStatus 继续来自真实 health，资源就绪不记为实际上游调用成功。Mock 仍为显式测试数据，真实模式没有自动回落 Mock。已有后台受理的任务、当前工程与存档不因准备状态刷新被改写。
+
+本次入口验收与实机资源缺项见 [工单 13](../CC-Tasks/已完成/13-easy-launch.md)、[启动记录](iteration-log.md#easy-launch)。
+
 <a id="project-data"></a>
 
 ## SongProject、SongPlan 与保护策略

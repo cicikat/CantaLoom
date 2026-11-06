@@ -6,6 +6,7 @@ import {effectivePlan} from '../song-plan';
 import {api} from '../api/client';
 import {usePlayer} from './usePlayer';
 import {useProduction} from './useProduction';
+import {useProductionReadiness} from './useProductionReadiness';
 import {STORAGE,initialProject,canAutoSave,readProject,exportProject} from '../features/project/files';
 import {exportWavFile,exportPVFile} from '../features/export/files';
 export function useStudio(){
@@ -16,12 +17,12 @@ export function useStudio(){
  const llmLabel=api.mock?'MOCK 固定测试方案 · 未调用 LLM':health.llmStatus==='verified'?'真实 LLM · 最近一次方案已校验':health.llm?'LLM 已配置 · 真实调用未验证':'本地规则 · 未调用 LLM';
  const importRef=useRef<HTMLInputElement>(null),toastTimer=useRef<ReturnType<typeof setTimeout>|undefined>(undefined),lastTap=useRef(0),requestToken=useRef(0);
  const production=useProduction(next=>{change(next);setIdea(next.metadata.idea);setStyle(next.style);setSection('');notify('自由作品已应用，可以试听了')},()=>{requestToken.current++});
+ const readiness=useProductionReadiness(health,setHealth);
  const selected=p.sections.find(s=>s.id===section)??p.sections[1];const length=p.sections.reduce((n,s)=>n+s.beats,0)*60/p.bpm;let tapBpm:number|undefined;try{tapBpm=estimateBpm(taps)}catch{/* need 4 taps */}
  function notify(message:string){setToast(message);clearTimeout(toastTimer.current);toastTimer.current=setTimeout(()=>setToast(''),4000)}
  function change(next:SongProject){if(next===p)return;production.invalidate();requestToken.current++;seek(0);setP(next)}
  function mutate(action:string,fn:(draft:SongProject)=>void){const next=structuredClone(p);fn(next);change(record(next,action))}
  useEffect(()=>{if(!autoSave){setSaved('旧存档格式异常，请导出或手动保存');return}try{localStorage.setItem(STORAGE,JSON.stringify(p));setSaved('已保存在此浏览器')}catch{setSaved('存储已满，请导出工程')}},[p,autoSave]);
- useEffect(()=>{const refresh=()=>{api.health().then(h=>setHealth({...h,available:true})).catch(()=>{})};refresh();window.addEventListener('focus',refresh);return()=>window.removeEventListener('focus',refresh)},[]);
  useEffect(()=>()=>clearTimeout(toastTimer.current),[]);
  function tap(){const now=performance.now();if(now-lastTap.current<180)return;const next=now-lastTap.current>1800?[]:taps;lastTap.current=now;setTaps([...next,now].slice(-8));void tapAudio().catch(()=>notify('浏览器暂时无法启动声音'))}
  function apply(){try{if(!tapBpm)throw Error('请连续敲击 4–8 次');if(p.tracks.some(t=>t.kind==='drums'&&t.locked))throw Error('鼓点已锁定，请先在音乐积木中解锁');change(applyRhythm(p,taps,tapBpm,complete));notify(`已量化 ${taps.length} 次真实敲击 · ${tapBpm} BPM`);setSection(p.sections[1].id);setPage(1)}catch(e){notify((e as Error).message)}}
@@ -53,5 +54,5 @@ export function useStudio(){
  function rewriteMelody(id:string){mutate('重写单句旋律',next=>{const line=next.lyrics.find(x=>x.id===id)!;line.version++;line.notes=lyricNotes(line,next.vocalPreset,line.version,next);syncVocal(next,line.sectionId)})}
  function newProject(){change(createProject());setIdea('海风吹过夏天的轻快歌');setStyle('海盐汽水');setPage(0);setAutoSave(true);setExportOpen(false)}
  const lyricLocked=(sectionId:string)=>!!p.tracks.find(t=>t.sectionId===sectionId&&t.kind==='vocal')?.locked;
- return {p,page,setPage:(value:number)=>{if(value!==page)production.invalidate('已离开输入页，上次制作结果不会覆盖当前工程。');requestToken.current++;setPage(value)},section,setSection,idea,setIdea:(value:string)=>{production.invalidate();requestToken.current++;setIdea(value)},style,setStyle:(value:Style)=>{production.invalidate();requestToken.current++;setStyle(value)},taps,setTaps,complete,setComplete,time,playing,busy,toast,setToast,saved,health,exportOpen,setExportOpen,setAutoSave,planError,plan,llmLabel,importRef,lastTap,selected,length,tapBpm,notify,stop,seek,play,change,mutate,tap,apply,develop,toggleStep,editLyric,exportWav,exportPV,importProject,saveProject,manualSave,recordChange,regenerateAll,regenerateTrack,changePreset,rewriteMelody,newProject,lyricLocked,production};
+ return {p,page,setPage:(value:number)=>{if(value!==page)production.invalidate('已离开输入页，上次制作结果不会覆盖当前工程。');requestToken.current++;setPage(value)},section,setSection,idea,setIdea:(value:string)=>{production.invalidate();requestToken.current++;setIdea(value)},style,setStyle:(value:Style)=>{production.invalidate();requestToken.current++;setStyle(value)},taps,setTaps,complete,setComplete,time,playing,busy,toast,setToast,saved,health,exportOpen,setExportOpen,setAutoSave,planError,plan,llmLabel,importRef,lastTap,selected,length,tapBpm,notify,stop,seek,play,change,mutate,tap,apply,develop,toggleStep,editLyric,exportWav,exportPV,importProject,saveProject,manualSave,recordChange,regenerateAll,regenerateTrack,changePreset,rewriteMelody,newProject,lyricLocked,production,readiness};
 }
