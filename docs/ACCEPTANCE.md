@@ -89,3 +89,9 @@
 - 交付入口、职责、契约、Mock、Git 工作流与本轮完整验收记录见 [V021_ACCEPTANCE.md](V021_ACCEPTANCE.md)。
 - 构建通过、31/31 单元与接口、11/11 真实模式 E2E、2/2 无后端 Mock E2E、独立 3102 端口启动检查通过。
 - 绮萱 CPU 实际重唱、缓存保护、FluidSynth 及 25 秒 H.264/AAC MP4 已测试；本轮没有新增真实上游 LLM 调用，不以 Mock 或接口夹具替代真实推理。
+
+# 2026-11-06 v0.3.1 后端
+完整自动回归通过；新自由网页与人工听感待小由接线后验收，详见 [V031_BACKEND_ACCEPTANCE.md](V031_BACKEND_ACCEPTANCE.md)。
+
+# 2026-11-06 v0.3.2 自动调教/混音
+最终 build、48/48 单元接口、11/11 真实引擎 E2E、2/2 Mock、启动检查通过。三组新输入真实后端制作和浏览器试听/导出完成；新正式网页输入与人工听感未验收，详见 [V032_BACKEND_ACCEPTANCE.md](V032_BACKEND_ACCEPTANCE.md)。

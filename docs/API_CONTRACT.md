@@ -26,3 +26,13 @@
 开发响应可带 `mock:true`；Mock 歌声音频必须同时 `isDemo:true`，真实绮萱必须 `isDemo:false`。Mock plan 的 source 保持旧 wire 格式以复用现有 Schema，但显式带 mock/model 标记；应用工程时记为 `source:local-rules, mock:true`，UI 显示固定测试方案，不记录真实 LLM 成功。Mock export 响应是明确标注的 JSON 状态回执。生产构建强制使用真实模式，不能通过 `VITE_API_MODE=mock` 冒充实际推理。
 
 变更流程见 [TEAM_WORKFLOW.md](TEAM_WORKFLOW.md) 和 [共享变更记录](../shared/contracts/CHANGELOG.md)。
+
+## v0.3.1 自由创作
+POST `/api/compose` 使用 shared/contracts/free-composition；接口、原子应用与前端待办见 [交接文档](V031_FRONTEND_HANDOFF.md)，实际测试边界见 [后端验收](V031_BACKEND_ACCEPTANCE.md)。新模式不调用旧 plan 模板，后台阶段仅表示真实执行阶段，不是声库任务完成或主观音质通过。
+
+## v0.3.2 自动制作
+
+POST `/api/production` 接受 FreeInput，返回202任务；GET `/api/production/:id` 轮询真实阶段；POST `/api/production/:id/retry/:phraseId` 重试缺失句。契约见 shared/contracts/production，前端使用统一 Client。`ready-for-mix` 不代表视频已导出。自动调教、人工覆盖、分轨与混音接入见 [V032_FRONTEND_HANDOFF.md](V032_FRONTEND_HANDOFF.md)，实测边界见 [V032_BACKEND_ACCEPTANCE.md](V032_BACKEND_ACCEPTANCE.md)。
+
+## v0.3.2
+制作状态、Auto/Manual 表达、混音设置及分轨接口见 [V032_FRONTEND_HANDOFF.md](V032_FRONTEND_HANDOFF.md)；真实运行与未完成的人耳/正式网页验收见 [V032_BACKEND_ACCEPTANCE.md](V032_BACKEND_ACCEPTANCE.md)。

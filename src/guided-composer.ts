@@ -1,3 +1,4 @@
+import {freeArrangement as sharedFreeArrangement} from '../shared/free-score.mjs';
 import type {SongProject,Track,Note,Lyric} from './model';
 import {uid,quantizeTaps} from './model';
 import {effectivePlan} from './song-plan';
@@ -19,6 +20,7 @@ function pitch(plan:SongPlan,position:number,beat:number,variation=0){
 export function sectionEnergy(p:SongProject,sectionId:string){const i=p.sections.findIndex(s=>s.id===sectionId);return effectivePlan(p).sectionEnergy[(['intro','verse','chorus','outro'] as const)[i]];}
 
 export function generateGuided(p:SongProject,t:Track,random:()=>number):Note[]{
+ if(p.mode==='free')return sharedFreeArrangement(p,t,uid);
  const plan=effectivePlan(p),s=p.sections.find(x=>x.id===t.sectionId)!,energy=sectionEnergy(p,s.id),notes:Note[]=[];
  const strength=(.55+plan.intensity*.45)*(.45+energy*.55);
  const add=(at:number,midi:number,duration:number,velocity:number,sound?:Note['sound'])=>{if(at>=s.beats)return;notes.push({id:uid(),beat:s.start+at,midi,duration:Math.min(duration,s.beats-at),velocity:Math.min(1,velocity*strength),...(sound?{sound}:{})});};
@@ -45,6 +47,7 @@ export function generateGuided(p:SongProject,t:Track,random:()=>number):Note[]{
  }
  return notes;
 }
+
 
 export function guidedLyricNotes(l:Lyric,p:SongProject,preset:string,version:number):Note[]{
  if(l.notes.some(n=>n.locked))return structuredClone(l.notes);
