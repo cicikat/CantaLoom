@@ -10,6 +10,7 @@
 
 - 工单：[13 · 方便使用的启动入口](../CC-Tasks/已完成/13-easy-launch.md)；日常使用：[README](../README.md#launch)；接线：[启动架构](ARCHITECTURE.md#launch)。toge 指出交付不应要求分辨原型和开发命令，本轮补使用入口，未修改后端、配置、共享契约或音乐算法。
 - 根目录「打开声屿.bat」仅转交既有 start.bat，保留参数/退出码，使用原依赖检查、构建、启动和自动打开页面链路。本机桌面创建「声屿.lnk」，目标与工作目录核对正确，未覆盖已有快捷方式。旧 LOOP HTML 原型完整保留，增加设计参考提示与实际入口说明。
+- 同轮收尾发现默认 3001 已有实际声屿服务运行；未关闭该进程，补充薄预检 helper，仅在 health、页面标识、资产路径与 JS 内容哈希匹配当前 dist 后复用并打开。不存在/不匹配则交回原 start.bat，check/no-open 不开浏览器。新增启动器测试 1/1 与语法检查通过，中文入口 --check 实际输出 reused current app；不再让重复打开进入端口占用错误。
 - 制作页只读检查 health / engines / qixuan 的现有状态，缺项/失联时禁用自动制作提交，显示「打开本机设置」「重新检查」和直接可用的「先玩音乐积木」，缺项详情默认折叠。检查不调用模型、安装资源或写入配置，不伪造 verified，不自动回落 Mock；原有本地创作/试听和存档保留。
 - 验证：构建通过；中文入口 `--check` 在默认真实服务链路通过，检查后正常退出。实际正式构建以临时同源 Node 服务和隔离 Chromium 完成本地灵感生成、播放状态/进度、缺项提交保护，页面错误 0，没有请求实际推理；只关闭本次验证创建的服务。`npm run test:e2e -- tests/browser/launch.spec.ts --output=D:/vibe-coding_/temp/songyu-launch-test-results` 4/4 通过（能力响应为明确测试夹具）；`npm run test:e2e:mock -- --output=D:/vibe-coding_/temp/songyu-launch-mock-regression --grep="frontend alone|A2 page makes|C targeted"` 3/3 通过，覆盖旧页、A2 与 C 代表性流程。启动器未改动，无需另造后端启动测试。
 - 当前机器实际检查 LLM / 伴奏音源 / 中文演唱声库 / FFmpeg 均未就绪；本地规则创作和浏览器合成试听已实测可用。新启动入口不代表真实 AI 制作可用，资源与正式听感仍交接 [工单 4](../CC-Tasks/4-blacktea-integration.md) / [工单 6](../CC-Tasks/6-joint-acceptance.md)。临时截图/测试输出不作为长期交付资产；正式可重复验证在上述测试文件与入口中。
