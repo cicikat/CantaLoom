@@ -4,27 +4,25 @@
 
 ## 双人分工：所有 Agent 必须遵守
 
-先读 `docs/TEAM_WORKFLOW.md` 和本轮工单；本地若有 `协作.md` 也先阅读，明确自己代表谁。没有明确 Owner 时先按当前工单范围工作，不接管另一人的区域。
+先读 `docs/TEAM_WORKFLOW.md`、`协作.md` 和任务对应计划。当前进度与后续分工只在 `docs/plans/free-creation-integration.md` 维护 checkbox；`cc-tasks/` 是历史工单。没有明确 Owner 时先按当前任务范围工作，不接管另一人的区域。
 
-- **红茶 / Backend / Agent**：server、引擎桥接 scripts、音乐核心计算、音频缓存/混音/FFmpeg、后端测试。本轮 `cc-tasks/1.md` 属于红茶。
+- **红茶 / Backend / Music Engine**：server、引擎桥接 scripts、音乐核心计算（含 `src/melody.ts`）、音频缓存、FFmpeg、后端测试。浏览器混音与跨层适配按团队工作流共同确认。
 - **小由 / Frontend / UX**：App.tsx、components、hooks、\*Panel.tsx、CSS、钢琴卷帘与调教交互、前端 Mock、前端 E2E。红茶不得顺手改这些文件，不以修构建、优化架构或完善功能为由扩大范围。
 - 前端 Agent 同样不得自行改真实 LLM、作曲算法、声库、推理、服务端缓存和桥接器。
-- **共享边界**：shared、src/model.ts、src/api/client.ts 及跨层业务适配。先在 shared/contracts/CHANGELOG.md 写字段、兼容性、调用点和测试说明，经双方或用户明确授权后再改。本轮用户已授权红茶按工单统一确认新契约；这不授权改小由 UI。
+- **共享边界**：shared、src/model.ts、src/api/client.ts 及跨层业务适配。先在 shared/contracts/CHANGELOG.md 写字段、兼容性、调用点和测试说明，经双方或 toge 明确授权后再改。具体授权必须关联任务/范围；历史工单授权不自动延伸到新任务，也不授权代改另一方 UI。
 - 开始、提交、推送前检查 git status / diff；只暂存本轮拥有的文件。保留其他人的未提交改动与工单，不执行全仓 git add、reset、clean、覆盖还原或强推。
-- 各自使用 feature/frontend-_ / feature/backend-_ 分支；main 保持稳定。跨区发现问题写交接说明，不擅自代改。测试失败若属于另一方工作，报告具体影响和证据。
+- 各自使用 `feature/frontend-*` / `feature/backend-*` 分支；main 保持可演示。跨区发现问题写交接说明，不擅自代改。测试失败若属于另一方工作，报告具体影响和证据。
 - 完成时写清实际实现、契约接入方式、真实与 Mock 测试边界、交接项和提交；不得把后端接口完成说成小由 UI 已接通。
 
 ## 产品与范围
 
-v0.2 更新：已实际调用用户后台配置的 LLM 并校验两组 SongPlan；已接入绮萱 v2.7.0 真实中文演唱，CPU / DirectML、网页单句重唱、缓存保护及 25 秒 WAV / MP4 实测通过。`server/qixuan.mjs` 调用 `scripts/openutau-bridge/`，桥接器复用未修改的官方 OpenUtau 0.1.576 程序集与声码器，不使用 Python checkpoint 路线、不转换模型。下文旧阶段“真实歌声未接入 / 无真实 Key 验收”已由此更新。细节与后续听感边界见 `docs/QIXUAN.md`。
+声屿 SONGYU 是面向零音乐基础的本地音乐创作 Web Demo，保留 V3 创意积木视觉。旧模式维持四段/六轨和约 24 秒流程；自由作曲模式保留四段，但支持 1–8 行歌词、20–30 秒目标时长，不能把四句固定模板限制套到新模式。
 
-声屿 SONGYU 是面向零音乐基础用户的本地音乐创作 Web Demo。保留 V3 创意积木的统一视觉，维持 Intro / Verse / Chorus / Outro、每段六轨和约 24 秒作品流程。
-
-当前实现：P0/P1 工作台与真实音符合成；P2.1 可执行音乐计划；绮萱真实中文歌声、FluidSynth 及歌词 PV。真实验收以本轮实际运行记录为准，历史记录与 Mock 不代表当前引擎验收。
+当前能力、版本含义与证据入口见 `README.md`；任务进度见当前接入计划。已有真实 LLM、绮萱演唱与导出历史记录，不得继续写成“尚未接入”；也不得把历史记录当成本机刚刚通过的验收。最新后端能力不等于正式新页面已接通，Mock、真实引擎、人工听感必须分别报告。
 
 ## 架构与职责边界
 
-补充（本地引擎与后台）：`server/admin-config.mjs` 负责仓库外原子配置与 Windows DPAPI；`server/admin.mjs` 负责仅限本机的管理 API、任务与资源台；`server/public/` 为无构建管理页面。管理 API 不得返回密钥、记录请求体或上游原始错误，不能回退明文存储。`server/instruments.mjs` / `server/singing.mjs` 负责外部引擎，`src/singing.ts` 负责工程交换与依赖，`src/audio.ts` 仍为试听与全部导出的统一混音入口。详见 `docs/ADMIN.md`。下文“不需要 Python / 不需要音库”仅适用于原有 Web Audio 模式。
+`server/admin-config.mjs` 负责仓库外原子配置与 Windows DPAPI；`server/admin.mjs` 负责仅限本机的管理 API、任务与资源台；`server/public/` 为无构建管理页面。管理 API 不得返回密钥、记录请求体或上游原始错误，不能回退明文存储。外部引擎在 server/services 与保留的 singing 文件交换入口，`src/singing.ts` 负责工程交换与依赖，`src/audio.ts` 为试听与导出的统一混音入口。依赖与后台边界见 `docs/ADMIN.md`；Mock/Web Audio 不要求声库，真实演唱需要已授权资源。
 
 这是**单仓库、前后端分层、浏览器端承担创作计算的轻量 Web 架构**。不是大型 Agent 系统，没有数据库、登录或微服务。
 
@@ -34,6 +32,7 @@ v0.2 更新：已实际调用用户后台配置的 LLM 并校验两组 SongPlan�
 - `src/composition.ts` 负责原子应用计划、异步规划入口、锁定和手工内容保护；`src/guided-composer.ts` 将计划变成实际音符；`src/composer.ts` 保留旧工程作曲器、量化、版本与单轨操作。
 - `src/App.tsx` 只组合页面；`src/hooks/` 协调状态、播放器和歌声操作，`src/features/` 管工程、导出和生成结果事务。不要在 UI 中新增 fetch / 缓存依赖校验。`src/api/client.ts` 是统一 API 边界，Mock 只用于开发测试。
 - `shared/contracts/` 统一公开请求/响应；运行时 `.mjs` 与相邻 `.d.mts`、Mock、测试必须同步。SongPlan 只在原共享文件定义。团队分工与 Git 规范见 `docs/TEAM_WORKFLOW.md`，接口见 `docs/API_CONTRACT.md`。
+- `shared/` 还包含 melody、performance、free-timeline、free-score 等共用纯计算；不把共享目录理解为只有 Schema，也不在其中加入 Node I/O。
 - `server/routes/` 管 HTTP，`server/services/` 管引擎服务。旧 instruments/qixuan/planner 入口只是兼容导出。禁止服务端导入 React 或 src。
 - 所有事件以 beat 保存，播放、字幕、导出统一按 `beat * 60 / bpm` 换算。
 
@@ -73,7 +72,7 @@ v0.2 更新：已实际调用用户后台配置的 LLM 并校验两组 SongPlan�
 
 ## 验证与交付
 
-每次任务开始，先检查当前分支、工作区状态和 origin/main。不得覆盖未提交修改。新任务从最新 main 建立功能分支；已有任务保留原分支。提交后推送自己的分支并创建 PR，不自动合并 main。遇到冲突时先报告冲突文件和原因，不擅自选择覆盖哪一方。
+每次任务开始，先检查当前分支、工作区状态和 origin/main。不得覆盖未提交修改。本仓库实行功能分支 + PR：新任务从最新 main 建分支，已有任务保留原分支，按任务范围暂存并本地提交。进入协作交付时推送自己的分支并创建 PR，不自动合并 main；当前任务明确要求“仅本地”或“不推送”时不做远端操作。遇到冲突先报告文件和原因，不擅自覆盖。
 
 修改前检查工作区，保护并行改动。根据改动范围运行必要检查，不以构建成功代替设备/真实模型/生产验收。
 
@@ -89,6 +88,6 @@ start.bat --check
 
 测试应验证真实 PCM 非静音、同 ID/版本的不同意图产生实际音符/声音差异、锁定数据不变、失败保留工程、无 API 可本地创作，并保留原有节奏/保存/字幕/WAV/MP4 回归。夹具响应须明确标注；真实手机、Safari 和真实 LLM 只在实际测试后宣称通过。
 
-维护 `README.md`、`docs/ACCEPTANCE.md` 和相关阶段文档，交付时说明文件、实际变化、执行结果、未验证项与下一步。P2.1 详细设计与测试边界见 `docs/P21.md`；原型与基础取舍见 `docs/IMPLEMENTATION.md`；能力和许可评估见 `docs/PROVIDERS.md`。
+按 `docs/TEAM_WORKFLOW.md` 的文档职责维护：当前能力看 README，待办 checkbox 留在对应计划。本协作仓库沿用原有记录方式：阶段完成摘要按日期追加到 `docs/ACCEPTANCE.md`，具体证据放版本验收报告，接入方法放交接文档；不再重复维护另一份迭代日志。纯文档任务检查链接、内容一致性与 diff，不运行构建/引擎测试。历史方案和验收按日期保留，不能作为当前待办或复用为新测试结果。
 
 推送排除 `node_modules/`、`dist/`、`.env`、`exports/`、测试输出和构建缓存，保留 `.env.example`。不要为了上传而修改仓库可见性或强推覆盖远端历史。

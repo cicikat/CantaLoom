@@ -1,5 +1,7 @@
 # v0.3.1 后端分支验收（2026-11-06）
 
+> 本阶段历史验收，保留当时的未执行项与来源边界；后续执行记录见 [v0.3.2](V032_BACKEND_ACCEPTANCE.md)，当前前端接线/共同验收以[计划](plans/free-creation-integration.md)为准。本次未重跑测试。
+
 基线 origin/main 480c924。仅红茶后端及工单授权的共享边界；小由 UI、hooks、Mock 和前端 E2E 源码未修改。
 
 已通过：npm run build；npm test 42/42；npm run test:e2e:mock 2/2；npm run test:e2e 11/11；PORT=3102 下 start.bat --check；git diff --check。

@@ -1,118 +1,120 @@
-# SONGYU v0.2.1 两人协作
+# SONGYU 两人协作工作流
 
-单仓库、React + Vite / Node + Express，通过共享契约集成。音乐计算仍可在浏览器运行。OpenUtau、FluidSynth、LLM、FFmpeg 沿用原实现。
+本文件维护稳定流程与目录所有权；当前能力见 [README](../README.md)，任务 checkbox 见[接入计划](plans/free-creation-integration.md)。包版本与能力阶段不是同一概念；后端交付、Mock 可用、页面接线和完整验收分别记录。
 
-## 从这里开始
+## 开发入口与依赖
 
-需要 Node.js 22.12+。两人各自 clone 同一仓库，分别 `npm ci`。
-
-前端成员（不安装任何引擎，不启动 Node 后端）：
+需要 Node.js 22.12+，两人各自 clone 仓库并在根目录执行 `npm ci`。前端默认无需引擎：
 
 ```powershell
 npm run dev:mock
-# http://127.0.0.1:5173
-npm run test:e2e:mock
+# http://127.0.0.1:5173，仅 Vite，不启动后端
 ```
 
-后端成员（不构建、不修改 React）：
+Mock 当前覆盖旧工作台；compose / melody / production 仍待扩展，不能把“已有 Mock”理解为新流程已经可用。后端独立运行 `npm run dev:backend`；不需要改 JSX，交付时仍按影响范围验证构建和相关测试。
 
-```powershell
-npm run dev:backend
-# http://127.0.0.1:3001/api/health；修改服务端文件自动重启
-npm test
-```
+真实联调：分别启动 `npm run dev:frontend` / `npm run dev:backend`，或同机 `npm run dev`。复制 `.env.development.example` 为 `.env.development.local`，配置 `VITE_API_PROXY_TARGET=http://127.0.0.1:3001`（或 SSH 本地转发端口）。不要在 `.env.local` 设置 Mock 开关覆盖团队模式。所有 `VITE_` 值对浏览器公开，禁止写密钥；后端端口/密钥放本机 `.env` 或加密后台配置。
 
-联调前端：`npm run dev:frontend`；本机同时启动两端：`npm run dev`。构建演示继续使用 `start.bat` 或 `npm run build` / `npm start`。
+跨电脑优先 SSH 将队友公共 API 转发到自己的 loopback 端口。不修改后端 `127.0.0.1` 监听地址，不公开管理端口，不为联调解除 Host / Origin / CSRF / DPAPI 限制。后台只能直接访问后端本机地址，默认 `http://127.0.0.1:3001/admin`；Vite 不代理 `/api/admin`、`/admin`、`/admin-assets`。
 
-将 `.env.development.example` 复制为 `.env.development.local`，设置 `VITE_API_PROXY_TARGET=http://127.0.0.1:3001`（可以改成本地转发端口）。`VITE_API_MODE=real` 是默认值；`dev:mock` 使用提交的 `.env.mock`。不要在 `.env.local` 中设置 Mock 开关覆盖团队模式。后端 `PORT` 与密钥仍在 `.env` 或本地加密后台配置。所有 `VITE_` 值对浏览器公开，禁止写密钥。
-
-跨设备联调优先用 SSH 将队友 API 转发到自己的 loopback 端口，再改 Vite 代理目标。不要修改后端 `127.0.0.1` 监听地址，不开公网管理端口。Vite 默认也只监听 loopback，不代理 `/api/admin`、`/admin`、`/admin-assets`。后台直接打开后端本机地址（默认 `http://127.0.0.1:3001/admin`）；更改端口后直接使用对应端口。原有 Host / Origin / CSRF / DPAPI 限制保留。
+真实演唱需要已授权声库、声码器与 OpenUtau 桥接，器乐可选 FluidSynth，真实 MP4 需要 FFmpeg。第三方资源与密钥不进 Git。部分实测脚本仍有原机器绝对路径，按[计划 B](plans/free-creation-integration.md)核对，不承诺环境变量能覆盖所有历史脚本。
 
 ## 文件所有权
 
-| Owner | 负责的路径和职责 |
+| Owner | 路径和职责 |
 |---|---|
-| Frontend Owner | `src/App.tsx`、`src/components/`、`src/*Panel.tsx`、`src/hooks/`、CSS、Canvas 展示、音轨可视化、歌姬展示、`src/api/mock.ts`、前端 E2E |
-| Backend / Agent Owner | `server/`、`scripts/` 的引擎桥接、LLM、FluidSynth、音频缓存、FFmpeg、后端测试；`src/composer.ts`、`guided-composer.ts`、`song-plan.ts`、`composition.ts`、`singing.ts` 的音乐计算 |
-| 协作适配边界 | `src/audio.ts` 是浏览器混音引擎；`src/external-audio.ts` 是资产适配；`src/features/` 是用例；修改它们先在 PR 中说明影响并由另一方看接口，不为了所有权强制搬进 Node |
-| Shared Contract | `shared/`（含 MIDI、SongPlan、API Schema/声明）、`src/model.ts` 的工程数据、`src/api/client.ts`、Vite/package/CI 配置；两人共同确认 |
+| 小由 / Frontend / UX | `src/App.tsx`、`components/`、`*Panel.tsx`、`hooks/`、CSS、Canvas 展示、钢琴卷帘与调教交互、`src/api/mock.ts`、前端浏览器测试 |
+| 红茶 / Backend / Music Engine | `server/`、引擎/实测 scripts、音乐核心计算、服务端音频缓存与 FFmpeg、后端测试；`src/composer.ts`、`guided-composer.ts`、`song-plan.ts`、`composition.ts`、`singing.ts`、`melody.ts` |
+| 跨层适配，双方确认 | `src/audio.ts` / `audio-mix.ts` 浏览器混音、`external-audio.ts` 资产适配、`src/features/` 用例；先明确此次修改 Owner、调用点与影响，由另一方看接口，不为目录所有权搬进 Node |
+| 公共契约与配置，双方确认 | `shared/`（契约、声明、共用纯音乐计算）、`src/model.ts`、`src/api/client.ts`、Vite/package/Playwright/CI 配置 |
+| 文档 | 各自更新任务相关说明与证据；协作规则/共同计划变更在任务或 PR 说明，不能通过改文档暗中扩大代码授权 |
 
-UI 只触发用例，不自行拼 fetch 或重算缓存依赖。后台路由只处理 HTTP 边界，服务处理引擎；服务端不导入 `src/`。共享契约禁止环境读取、密钥和 Node I/O。旧的平铺音乐模块有真实调用方，保留原路径，避免为搬目录制造冲突。
+不得以修构建、完善功能为由代改另一方区域。跨区问题写清证据和影响后交接。没有明确 Owner 时只做当前明确范围。UI 触发用例，HTTP 经统一 Client；服务端不导入 React 或 `src/`；shared 不做 I/O、不读取环境或秘密。保留有真实调用方的旧模块路径。
 
-## 实际目录
+## 目录用途
 
-```text
-src/
-  App.tsx                     页面组合
-  components/                 Landscape / Notes 展示
-  hooks/                      useStudio / usePlayer / useQixuan
-  features/
-    project/files.ts          工程恢复、导出及存储键
-    export/files.ts           WAV / PV 用例
-    singing/qixuan.ts         生成、依赖校验、历史版本事务
-  api/                        client.ts / mock.ts
-  audio.ts                    浏览器音频引擎（保留原路径）
-  composition.ts              计划应用与保护入口（保留原路径）
-  composer.ts / guided-composer.ts / model.ts / singing.ts / song-plan.ts
-server/
-  index.mjs                   启动、配置与装配
-  routes/                     planning / instruments / qixuan / export
-  services/                   planner / instruments / qixuan / export
-  admin*.mjs / public/         本机管理与配置
-  singing.mjs                 既有原生 DiffSinger 文件交换接口
-  instruments.mjs / qixuan.mjs / planner.mjs   兼容导出
-shared/
-  contracts/                  API Zod Schema、TS 类型、接口变更记录
-  song-plan.mjs / .d.mts       唯一 SongPlan Schema
-  midi.mjs / .d.mts
-scripts/                      启动、OpenUtau 桥接等
-tests/                        单元、接口、browser E2E
-```
+| 目录／文件 | 用途 |
+|---|---|
+| `src/main.tsx`、`App.tsx` | 浏览器入口与页面组合 |
+| `src/components/`、`*Panel.tsx`、CSS | 展示与交互；`visual.ts` 管程序化画面/字幕 |
+| `src/hooks/` | useStudio / usePlayer / useQixuan，协调状态与交互 |
+| `src/features/project`、`export`、`singing` | 工程恢复/保存、导出、歌声结果与历史事务 |
+| `src/api/` | client：请求/超时/校验；mock：独立测试 transport |
+| `src/model.ts`、音乐模块 | 工程数据、保护策略、计划/旋律/调教；浏览器运行不等于 UI 所有权 |
+| `src/audio.ts`、`audio-mix.ts`、`external-audio.ts` | 共同试听/混音入口、处理、外部资产适配 |
+| `server/index.mjs` | 启动、装配与配置 |
+| `server/routes/`、`services/` | HTTP 与引擎服务，含 melody / free-composition / production |
+| `server/admin*.mjs`、`public/` | 本机管理 API、DPAPI 配置与无构建管理页面 |
+| `server/singing.mjs`、旧平铺导出 | 既有文件交换接口与 instruments/qixuan/planner 兼容导出 |
+| `shared/contracts/` | API Zod Schema、相邻 TS 声明与变更记录 |
+| `shared/*.mjs`、`.d.mts` | 唯一 SongPlan、MIDI、旋律/调教/时间轴/伴奏纯逻辑 |
+| `scripts/`、`openutau-bridge/` | 启动、实测/报告工具、小型 .NET 引擎桥接 |
+| `tests/`、`tests/browser/` | 单元/接口及 Playwright 页面流程 |
+| `docs/`、`docs/plans/` | 稳定说明/验收证据、正式任务计划 |
+| `cc-tasks/` | 历史工单原文，不能当作新任务或持续授权 |
+| `.github/`、根目录配置 | CI、npm 命令、Vite/TS/Playwright 配置与环境示例 |
+| `03_patchlab_playful.html` | 视觉原型参考，不是当前应用入口 |
+| `dist/`、`node_modules/`、测试输出 | 可生成的本机产物，忽略提交；不自行清理他人文件 |
 
-```mermaid
-flowchart LR
- UI[React 页面与组件] --> Hooks[交互 hooks]
- Hooks --> Features[工程 / 导出 / 歌声用例]
- Hooks --> Core[纯音乐计算与 SongProject]
- Features --> Core
- Hooks --> API[统一 API Client]
- Features --> API
- Mix[浏览器 audio.ts 混音] --> API
- API --> Mock[开发 Mock 测试数据]
- API --> Routes[Express routes]
- Routes --> Services[LLM / 歌声 / 器乐 / FFmpeg services]
- API -.校验.-> Contract[shared/contracts 与唯一 SongPlan]
- Routes -.校验.-> Contract
- Core -.数据.-> Contract
- Services --> Engines[OpenUtau / FluidSynth / LLM / FFmpeg]
-```
+引擎、模型、缓存与后台配置在仓库外。`SONGYU_EXTERNAL_ROOT` 默认路径及引擎配置见 [ADMIN](ADMIN.md)；不存在就不能假定已安装，不自动下载或迁移。
 
-## Mock 与真实模式
+## 接口先行与 Mock 交接
 
-Mock 是浏览器内部 transport，不会回落到真实后端。固定 SongPlan 与输入灵感无关；声库、音轨响应含 `mock:true`。生成有 running / succeeded / failed 生命周期；测试音为明确标注的 PCM 正弦音，`isDemo:true`，没有歌声模型推理。页面显示 Mock 横幅与任务提示；工程 planning 标记 `mock:true`，不会提升真实 LLM verified 状态。
+1. 需要新字段或改变含义时，先在[共享变更记录](../shared/contracts/CHANGELOG.md)写提案：Owner、字段/调用点、兼容方式、Mock/测试负责人、确认状态与关联任务/PR。
+2. 双方确认，或 toge 明确授权限定范围后实施。历史“本轮授权”只属于其记录的任务，不能延伸到后续任务。
+3. 红茶提供合规、无密钥的响应示例与失败/阶段语义；小由扩展既有 Mock 并接页面。字段、来源标记与工程应用方式先确认，禁止各造一套契约。
+4. 默认一个 PR 同步运行时 `.mjs`、声明 `.d.mts`、Client、Mock 与契约测试。确需分两人 PR：先约定同一契约，后端 PR 明示“后端交付 / Mock与页面待接”，小由接入 PR 链接它；未联调前不宣称产品完成，不发布依赖未完成 Mock 的新入口。
+5. 新增可选字段优先；删除/改义字段提供旧工程与调用方迁移方案。新流程的结果应用与失败保护按 [API 说明](API_CONTRACT.md)和交接执行。
 
-Mock 存档用 `songyu-mock-project-v1`，真实存档仍为 `songyu-project-v1`；Mock WAV/工程文件名含 `.mock`。Mock PV 操作下载 `.mock-export.json` 状态回执，不伪造 MP4。测试音 URL 可在页面内试听与混音，刷新后可继续使用。真实模式拒绝 Mock 响应与 Mock 歌声缓存。Mock 测试会拦截所有 HTTP `/api/` 请求，完整交互必须仍通过。
+Mock 为浏览器内部 transport，不回落真实后端。测试音显式 isDemo/mock，任务状态不伪造真实推理；存档用 `songyu-mock-project-v1`，真实用 `songyu-project-v1`，Mock 工程/WAV 文件名带 .mock，PV 是 JSON 回执。真实模式拒绝 Mock 响应/歌声资产。新自由创作的 Mock 来源协议仍需确认，不能把 fixture 记为真实 LLM 成功。
 
-后端成员用真实接口和相同 Schema 开发服务，无需改 JSX。前端成员用 Mock 开发页面和交互，无需安装绮萱、OpenUtau、DiffSinger、FluidSynth、FFmpeg。合并前以真实模式回归，Mock 通过不代表真实引擎通过。
+## 分支、提交与 PR
 
-## 分支与 PR
+- 本仓库采用功能分支 + PR，这是针对本仓库的协作安排。两人默认各自独立 clone；不要求每项任务另建 worktree。
+- 新任务核对当前分支、工作区和最新 main，从最新 main 开 `feature/frontend-*` 或 `feature/backend-*`；延续任务保留原分支，不顺手切换或清理。
+- 开始、暂存、提交及推送前检查 status/diff；只暂存本次已完成且验证过的文件，不做全仓 git add，不覆盖其他人的改动。
+- 完成步骤先更新计划 checkbox 与 ACCEPTANCE 阶段摘要，再本地提交。进入协作交付时推送本人分支并开 PR，另一方 review；明确要求仅本地/不推送的任务停在本地提交。
+- 合并前更新分支并按范围回归；发生冲突先报告文件和原因，不擅自选一方覆盖，不强推或自动合并 main。
+- PR 写清实际结果、契约/调用点、Mock与真实测试边界、未完成交接，以及计划/验收链接。main 可保留向后兼容但尚无页面入口的 API；这不代表新产品阶段已完成。
+- CI 配置在 main、匹配的 feature/codex 分支 push 和 PR 运行。维护者需实际核实远端运行及 main 的 `checks` 必需检查，配置文件存在不表示保护设置已经启用。
 
-- `main`：保持可演示。每个成员使用自己的 clone/worktree。
-- `feature/frontend-*`：前端工作；`feature/backend-*`：后端与 Agent 工作。
-- 从最新 main 开分支，做小 PR；合并前更新分支并解决冲突，不强推 main。
-- 两人分别开 PR，另一方 review。共享字段变更先在 `shared/contracts/CHANGELOG.md` 提交提案，写明字段、兼容性、调用方、Mock 和测试更新，两人确认后再改；不要在各自分支定义不同版本的字段。
-- 同一 PR 更新运行时 `.mjs`、相邻 `.d.mts`、Mock 与契约测试。只增加可选字段优先；删除或改义字段必须提供旧工程/调用方迁移方案。
-- `.github/workflows/ci.yml` 在 main/feature push 和所有 PR 自动执行构建、单元/接口、Mock E2E、无需本地模型的真实 API E2E。维护者应把 `checks` 设为 main 必需状态检查；此提交没有修改 GitHub 分支保护设置。
-- 真实引擎 PR 在有资源的 Windows 主机执行完整 `npm run test:e2e` 并附验收记录，不把 CI 的无模型测试当成真实歌声验收。
+## 验证与完成标准
 
-## 测试命令
+| 修改范围 | 需要的验证 |
+|---|---|
+| 纯文档 | 本地链接/引用、内容与源码一致性、git diff --check；不为此运行构建或模型 |
+| 普通 UI / 业务代码 | build、相关单元/接口测试；交互改动补对应页面测试 |
+| 新流程接入 | Mock 页面流程 + 有资源主机上的真实页面流程，分别报告 |
+| 引擎、音频、缓存或导出 | 相关测试及受影响的真实引擎/PCM/WAV/PV 回归，不以构建成功替代 |
+| 阶段交付 | 根据计划执行必要全量回归，列出通过/失败/跳过与环境，补人工体验验收 |
+
+命令入口：
 
 ```powershell
 npm run build
 npm test
+# 首次浏览器测试前按需安装
+npx playwright install chromium
 npm run test:e2e:mock
 npm run test:e2e
 .\start.bat --check
 ```
 
-E2E 自动启动隔离服务，默认真实前端 5183、API 3101，Mock 前端 5184；可用 `E2E_FRONTEND_PORT` / `E2E_API_PORT` / `E2E_MOCK_PORT` 改端口，不复用已运行实例。完整真实 E2E 的 FluidSynth/FFmpeg 用例要求资源已安装；绮萱用例还需 `docs/QIXUAN.md` 的本机验收工程，缺失会明确 skip。
+E2E 自动启动隔离服务，不必预先启动 dev；默认真实前端 5183、API 3101、Mock 前端 5184，可用 E2E_FRONTEND_PORT / E2E_API_PORT / E2E_MOCK_PORT 调整，不复用运行中实例。完整套件需真实资源；绮萱还依赖既有本机工程，缺资源可 skip，必须报告跳过。CI 排除部分 FluidSynth / Qixuan / FFmpeg 用例，不等于真实生成验收。
+
+每个功能分开记录“后端/核心完成、Mock可用、页面接线、真实联调、共同验收”；checkbox 仅存在对应计划。请求成功、Schema通过、非静音、PCM差异均不能替代从正式页面创作和人工听感。制作 ready-for-mix 也不等于已导出作品。
+
+## 文档职责与更新
+
+| 文档 | 维护什么 |
+|---|---|
+| README | 当前能力/缺口、启动、阅读入口；不堆历次测试日志 |
+| AGENTS / TEAM_WORKFLOW | 长期边界 / 稳定流程；不写临时授权或滚动待办 |
+| 协作.md | 导航与双方职责摘要，链接计划，不维护第二套 checkbox |
+| docs/plans/主题.md | 当前任务、Owner、依赖、验收、checkbox；小写英文主题文件名，不建索引 |
+| API_CONTRACT / contracts/CHANGELOG | 现行用法 / 提案、确认与兼容记录；历史授权标明范围 |
+| *_FRONTEND_HANDOFF | 具体接入方法、限制与交接基线；进度回链计划 |
+| ACCEPTANCE / 版本验收 | 沿用原工作流：汇总按日期追加简短阶段完成记录，版本报告保存当时实际结果；不把旧数字改成新执行结果 |
+| IMPLEMENTATION / P21 / DECOUPLING_AUDIT / V03_BACKEND / cc-tasks | 历史方案、快照或原工单，保留日期；不作为当前状态入口 |
+
+完工时更新相关计划、ACCEPTANCE 阶段摘要与必要现状说明；不要求双方额外维护另一份 iteration-log。历史证据只补时间/范围标识，不篡改当时失败或限制。新结论有日期和来源，避免在每份文档复制整套进度。

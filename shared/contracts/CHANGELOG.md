@@ -1,5 +1,7 @@
 # 公共契约变更
 
+2026-11-06 文档说明：下文 v0.3–v0.3.2 的授权是对应历史任务记录，不适用于新字段或新任务；本次只整理说明，未修改任何 Schema、类型、Client 或 Mock。现行流程见[团队工作流](../../docs/TEAM_WORKFLOW.md)，当前缺口见[接入计划](../../docs/plans/free-creation-integration.md)。
+
 ## v0.2.1
 
 - 汇总已有 health、器乐、绮萱、音频文件、导出、引擎/词典/导入契约；SongPlan 复用原 Schema。
@@ -13,12 +15,15 @@
 
 ```text
 状态：提案 / 双方已确认 / 已合并
+关联计划/任务与 Owner：
 Frontend reviewer：
 Backend reviewer：
+确认依据：双方 review / toge 对本任务范围的明确授权（记录范围，不推定批准）
 路径/Schema/字段：
 新增、删除或语义变更：
 旧工程与旧调用方兼容方式：
 受影响的 UI / 服务 / Mock：
+Mock 示例提供人 / 实现人 / 待接入 PR：
 契约与回归测试：
 关联 PR：
 ```
@@ -35,8 +40,12 @@ SongProject 新增可选 melodyDraft；Note 新增可选 locked；Lyric 新增�
 
 验收：契约约束、歌词/音符对齐、锁定和局部生成、和声检查、失败原子性、旧缓存兼容、真实 LLM 与歌声实测；详细证据见 docs/V03_BACKEND.md。
 
-## v0.3.1 自由创作（工单2授权）
+## v0.3.1 自由创作（历史工单2授权记录）
+
+原工单2未随本仓库保存；此处保留当时授权记录，现行接入方法与验收条件以下方交接及当前计划为准。
 新增 POST /api/compose，输入 intent、可选 lyrics[]、bpm、targetSeconds；响应为一次事务完成的宏观规划、分配时间轴和 MelodyDraft，含 requestId/model 来源。新工程 mode=free/style=自由创作，不从旧模板初始化。旧模式不迁移不改音符。前端接入与 Mock 属于小由，见 docs/V031_FRONTEND_HANDOFF.md。
 
-## v0.3.2（工单3及用户本轮授权）
+## v0.3.2（历史工单3及当时授权记录）
+
+原工单3未随本仓库保存；历史授权不延伸为后续修改许可。此阶段后端已合并，前端/Mock与共同验收仍见当前计划。
 Performance 增加可选 mode=auto/manual、energy、locked、逐音符 overrides；无新字段仍走旧参数映射。SongProject 增加可选混音设置和调教历史。共享类型/校验/客户端由红茶维护，UI/Mock 仍交接小由。新增制作任务接口复用 compose、FluidSynth、绮萱无窗口桥接；ready-for-mix 不表示浏览器导出完成。主题为创作意图而非歌词原文，允许自由歌体。

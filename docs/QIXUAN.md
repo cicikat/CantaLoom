@@ -1,8 +1,12 @@
 # SONGYU v0.2 · 绮萱真实演唱
 
+本文件保留 v0.2 的引擎接入与原机器验收记录，不表示当前电脑已安装相同资源。v0.3.2 的调教、缓存修订与分轨补充见[最新交接](V032_FRONTEND_HANDOFF.md)及[验收](V032_BACKEND_ACCEPTANCE.md)；当前待办见[接入计划](plans/free-creation-integration.md)。下方绝对路径/构建命令是原机器示例，执行前按自己的资源根目录调整。
+
 ## 当前链路
 
 用户歌词与 SongPlan → 本地 Note → USTX → **官方 OpenUtau 0.1.576 程序集中的中文发音器与 DiffSinger 渲染器** → 绮萱 v2.7.0 ONNX / 2025.02 社区声码器 → WAV → 浏览器统一混音 → WAV / MP4。
+
+以上是旧模式入口；新自由作曲由 LLM 生成并校验 MelodyDraft 音符，自动制作再串联同一演唱引擎。主观听感和正式新网页闭环仍需双方验收，不因已有真实引擎记录而自动完成。
 
 不转换、修改、训练模型。原有 Python DiffSinger checkpoint 路线保留，绮萱使用单独的 `openutau-diffsinger` Provider。没有把 ONNX 包传给 Python infer.py。
 

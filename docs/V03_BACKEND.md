@@ -1,5 +1,7 @@
 # v0.3 后端工单交接
 
+> 这是 v0.3 当时的交付快照，保留停止点与测试边界，不作为当前接入顺序。后续 compose / production 已取代下文早期建工程建议，接入须读 [v0.3.1](V031_FRONTEND_HANDOFF.md) / [v0.3.2](V032_FRONTEND_HANDOFF.md) 与[当前计划](plans/free-creation-integration.md)。历史停止/授权不延伸到新任务。
+
 分支：feature/backend-dynamic-melody。用户要求先推送并停止后续工作。
 
 已更新 AGENT.md / AGENTS.md：红茶只改后端、音乐核心和经授权的共享边界；小由负责组件、hooks、CSS、Mock 与前端 E2E。原有用户工单和协作文件不代为提交。

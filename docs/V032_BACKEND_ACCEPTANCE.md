@@ -1,5 +1,7 @@
 # v0.3.2 自动调教 / 混音后端验收
 
+> 原执行机器的阶段验收快照；下方测试、模型与产物数字按原记录保留，不表示本机在本次文档整理中重新通过。此阶段后端已合并至 main `da54e03`；前端接线与人工听感仍未验收，统一跟踪在[计划](plans/free-creation-integration.md)。
+
 日期：2026-11-06。分支 `feature/backend-auto-performance-mix`，开始时基于尚未合并的 v0.3.1 `799229c`；交付前核实 PR #2 已由成员合并，origin/main 为 `10c1574`。本任务保留原功能分支，PR 指向 main，不自动合并。前端接入见 [V032_FRONTEND_HANDOFF.md](V032_FRONTEND_HANDOFF.md)。
 
 ## 实现范围

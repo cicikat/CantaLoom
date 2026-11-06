@@ -1,28 +1,32 @@
-# 真实歌声与 AI 接入评估
+# 歌声、LLM 与素材边界
 
-核对日期：2026-11-04。只评估官方项目，不下载音库。
+2026-11-06 文档整理：本文件说明项目已有路线与许可核对入口，不是当前电脑资源探测结果，也不重新核验上游许可。原2026-11-04的候选评估已被后续真实接入记录更新；安装/推理证据见 [QIXUAN](QIXUAN.md) 与 [v0.3.2 报告](V032_BACKEND_ACCEPTANCE.md)。
 
-## 优先候选
+## 已采用的歌声路线
 
-**OpenVPI DiffSinger** 是真实歌声合成系统，适合将歌词、音高、时值交给独立推理服务生成 WAV。官方仓库当前代码为 Apache-2.0；代码许可证不能证明任意音库/模型权重都能使用。落地前需要逐项确认声库、声码器、权重及声音来源的授权和用途。当前项目没有对应已授权声库和推理环境，因此未接入，不能称为真实歌唱已完成。
+- **OpenUtau / 绮萱**：`scripts/openutau-bridge/` 直接调用固定版本官方程序集，使用中文发音器、DiffSinger 渲染器、绮萱 ONNX 与声码器产出单句 WAV。已有真实中文推理历史记录；不是 TTS 或预录音。版本、原机器路径、来源和许可记录在 QIXUAN。
+- **原生 Python DiffSinger**：保留文件交换/授权声库注册接口。ONNX 绮萱包不交给 Python infer.py；此保留路线不代表任意 checkpoint 已经过本项目验收。
+- **外部 WAV 导入**：可回导合法来源歌声，并进入同一时间轴混音。
+- **元音演示**：`src/audio.ts` 的 demoVocal 是浏览器合成元音，能表现旋律，不能读出中文歌词。Mock 测试音也不是真实演唱。
 
-- 官方仓库：https://github.com/openvpi/DiffSinger
-- 推理/部署入口：https://github.com/openvpi/DiffSinger/tree/main/deployment
-- 社区声码器与各自条款：https://openvpi.github.io/vocoders/
+缺失或过期的真实歌声资产应明确报错或提示重新生成，不自动用元音替换并冒充成功。元音模式只能由明确的模式选择启用。歌声缓存、单句变更保护与统一试听/导出路径继续沿用已有实现。
 
-**OpenUtau** 是开放的歌声合成平台，代码 MIT，可用于验证有授权音库的离线歌唱流程。它不是本项目中已接通的 HTTP 服务，仍需选择合法声库、配置发音器/引擎并实现导出桥接。不能把开源宿主的代码许可证等同于商业歌姬声库授权。
+## 授权与分发
 
-- 官方仓库：https://github.com/openutau/OpenUtau
+宿主代码许可证、声库、声码器与角色图像条款分别适用。不能由 OpenUtau/DiffSinger 代码开源推断所有权重或商用用途都获许可。项目只提交桥接/调用源码，不随 Git 分发第三方权重、安装包、密钥或真实音频缓存。
 
-## 当前 VocalProvider
+公开作品保留适用的 AI 合成、绮萱及 DiffSinger 标识；新资源或新用途使用前核对相应条款。已有来源记录：
 
-`src/audio.ts` 的 `demoVocal` 使用 PeriodicWave 谐波、简单共振峰权重、包络和颤音，按 Note 事件合成元音。没有使用 TTS，没有音库下载。可以听见旋律，但不能听见歌词辅音/中文咬字。UI、预览和 MP4 都注明演示状态。
+- [绮萱 v2.7.0 发行](https://github.com/yqzhishen/qixuan-diffsinger/releases/tag/v2.7.0)与[使用条款](https://github.com/yqzhishen/qixuan-diffsinger/blob/main/terms_of_use/Terms_of_Use.zh-CN.md)
+- [OpenUtau](https://github.com/openutau/OpenUtau)
+- [OpenVPI DiffSinger](https://github.com/openvpi/DiffSinger)与[声码器入口](https://openvpi.github.io/vocoders/)
 
-未来真实 Provider 应扩展为异步 `synthesize({preset,lyrics,notes,bpm}) -> {audioUrl|PCM,alignment,license}`，服务端缓存每句资产并按依赖版本失效。外部 WAV 需要插入统一混音路径，不能只替换界面预设名称。保留当前演示 provider 作为故障降级，并明确展示当前实际启用的 provider。
+这些是资料入口，不表示本轮已联网重新确认授权或下载资源。
 
-## LLM 与图像
+## LLM、作曲与画面
 
-- LLM：P2.1 同时生成歌名、氛围、四句歌词及经过共享 Zod 严格校验的 SongPlan，实际控制和弦、鼓点、旋律与段落能量。服务端请求 OpenAI-compatible chat/completions，密钥不进入浏览器；配置状态与有效调用状态分别标注。尚无真实密钥验证记录，夹具测试不算模型验收。
-- Composer：本地确定性种子规则作曲，不包装成音乐大模型。随机数只用于实际音符变化，变化会进入 PCM 音频。
-- ImageProvider：原创程序化海岛画面，不使用任何 AI 图像服务或他人歌曲素材。
-- VisualPlanner：从歌词提取有限关键词、选择分段配色，属于本地规则，并非 LLM 意象理解。
+- 旧 plan 生成标题、氛围、四句歌词与 SongPlan，本地规则生成具体音符；允许明确标注的本地模式。
+- 新 compose 以一次事务生成宏观规划与 MelodyDraft；production 再协调器乐和歌声。真实 LLM 历史调用已有记录，不再写作“尚无真实密钥验证”；是否配置、调用成功、作品主观质量仍须区分。
+- 音符数据通过共享 Schema 与音乐约束校验；LLM 不直接输出最终音频。手写歌词、锁定与局部编辑保护不能被生成覆盖。
+- 画面为原创程序化 Canvas；VisualPlanner 的关键词与配色是本地规则，无 AI 生图调用。原始 HTML 只作视觉参考。
+- 正式新自由入口、Mock 与人工听感的缺口统一见[接入计划](plans/free-creation-integration.md)，不在本文件复制待办。

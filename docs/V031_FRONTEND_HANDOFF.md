@@ -1,6 +1,6 @@
 # v0.3.1 红茶 → 小由接入交接
 
-本轮只实现后端/音乐核心及工单授权的共享字段，不修改 React、hooks、CSS、Mock、前端 E2E。基于 origin/main `480c924`，分支 `feature/backend-free-composition`。需由成员合并后小由同步 main 接线。
+历史交接基线：origin/main `480c924`，分支 `feature/backend-free-composition`；当时只实现后端/音乐核心及授权共享字段，未修改 React、hooks、CSS、Mock、前端 E2E。该后端 PR #2 已合并，当前接线基于最新 main，并同时阅读 [v0.3.2 交接](V032_FRONTEND_HANDOFF.md)。当前待办统一见[接入计划](plans/free-creation-integration.md)，本文件保留 compose 接入方法。
 
 ## 唯一正式创作入口
 
@@ -33,7 +33,7 @@ const next = projectFromComposition(result);
 
 ## 状态与 Mock
 
-统一 Client 的 plan 任务状态表示一次请求 running/succeeded/failed。不要伪造服务端百分比。后台的真实 jobs 会记录 planning/melody/validated 阶段，仍通过现有仅本机管理接口访问；普通前端目前没有独立的逐阶段订阅接口，可显示“规划与旋律生成中”。若需要逐阶段实时展示，先共同确认 SSE/任务协议，不用定时器假装阶段推进。
+直接 compose 调用的 Client plan 状态表示一次请求 running/succeeded/failed；不提供它的独立逐阶段订阅。自动制作请使用 v0.3.2 的 production 创建/轮询接口取得真实阶段，不必为了已有轮询能力另造 SSE 协议，也不能用定时器假装阶段推进。管理接口继续仅本机访问。
 
 小由需补 `/api/compose`、`/api/melody` Mock；现有 Mock 是关闭的路由列表，未知路由明确404，不会偷连真实后端。可用固定且显式 mock:true 的数据开发，但正式 api.compose 不接受把它当 llm 结果；需要同步响应 Mock 标记与 projectFromComposition 的开发分支协议。该扩展未由红茶代改。
 
@@ -41,6 +41,6 @@ const next = projectFromComposition(result);
 
 ## 最终验收依赖
 
-红茶自动回归不等于新自由入口网页验收。小由完成 F1–F4 后，必须按 cc-tasks/2.md T2–T4 从正式网页现场输入全新主题/歌词，不读取旧完成工程；分别验收首次真实生成与缓存命中、锁定续写、只调教重唱、全曲试听、MIDI/WAV/MP4、字幕同步及人工听感。
+红茶自动回归不等于新自由入口网页验收。历史工单2未随仓库保存，后续按[接入计划](plans/free-creation-integration.md)的 A–D 执行：从正式网页现场输入全新主题/歌词，不读取旧完成工程；分别验收首次真实生成与缓存命中、锁定续写、只调教重唱、全曲试听、MIDI/WAV/MP4、字幕同步及人工听感。
 
-输出统一放 `D:\ai\hacson\external\runtime\exports\v031-full-flow`。目前该目录仅存后端交接验收报告，不放旧 A/B/C 音频冒充本轮完整作品。
+原交接机器输出路径为 `D:\ai\hacson\external\runtime\exports\v031-full-flow`，不是两人电脑都必须存在的目录。新验收记录实际资源根目录及产物位置；脚本可移植性仍待计划 B2 处理，不使用旧 A/B/C 音频冒充本次完整作品。

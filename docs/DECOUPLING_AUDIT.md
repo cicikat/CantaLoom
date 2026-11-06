@@ -1,5 +1,7 @@
 # v0.2.1 现状审计（修改前）
 
+> 这是解耦实施前的历史快照；下文依赖图与预计修改清单不是现行待办。实施后目录/边界见 [TEAM_WORKFLOW](TEAM_WORKFLOW.md)，当前接入任务见[计划](plans/free-creation-integration.md)。
+
 基线：`5047917`，2026-11-05；工作区干净。已阅读根目录 `AGENT.md`、源码、共享 Schema、现有单元/接口/E2E 测试。没有重写引擎的必要。
 
 ```mermaid
