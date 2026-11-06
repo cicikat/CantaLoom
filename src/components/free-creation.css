@@ -1,0 +1,22 @@
+.free-creation{margin:28px 0 36px;border:1px solid #d9d0df;border-radius:10px;padding:28px;background:#f0ebf3;color:#314a52}
+.free-creation-heading{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:24px}
+.free-creation-heading h2{font-size:24px;letter-spacing:-.5px;font-weight:600;display:inline}
+.free-creation-symbol{font-size:26px;margin-right:12px;color:#76588c}
+.free-creation-heading p{margin-top:12px;font-size:12px;line-height:1.9;color:#6e6475;max-width:60ch}
+.free-creation-layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(240px,1fr);gap:30px}
+.free-creation form>label{display:block;font-size:13px;font-weight:600;margin-bottom:10px}
+.free-creation label small{font-weight:400;color:#6e6475;margin-left:10px;font-size:11px}
+.free-creation textarea{display:block;width:100%;resize:vertical;min-height:76px;border:1px solid #c8bdcf;border-radius:5px;background:#fffdf8;color:#314a52;padding:12px 14px;font:inherit;font-size:13px;line-height:1.8;margin-bottom:20px}
+.free-creation textarea:focus-visible,.free-creation input:focus-visible,.free-creation select:focus-visible,.free-creation button:focus-visible{outline:2px solid #76588c;outline-offset:3px}
+.free-creation-options{display:flex;gap:18px;flex-wrap:wrap;font-size:12px}
+.free-creation-options input,.free-creation-options select{margin-left:8px;width:116px;padding:8px;border:1px solid #c8bdcf;border-radius:4px;font:inherit;color:inherit;background:#fffdf8}
+.free-creation-actions{margin-top:22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.free-creation-actions small{font-size:11px;line-height:1.8;color:#6e6475;max-width:30ch}
+.production-note{border-left:2px solid #c5b4ed;padding:8px 0 8px 24px;align-self:stretch;overflow-wrap:anywhere}
+.production-note h3{font-size:17px;font-weight:600;margin-bottom:18px}
+.production-note p{font-size:13px;line-height:1.9;margin-bottom:18px}
+.production-note .production-stage{font-weight:600;color:#76588c}
+.production-note .production-error{color:#8b4435}
+.production-note>small{display:block;color:#6e6475;font-size:11px;line-height:1.9;margin-top:24px}
+@media(max-width:700px){.free-creation{padding:22px 18px}.free-creation-heading{flex-direction:column;gap:14px}.free-creation-heading h2{font-size:22px}.free-creation-layout{grid-template-columns:minmax(0,1fr);gap:24px}.production-note{padding-left:18px}.free-creation label small{display:block;margin:7px 0 0}.free-creation-options{gap:12px}.free-creation-options label{display:flex;align-items:center}.free-creation-options input,.free-creation-options select{width:105px}}
+@media(prefers-reduced-motion:reduce){.free-creation .spin{animation:none}}

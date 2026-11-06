@@ -87,7 +87,7 @@ SongProject 保存稳定 ID、版本、音符、歌词来源、锁定/静音和�
 
 ## 公共 HTTP 接口与统一 Client
 
-基础契约在 `shared/contracts/index.mjs`，自由作曲/旋律/制作分别在同目录 `free-composition.mjs`、`melody.mjs`、`production.mjs`，TypeScript 声明在相邻 `.d.mts`。SongPlan 只使用 `shared/song-plan.mjs`。业务 JSON 请求统一 `Content-Type: application/json`，HTTP 错误为非 2xx + `{error:string}`；已受理的制作任务也可能在后续 200 响应中返回 state=failed。契约只含公共音乐数据，不含后台设置或密钥。接口与 A1 Mock 已提供；这不代表 A2 新页面已接通，进度见[Toge 工单](../CC-Tasks/5-toge-free-creation.md)。
+基础契约在 `shared/contracts/index.mjs`，自由作曲/旋律/制作分别在同目录 `free-composition.mjs`、`melody.mjs`、`production.mjs`，TypeScript 声明在相邻 `.d.mts`。SongPlan 只使用 `shared/song-plan.mjs`。业务 JSON 请求统一 `Content-Type: application/json`，HTTP 错误为非 2xx + `{error:string}`；已受理的制作任务也可能在后续 200 响应中返回 state=failed。契约只含公共音乐数据，不含后台设置或密钥。接口、A1 Mock 和 A2 最小页面已提供；真实页面闭环仍需工单 6 验收，进度见[Toge 工单](../CC-Tasks/5-toge-free-creation.md)。
 
 | 方法 / 路径 | 请求 | 成功响应 / 契约 | 客户端超时 |
 |---|---|---|---|
@@ -174,6 +174,22 @@ production 串联规划、旋律、器乐与歌声。stage 契约枚举为 queue
 
 ## 自动制作与真实阶段
 
+### 首页最小创作流程（A2）
+
+首页 `FreeCreation` 负责主题、可选手写歌词、可选 BPM 和目标时长；沿用积木工作台的视觉及底部播放器。`useProduction` 通过既有 Client 的 `startProduction` / `production` / `retryProduction` 协调请求，不在组件内新增 fetch，不改公开契约、服务或音乐算法。Owner 为 toge，调用原有 validateProject / validateMelody / currentVocalAsset 进行只读校验。
+
+- 先按 freeInputSchema 校验输入；空行忽略，非空手写行保留原字词与空格，支持 1–8 行、每行最多 100 字。未填写歌词时由对应真实服务或明确 Mock 夹具提供；不调用旧 composeFromIdea。
+- 以约一秒间隔依次查询任务，展示返回的 state/stage 和已完成句数，不假定能观察到全部阶段，不显示百分比。Mock 显示“测试阶段”。
+- 仅 succeeded / ready-for-mix 后校验完整自由工程、20–30 秒时间轴、手写词/来源与输入一致、旋律和实际音符一致、每句演唱引用有效，再经 useStudio.change 一次应用并复用原播放器。不重建谱面、不把部分 project 提前存入当前工程，也不把 ready-for-mix 称为已导出视频。
+- 修改自由输入、调整当前工程、离开输入页、停止等待或卸载都会使操作代次失效；停止后不再轮询，迟到响应不能覆盖工程或新请求状态。Client 已发出的请求与后台已受理制作可能继续运行，界面明确说明这一点。
+- 失败、超时、错误 JSON/工程或任务丢失时保留旧工程，无自动模板回退；任务丢失提示重新制作。singing 失败可按返回 phraseId 逐句重试缺失演唱，仍等整体成功后应用。
+- 新作品成功后替换浏览器当前工程，入口提示先导出需要保留的作品；仍使用既有 Mock/真实存档隔离，刷新后可用底部播放器试听保存的工程。未改变旧 JSON 恢复方式。
+- 自由作品暂时禁用旧模板重作曲、节奏覆盖、音符格子与歌词/旋律改写，避免尚未接入 C 时改坏新谱面；试听、静音、锁定、现有演唱/导出入口沿用。C 的钢琴卷帘、局部旋律、调教与混音控件尚未交付。
+
+本次证据见 [A2 迭代记录](iteration-log.md#a2-free-creation-page)，工单 checkbox 仅在 [工单 5](../CC-Tasks/5-toge-free-creation.md)。真实新页面闭环与人工听感仍跟踪 [工单 6](../CC-Tasks/6-joint-acceptance.md)。
+
+### API 调用顺序
+
 1. `api.startProduction({intent,lyrics?,bpm?,targetSeconds?})` → 202 job id。
 2. 用 `api.production(id)` 轮询真实 state/stage：checking、planning、melody、instruments、singing、ready-for-mix。没有百分比。
 3. 只有 state=succeeded 且 stage=ready-for-mix 时，`validateProject(job.project)` 后再原子应用。该阶段表示乐谱/伴奏缓存/歌声就绪，**不是** MP4 已导出。浏览器仍调用统一 renderAudio 和现有导出用例。
@@ -227,7 +243,7 @@ A1 已补 `/api/compose`、`/api/melody`、`/api/production` Mock。仍为关闭
 
 Performance 支持 natural/soft/strong、Auto/Manual、人工 overrides/锁定；只改表现后仅重唱该句。分轨与混音不是新增 HTTP 导出路由：浏览器 `renderAudio` 支持 vocal-dry/vocal-processed/instrumental/mix，原 WAV/PV 用例复用该入口。逐音符 overrides 按当前句音符索引，UI 调整顺序需核对。
 
-Client 在解析前后检查顶层及已知嵌套 Mock 来源（project、composition、draft、melodyDraft、planning、歌声资产及历史），真实模式拒收；Mock 新三类响应必须显式带标记。导入及启动恢复复用相同检查，拒绝的存档保留并停用自动覆盖。API Mock 可用与正式新页面接通分别记录，当前 A2 尚未实施。
+Client 在解析前后检查顶层及已知嵌套 Mock 来源（project、composition、draft、melodyDraft、planning、歌声资产及历史），真实模式拒收；Mock 新三类响应必须显式带标记。导入及启动恢复复用相同检查，拒绝的存档保留并停用自动覆盖。API Mock、A2 最小页面和真实验收分别记录；A2 页面已在本地接通并通过 Mock 回归，真实现场创作仍待工单 6。
 
 默认 Mock 制作阶段由轮询推进固定测试状态，不是实际引擎进度。测试可用 `createMockRequest(scenario)` 从 src/api/mock.ts 建立独立 transport；scenario 为 success / planning-failure / singing-failure / lost，不向公共请求加测试字段。歌声失败保留已完成测试音，逐句 retry 可复用已有 composition / project；ready-for-mix 后仍须浏览器混音。伴奏使用既有浏览器 synth，歌声为显式 isDemo/mock 的本地 PCM 测试音；没有安装或调用 FluidSynth / 绮萱。部分音符锁定时，Mock 保留该句全部现有音符，不假装真实 LLM 续写；无法满足音乐约束的过密或无可唱字符歌词明确失败。
 

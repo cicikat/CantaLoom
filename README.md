@@ -2,20 +2,20 @@
 
 面向零音乐基础的本地音乐创作工作台：输入灵感或歌词，编曲、编辑、试听，由绮萱演唱并导出作品。仓库：[cicikat/CantaLoom](https://github.com/cicikat/CantaLoom)。
 
-## 当前进度（2026-11-07 A1 更新）
+## 当前进度（2026-11-07 A2 更新）
 
-`package.json` 版本仍为 **0.2.1**；v0.3 / v0.3.1 / v0.3.2 是后续能力与验收阶段名，不代表对应新版页面已经发布。后端能力文档核对基线为 main `da54e03`；11 月 7 日已验证 A1 新流程 Mock 的构建、定向测试和浏览器回归，真实模型与引擎没有重跑。
+`package.json` 版本仍为 **0.2.1**；v0.3 / v0.3.1 / v0.3.2 是后续能力与验收阶段名，不代表对应新版页面已经发布。后端能力文档核对基线为 main `da54e03`；11 月 7 日已验证 A1 Mock 与 A2 最小页面的构建、定向测试和浏览器回归；新入口已在本地分支接通，真实模型与引擎没有重跑。
 
 | 能力 | 当前状态 | 证据与边界 |
 |---|---|---|
 | 现有四页工作台 | 已有节奏录入、分轨、歌词编辑、试听、锁定、保存、WAV/PV 导出 | [v0.2.1 验收](docs/iteration-log.md#v021)；真实 MP4 需要 FFmpeg |
 | 真实中文演唱与 LLM | 历史记录已有真实调用、绮萱 CPU / DirectML、缓存与成片实测 | [绮萱历史记录](docs/iteration-log.md#qixuan)；不证明新电脑已装好引擎或当前 Key 可用 |
-| 自由作曲与动态旋律 | compose / melody 接口、共享客户端及工程应用逻辑已提供 | [自由创作接入](docs/ARCHITECTURE.md#composition)；正式新入口仍待前端接入 |
+| 自由作曲与动态旋律 | compose / melody 接口、共享客户端及工程应用逻辑已提供 | [自由创作接入](docs/ARCHITECTURE.md#composition)；首页最小入口已本地接入，局部编辑仍待工单 5 C |
 | 自动制作、调教与混音 | 制作任务、Auto/Manual、历史、分轨渲染已有实现；有真实后端制作与浏览器加载工程导出记录 | [自动制作接入](docs/ARCHITECTURE.md#production)、[验收](docs/iteration-log.md#v032) |
-| 新流程 Mock 与页面 | **A1 Mock 已完成，A2 页面待接**：compose / melody / production 的本地夹具、任务阶段与重试可用；当前页面仍走旧入口，未知接口返回 404 | [A1 验证](docs/iteration-log.md#a1-free-creation-mock)；双方待办见下方[协作工单](#协作工单) |
-| 新网页完整流程及听感 | **待双方验收**：现场新输入 → 制作 → 试听/导出，以及人工听感 | 旧页面测试、后端实测与非静音指标不能代替这项验收 |
+| 新流程 Mock 与页面 | **A1 / A2 已完成**：首页主题/可选歌词 → 制作状态 → 完整结果应用 → 试听已接通；支持取消、失败保留与缺失句重试。旧入口保留，未知 Mock 接口返回 404 | [A1 验证](docs/iteration-log.md#a1-free-creation-mock)、[A2 验证](docs/iteration-log.md#a2-free-creation-page)；双方待办见下方[协作工单](#协作工单) |
+| 新网页完整流程及听感 | **待双方验收**：现场新输入 → 制作 → 试听/导出，以及人工听感 | Mock 页面测试、后端历史实测与非静音指标不能代替这项验收 |
 
-下一步是 A2：“新输入 → 制作状态 → 应用结果 → 试听”的最小页面流程，再接局部编辑、调教和混音。详细 checkbox 只维护在对应 CC-Tasks 工单中。
+最小页面已可在 Mock 中从新输入制作并试听；真实最小闭环仍需结合工单 4 / 6 验收，局部编辑、调教和混音控件跟踪在工单 5 C。详细 checkbox 只维护在对应 CC-Tasks 工单中。
 
 ## 开始开发
 
@@ -27,7 +27,7 @@ npm ci
 npm run dev:mock
 ```
 
-前端地址为 `http://127.0.0.1:5173`。Mock 是固定测试数据与测试音，现有交互可用；自由创作 API Mock 已补齐，正式新页面入口仍待 A2，不会自动连接真实模型。Mock PV 下载 JSON 回执，不是 MP4。
+前端地址为 `http://127.0.0.1:5173`。Mock 是固定测试数据与测试音，现有交互可用；自由创作 API Mock 与首页输入/制作/试听入口已补齐，不会自动连接真实模型。Mock PV 下载 JSON 回执，不是 MP4。
 
 真实联调使用 `npm run dev:frontend` 与 `npm run dev:backend`，或同机 `npm run dev`。将 `.env.development.example` 复制为 `.env.development.local`，按本机或 SSH 转发端口设置 `VITE_API_PROXY_TARGET`。配置和两人分工见[团队工作流](docs/TEAM_WORKFLOW.md)。
 
@@ -52,7 +52,7 @@ npm run build
 npm start
 ```
 
-打开 `http://127.0.0.1:3001`。现有页面可演示 TAP → 音乐积木 → 单句歌词/演唱 → 歌词 PV。元音模式只唱元音；安装并启用真实绮萱后才是中文歌声。新自由创作的一键流程尚未接线。
+打开 `http://127.0.0.1:3001`。现有页面可演示 TAP → 音乐积木 → 单句歌词/演唱 → 歌词 PV。元音模式只唱元音；安装并启用真实绮萱后才是中文歌声。首页新增自由创作入口：填写主题与可选的 1–8 行歌词，查看制作阶段，成功应用后试听。真实模式使用实际 production 服务，不会失败后自动退回旧模板；本轮页面验证使用 Mock。
 
 ## 架构与数据
 
@@ -75,7 +75,7 @@ npm start
 | 谁 / 任务 | 应做清单与依赖 |
 |---|---|
 | Blacktea（红茶） | [4 · 接口交接与真实联调准备](CC-Tasks/4-blacktea-integration.md)：字段/示例、可移植实测工具、授权资源与联调环境 |
-| Toge（toge） | [5 · 自由创作 Mock、页面与局部编辑](CC-Tasks/5-toge-free-creation.md)：A1 Mock 已完成，接着做 A2 最小页面，再接旋律、调教和混音 |
+| Toge（toge） | [5 · 自由创作 Mock、页面与局部编辑](CC-Tasks/5-toge-free-creation.md)：A1 / A2 已完成，C 局部旋律编辑、调教和混音控件待实施 |
 | 双方共同验收 | [6 · 正式新页面真实闭环与听感](CC-Tasks/6-joint-acceptance.md)：依赖 4/5 就绪，分别记录 Mock、真实引擎、页面和人工听感 |
 | 前一轮工单整理 | [7 · 项目工作流整理](CC-Tasks/已完成/7-documentation-workflow.md)：已完成的范围与验证入口 |
 | 本轮文档合并 | [8 · 文档主题合并与历史归位](CC-Tasks/已完成/8-docs-consolidation.md) |

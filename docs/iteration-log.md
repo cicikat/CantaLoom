@@ -4,6 +4,17 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+<a id="a2-free-creation-page"></a>
+
+## 2026-11-07 · 工单 5 A2 首页输入到试听
+
+- 工单：[5 · A2 最小页面与页面测试](../CC-Tasks/5-toge-free-creation.md)；调用方法：[架构与接线](ARCHITECTURE.md#production)；分工：[团队工作流](TEAM_WORKFLOW.md)。按 toge 本轮明确要求实施 A2，沿用 A1 功能分支，不改共享字段、Client、服务端或音乐算法。
+- 首页新增自由创作区域：主题、可选 1–8 行手写歌词、可选 BPM、20/25/30 秒目标；使用原有 production 创建/轮询/单句重试，显示真实返回状态或明确的 Mock 测试阶段。完整工程通过结构、来源、输入、旋律/音符及歌声引用校验后一次应用，复用底部播放器；试听有准备状态，不自动播放或宣称已导出。
+- 操作代次保护覆盖输入修改、当前工程编辑、离开输入页、停止等待、组件卸载及新旧请求交错；失败、404、超时、无效响应/工程均保留当前工程，不自动回退旧模板。缺失句重试只在整曲完成后应用。自由作品停用尚未适配的旧谱面/歌词编辑与模板重生成按钮，保留试听、静音、锁定和既有导出，C 局部编辑仍待实施。
+- 验证：`npm run build` 通过；`node --import tsx --test tests/production-page.test.ts tests/mock-free.test.ts tests/api.test.ts tests/free-composition.test.ts tests/melody.test.ts tests/production.test.ts` 32/32 通过；`npm run test:e2e:mock -- --output=D:/vibe-coding_/temp/songyu-a2-mock-test-results` 14/14 通过（包含原有 3 项和 A2 新增 11 项）。新增页面用例实际输入五行新词并保留空格，等待阶段、应用、播放进度前进、暂停、刷新恢复均通过；原真实模式存档保留，全程无真实 API 请求。失败/丢失、单句重试、四种失效场景、旧响应晚于新请求及错误工程保护通过。
+- Windows / Node 26.1.0 / Playwright Chromium headless shell。检查 1440 像素桌面和 390 像素窄屏截图，无横向溢出；截图位于 `D:/vibe-coding_/temp/songyu-a2-desktop.png`、`D:/vibe-coding_/temp/songyu-a2-mobile.png`，测试输出在上述仓库外目录。五句音频准备曾超过默认五秒断言，已增加页面准备提示，并将该试听测试等待限定为 20 秒后通过；没有降低播放进度或存档断言。构建仍有 Zod 注释/大包提示。
+- 完成后另对失败文案做定向回归：隐藏校验器内部字段，统一提示工程保留；最终构建及该页面用例通过。文档链接与 `git diff --check` 通过。A2 两项已勾选，未完成的 C 仍留原工单；未运行真实 LLM、声库、真实 MP4、手机/Safari 或人工听感，不勾选[工单 6](../CC-Tasks/6-joint-acceptance.md)。仅本地提交，未推送、PR、合并或部署。
+
 <a id="a1-free-creation-mock"></a>
 
 ## 2026-11-07 · 工单 5 A1 自由创作 Mock 完成

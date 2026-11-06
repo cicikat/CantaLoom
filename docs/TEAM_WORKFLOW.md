@@ -11,7 +11,7 @@ npm run dev:mock
 # http://127.0.0.1:5173，仅 Vite，不启动后端
 ```
 
-Mock 已覆盖旧工作台及 compose / melody / production 的 API 夹具、任务阶段和单句重试；新正式页面入口仍待工单 5 A2，不能把 API Mock 可用理解为页面已接通。后端独立运行 `npm run dev:backend`；不需要改 JSX，交付时仍按影响范围验证构建和相关测试。
+Mock 已覆盖旧工作台及 compose / melody / production 的 API 夹具、任务阶段和单句重试；工单 5 A2 已接通首页输入到试听并通过 Mock 页面回归；真实页面闭环与人工听感仍待工单 6，不能把 Mock 通过理解为真实引擎验收。后端独立运行 `npm run dev:backend`；不需要改 JSX，交付时仍按影响范围验证构建和相关测试。
 
 真实联调：分别启动 `npm run dev:frontend` / `npm run dev:backend`，或同机 `npm run dev`。复制 `.env.development.example` 为 `.env.development.local`，配置 `VITE_API_PROXY_TARGET=http://127.0.0.1:3001`（或 SSH 本地转发端口）。不要在 `.env.local` 设置 Mock 开关覆盖团队模式。所有 `VITE_` 值对浏览器公开，禁止写密钥；后端端口/密钥放本机 `.env` 或加密后台配置。
 

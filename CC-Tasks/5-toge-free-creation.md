@@ -1,10 +1,10 @@
 # 工单 5：Toge · 自由创作 Mock、页面与局部编辑
 
-Owner：Toge（toge / Frontend / UX）。状态：A1 Mock 与共享确认已完成；A2 最小页面待实施，局部编辑尚未开始。
+Owner：Toge（toge / Frontend / UX）。状态：A1 / A2 已完成并通过 Mock 页面回归；C 局部编辑待实施，真实共同验收另见工单 6。
 来源：2026-11-06 原自由创作接入计划 A、C；保留 A1/A2 编号。先完成最小流程，再接编辑器。
 本工单不授权修改真实 LLM、作曲算法或引擎；A1 共享变更已由 toge 对契约提案明确确认。
 
-2026-11-07：toge 已要求先做 A1；已核对现有 Mock / Client / 工程来源，具体字段、兼容、文件范围与验证要求见[Mock 来源提案](../shared/contracts/CHANGELOG.md)。toge 随后回复「可以，继续做完」，已按提案实施并验证 A1；A2 / C 保持未勾选。
+2026-11-07：toge 已要求先做 A1；已核对现有 Mock / Client / 工程来源，具体字段、兼容、文件范围与验证要求见[Mock 来源提案](../shared/contracts/CHANGELOG.md)。toge 随后回复「可以，继续做完」，已按提案实施并验证 A1；随后明确要求继续 A2，现已完成首页输入到试听与失败保护。C 保持未勾选，真实验收未提前勾选。
 
 ## 先读与现状
 
@@ -12,9 +12,9 @@ Owner：Toge（toge / Frontend / UX）。状态：A1 Mock 与共享确认已完�
 真实接口材料与联调环境由 Blacktea 按 [工单 4](4-blacktea-integration.md)交付；A1 字段已按上述限定授权确认，后续新增字段仍须单独确认。
 
 - compose、melody、production API 及统一 Client 已在代码中；`src/melody.ts` 有结果应用、局部旋律、调教和历史逻辑，`src/audio.ts` 有统一分轨渲染。
-- `src/hooks/useStudio.ts` 仍走 `composeFromIdea`；A1 已在既有 transport 补齐三类接口及测试，未知路径返回 404。正式新页面仍待 A2。
+- 旧入口仍使用 `composeFromIdea`；首页新自由创作区域通过 `useProduction` 使用 `startProduction` / 轮询 / 单句重试，成功后完整校验并一次应用。A1 已补齐 Mock，未知路径返回 404。
 - [v0.3.2 后端报告](../docs/iteration-log.md#v032)记录真实后端制作、浏览器加载工程试听/导出；正式新页面从输入开始的流程和人工听感未验收。
-- A1 本次验证 build、定向测试与 Mock 浏览器流程，未检查外部模型/音频产物，不把历史报告当成本机真实引擎状态。历史工单 2/3 不在本仓库，不补造其内容或复用编号；后续按本工单与现存交接执行。
+- A1 / A2 本次验证 build、定向测试与 Mock 浏览器流程，未检查外部模型/音频产物，不把历史报告当成本机真实引擎状态。历史工单 2/3 不在本仓库，不补造其内容或复用编号；后续按本工单与现存交接执行。
 
 ## A：Mock 与最小页面流程
 
@@ -22,8 +22,8 @@ Owner：toge；红茶配合确认接口。先做 A1，再做 A2；不把完整�
 
 - [x] **A1 新流程 Mock**：扩展现有 transport，覆盖 compose、melody、production 创建/轮询/重试；固定数据与测试音显式标记，未知路径继续失败，不连接真实模型。覆盖成功、处理中、失败、任务丢失、局部重试。
 - [x] **A1 共享确认**：双方先在[契约记录](../shared/contracts/CHANGELOG.md)确认 Mock 标记与工程来源处理。真实 `freeResultSchema.source=llm`，不能把测试结果记成真实生成成功；必要字段改动同步运行时、声明、Client 与测试。
-- [ ] **A2 最小页面接线**：自由主题/可选手写歌词 → `startProduction` → 轮询实际 state/stage → 校验完整 project → 一次应用 → 试听。处理失败、404、离开页面或编辑导致结果过期；保留原工程，不显示伪造百分比。
-- [ ] **A2 页面测试**：没有后端时完成上述交互；验证新旧存档隔离、错误保留工程与过期结果不覆盖。页面/Mock 完成不勾选真实验收。
+- [x] **A2 最小页面接线**：自由主题/可选手写歌词 → `startProduction` → 轮询实际 state/stage → 校验完整 project → 一次应用 → 试听。处理失败、404、离开页面或编辑导致结果过期；保留原工程，不显示伪造百分比。
+- [x] **A2 页面测试**：没有后端时完成上述交互；验证新旧存档隔离、错误保留工程与过期结果不覆盖。页面/Mock 完成不勾选真实验收。
 
 接入说明：[v0.3.2 交接](../docs/ARCHITECTURE.md#production)。`ready-for-mix` 只表示资产就绪，浏览器仍需混音/导出。直接 compose 模式应用 `projectFromComposition`，不能调用旧 `applySongPlan/composeFromIdea` 覆盖新旋律。
 
