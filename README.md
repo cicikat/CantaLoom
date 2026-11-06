@@ -70,15 +70,15 @@ npm start
 
 ## 协作工单
 
-本项目用 CC-Tasks/数字-任务简述.md 管理计划，checkbox 只在工单中更新；完成记录写入 [docs/iteration-log.md](docs/iteration-log.md)，新记录在上，每条注明工单及相关文档地址。规则见 [AGENTS 项目专属工作流](AGENTS.md#project-workflow)。
+本项目用 CC-Tasks/数字-任务简述.md 管理计划，checkbox 只在工单中更新；已完成工单归入 [CC-Tasks/已完成/](CC-Tasks/已完成/)，保留编号和文件名；完成记录写入 [docs/iteration-log.md](docs/iteration-log.md)，新记录在上，每条注明工单及相关文档地址。规则见 [AGENTS 项目专属工作流](AGENTS.md#project-workflow)。
 
 | 谁 / 任务 | 应做清单与依赖 |
 |---|---|
 | Blacktea（红茶） | [4 · 接口交接与真实联调准备](CC-Tasks/4-blacktea-integration.md)：字段/示例、可移植实测工具、授权资源与联调环境 |
 | Toge（toge） | [5 · 自由创作 Mock、页面与局部编辑](CC-Tasks/5-toge-free-creation.md)：先补 Mock/最小页面，再接旋律、调教和混音 |
 | 双方共同验收 | [6 · 正式新页面真实闭环与听感](CC-Tasks/6-joint-acceptance.md)：依赖 4/5 就绪，分别记录 Mock、真实引擎、页面和人工听感 |
-| 前一轮工单整理 | [7 · 项目工作流整理](CC-Tasks/7-documentation-workflow.md)：已完成的范围与验证入口 |
-| 本轮文档合并 | [8 · 文档主题合并与历史归位](CC-Tasks/8-docs-consolidation.md) |
+| 前一轮工单整理 | [7 · 项目工作流整理](CC-Tasks/已完成/7-documentation-workflow.md)：已完成的范围与验证入口 |
+| 本轮文档合并 | [8 · 文档主题合并与历史归位](CC-Tasks/已完成/8-docs-consolidation.md) |
 | 后台后续方向 | [12 · 后台与资源管理](CC-Tasks/12-admin-backlog.md)，待排期 |
 | 历史方案 | [1 · 动态旋律](CC-Tasks/1-dynamic-melody-and-performance.md)、[9 · 初始工作台](CC-Tasks/9-initial-workbench.md)、[10 · P2.1 后续建议](CC-Tasks/10-guided-composition.md)、[11 · 解耦迁移](CC-Tasks/11-frontend-backend-decoupling.md)；旧 2/3 未随仓库保存，不复用编号 |
 

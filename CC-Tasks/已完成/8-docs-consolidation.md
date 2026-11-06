@@ -11,7 +11,9 @@ Owner：Toge / 文档。日期：2026-11-06。状态：已完成。
 - [x] 原检查、安装清单、测试数字、旧环境与停止点并入对应日期日志，保留结果与限制。
 - [x] 修复 README、AGENTS、工单和契约记录的引用，检查链接/锚点、迁移内容、待办状态、倒序和 diff。
 
+- [x] 后续按要求将已完成工单 7/8 移入 CC-Tasks/已完成/，更新规则、索引及所有相对链接。
+
 ## 结果与验证
 
-[协作流程](../docs/TEAM_WORKFLOW.md)、[架构与接口](../docs/ARCHITECTURE.md)、[引擎与后台](../docs/ENGINES.md)、[本轮迭代记录](../docs/iteration-log.md#docs-consolidation)。
+[协作流程](../../docs/TEAM_WORKFLOW.md)、[架构与接口](../../docs/ARCHITECTURE.md)、[引擎与后台](../../docs/ENGINES.md)、[本轮迭代记录](../../docs/iteration-log.md#docs-consolidation)。
 纯文档整理，未运行构建、测试或真实引擎；新编译命令仅为依据项目属性整理的示例。

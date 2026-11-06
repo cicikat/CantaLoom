@@ -4,11 +4,20 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+<a id="completed-ticket-archive"></a>
+
+## 2026-11-06 · 已完成工单归档
+
+- 工单：[8 · 文档整理](../CC-Tasks/已完成/8-docs-consolidation.md)；规则：[AGENTS](../AGENTS.md#project-workflow)、[团队工作流](TEAM_WORKFLOW.md)；入口：[README](../README.md#协作工单)。
+- 明确已完成且无未勾选事项的工单 7、8 移入 CC-Tasks/已完成/，保留编号、文件名与正文；当前任务及未明确关闭的历史方案保留原状态和位置。
+- 修正归档工单内部及其他文档指向它们的相对链接；补充后续完成工单的归档规则。
+- 验证：190 个本地链接与锚点通过，归档正文保留，其余 8 张工单内容与状态不变；日志日期倒序及 git diff --check 通过。纯文档调整，未运行构建或引擎测试。
+
 <a id="docs-consolidation"></a>
 
 ## 2026-11-06 · 文档主题合并与历史归位
 
-- 工单：[8 · 文档主题合并](../CC-Tasks/8-docs-consolidation.md)；现行文档：[协作流程](TEAM_WORKFLOW.md)、[架构与接口](ARCHITECTURE.md)、[引擎与后台](ENGINES.md)。
+- 工单：[8 · 文档主题合并](../CC-Tasks/已完成/8-docs-consolidation.md)；现行文档：[协作流程](TEAM_WORKFLOW.md)、[架构与接口](ARCHITECTURE.md)、[引擎与后台](ENGINES.md)。
 - docs 从 12 份收敛为 4 份（含本日志）；API/compose/production/调教混音归入架构，后台/声库/资源/许可归入引擎说明，不再按版本分散保留交接文件。
 - 原最小实现、P2.1 后续建议和解耦迁移方案转为[历史工单 9](../CC-Tasks/9-initial-workbench.md)、[10](../CC-Tasks/10-guided-composition.md)、[11](../CC-Tasks/11-frontend-backend-decoupling.md)；后台后续方向转为[工单 12](../CC-Tasks/12-admin-backlog.md)，保持待排期。当前工单 4/5/6 的 18 项待办状态保留。
 - 历史检查、安装清单、原机器路径、验证数字、缺口与停止点回收到各自日期；不改变当时通过/失败/未验收结果。新桥接编译示例仅按现有项目属性整理，未执行。
@@ -18,7 +27,7 @@
 
 ## 2026-11-06 · 工单与文档流程统一
 
-- 工单：[7-documentation-workflow.md](../CC-Tasks/7-documentation-workflow.md)；文档：[AGENTS](../AGENTS.md)、[团队工作流](TEAM_WORKFLOW.md)、[README](../README.md)。
+- 工单：[7-documentation-workflow.md](../CC-Tasks/已完成/7-documentation-workflow.md)；文档：[AGENTS](../AGENTS.md)、[团队工作流](TEAM_WORKFLOW.md)、[README](../README.md)。
 - 原有 AGENT.md 与四张旧截图删除已独立提交 fd2a3a7；随后仅整理文档。
 - 项目计划统一为 CC-Tasks/数字-任务简述.md；Blacktea、Toge 与共同验收分别见[工单 4](../CC-Tasks/4-blacktea-integration.md)、[工单 5](../CC-Tasks/5-toge-free-creation.md)、[工单 6](../CC-Tasks/6-joint-acceptance.md)。旧工单 2/3 缺失，保留编号空缺，不补造历史。
 - 协作.md 与原 docs/plans 接入计划已拆分；旧验收汇总及三份版本报告合入本日志。历史需求、测试结果、失败与未验收边界保留；交接/技术文档继续保留并更新入口。

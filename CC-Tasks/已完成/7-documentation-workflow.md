@@ -23,5 +23,5 @@ Owner：Toge / 文档。日期：2026-11-06。状态：已完成。
 
 ## 结果与验证入口
 
-[项目规则](../AGENTS.md)、[团队工作流](../docs/TEAM_WORKFLOW.md)、[README](../README.md)、[迭代日志](../docs/iteration-log.md)。
+[项目规则](../../AGENTS.md)、[团队工作流](../../docs/TEAM_WORKFLOW.md)、[README](../../README.md)、[迭代日志](../../docs/iteration-log.md)。
 原计划的功能待办分别保留在工单 4、5、6；没有把文档整理写成实际功能完成。
