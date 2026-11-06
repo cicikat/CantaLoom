@@ -2,8 +2,8 @@
 
 ## 工单 5 A1 · 自由创作 Mock 来源提案（2026-11-07）
 
-状态：提案，待 toge 对下列限定范围确认；尚未修改运行时契约或实现 Mock。
-关联任务：[工单 5 A1](../../CC-Tasks/5-toge-free-creation.md)。Owner / Frontend reviewer：toge；Backend reviewer：待红茶 review，或由 toge 按团队规则明确授权本任务范围。提出 A1 实施不视为已确认本提案的共享字段。
+状态：toge 已明确确认限定范围，A1 已实现并验证（2026-11-07），尚未推送。确认依据：本会话在审阅下列提案后回复「可以，继续做完」。
+关联任务：[工单 5 A1](../../CC-Tasks/5-toge-free-creation.md)。Owner / Frontend reviewer：toge；Backend reviewer：未另行 review；本次按 toge 对下列限定范围的明确授权实施。
 
 ### 标记和工程来源
 
@@ -16,7 +16,7 @@
 
 ### 限定改动范围与兼容
 
-| 文件 / 调用点 | 本次允许实施的变更（待确认） |
+| 文件 / 调用点 | 本次已授权实施的变更 |
 |---|---|
 | `shared/contracts/free-composition.mjs` / `.d.mts` | 仅 FreeResult 可选 Mock 标记 |
 | `shared/contracts/melody.mjs` / `.d.mts` | 仅 MelodyResponse / MelodyDraft 可选 Mock 标记，不改请求和音乐约束 |
@@ -28,13 +28,13 @@
 
 不修改 server、真实 LLM / 声库 / 桥接、`src/melody.ts`、`src/model.ts` 或音乐算法。不接 A2 新页面、调教控件或混音控件，不推送或部署。
 
-### 拟验证与交接
+### 验证与交接
 
 - 契约保留 Mock 标记，真实响应与旧工程继续通过，Mock 工程应用/保存/恢复后不变成真实 LLM 来源。
 - compose 保留 1–8 行手写歌词；melody 保留非目标句、锁定及手写内容；测试数据也走既有音乐校验，不放宽约束。
 - production 覆盖创建、处理中、成功、失败、404/任务丢失与单句重试，重试保留已完成资产；故障场景通过仅测试端可控入口选择，不往真实请求新增字段。
 - 真实 Client 拒绝顶层/嵌套 Mock 数据；Mock 全流程不调用网络、引擎或后台；测试音明确标记。
-- 实施后执行 build、相关定向测试和现有 Mock 页面回归；结果写回工单与迭代日志。A1 完成不代表 A2 页面接通、真实引擎或人工听感验收。
+- build、30 项相关定向测试和 3 项 Mock 页面/浏览器回归通过；结果已写回工单与迭代日志。A1 完成不代表 A2 页面接通、真实引擎或人工听感验收。
 - 示例由前端依据已核对契约编写并标注为夹具；红茶实际调用示例与环境仍跟踪[工单 4](../../CC-Tasks/4-blacktea-integration.md)。关联 PR：未创建。
 
 2026-11-06 文档说明：下文 v0.3–v0.3.2 的授权是对应历史任务记录，不适用于新字段或新任务；本次只整理说明，未修改任何 Schema、类型、Client 或 Mock。现行流程见[团队工作流](../../docs/TEAM_WORKFLOW.md)，当前缺口见[Toge 工单](../../CC-Tasks/5-toge-free-creation.md)。

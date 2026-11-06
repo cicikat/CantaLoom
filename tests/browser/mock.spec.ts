@@ -25,3 +25,28 @@ test('frontend alone supports planning, locks, singing, sibling cache, playback,
 });
 
 test('Vite cannot proxy administration in standalone mode',async({request})=>{for(const path of ['/admin','/api/admin/state','/admin-assets/admin.js'])expect((await request.get(path)).status()).toBe(403)});
+
+test('new Mock API builds, restores and mixes a free project in the browser without a backend',async({page})=>{
+ const requests:string[]=[],errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/api/**',route=>{if(!new URL(route.request().url()).pathname.startsWith('/api/'))return route.continue();requests.push(route.request().url());return route.abort()});
+ await page.goto('/');
+ const result=await page.evaluate(async()=>{
+  // @ts-expect-error Vite serves browser modules directly.
+  const {api}=await import('/src/api/client.ts');
+  // @ts-expect-error browser module
+  const {validateProject}=await import('/src/model.ts');
+  // @ts-expect-error browser module
+  const {initialProject,canAutoSave,STORAGE,readProject}=await import('/src/features/project/files.ts');
+  // @ts-expect-error browser module
+  const {renderAudio}=await import('/src/audio.ts');
+  let job=await api.startProduction({intent:'MOCK 浏览器新流程测试',lyrics:['风吹过小岛','灯照着海岸']});
+  for(let i=0;i<20&&job.state==='running';i++)job=await api.production(job.id);
+  const p=validateProject(job.project),audio=await renderAudio(p),samples=audio.buffer.getChannelData(0);
+  let energy=0;for(const sample of samples)energy+=sample*sample;
+  localStorage.setItem(STORAGE,JSON.stringify(p));
+  const restored=initialProject(),imported=await readProject(new File([JSON.stringify(p)],'fixture.mock.songyu.json'));
+  return {state:job.state,stage:job.stage,mock:restored.planning.mock,draftMock:restored.melodyDraft.mock,source:restored.planning.source,lyrics:restored.lyrics.map((l:any)=>l.text),same:restored.id===p.id&&imported.id===p.id,canAutoSave:canAutoSave(),rms:Math.sqrt(energy/samples.length),realStorage:localStorage.getItem('songyu-project-v1')};
+ });
+ expect(result).toMatchObject({state:'succeeded',stage:'ready-for-mix',mock:true,draftMock:true,source:'local-rules',same:true,canAutoSave:true,realStorage:null,lyrics:['风吹过小岛','灯照着海岸']});
+ expect(result.rms).toBeGreaterThan(.001);expect(requests).toEqual([]);expect(errors).toEqual([]);
+});

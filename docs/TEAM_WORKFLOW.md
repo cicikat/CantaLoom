@@ -11,7 +11,7 @@ npm run dev:mock
 # http://127.0.0.1:5173，仅 Vite，不启动后端
 ```
 
-Mock 当前覆盖旧工作台；compose / melody / production 仍待扩展，不能把“已有 Mock”理解为新流程已经可用。后端独立运行 `npm run dev:backend`；不需要改 JSX，交付时仍按影响范围验证构建和相关测试。
+Mock 已覆盖旧工作台及 compose / melody / production 的 API 夹具、任务阶段和单句重试；新正式页面入口仍待工单 5 A2，不能把 API Mock 可用理解为页面已接通。后端独立运行 `npm run dev:backend`；不需要改 JSX，交付时仍按影响范围验证构建和相关测试。
 
 真实联调：分别启动 `npm run dev:frontend` / `npm run dev:backend`，或同机 `npm run dev`。复制 `.env.development.example` 为 `.env.development.local`，配置 `VITE_API_PROXY_TARGET=http://127.0.0.1:3001`（或 SSH 本地转发端口）。不要在 `.env.local` 设置 Mock 开关覆盖团队模式。所有 `VITE_` 值对浏览器公开，禁止写密钥；后端端口/密钥放本机 `.env` 或加密后台配置。
 
@@ -43,7 +43,7 @@ Mock 当前覆盖旧工作台；compose / melody / production 仍待扩展，不
 4. 默认一个 PR 同步运行时 `.mjs`、声明 `.d.mts`、Client、Mock 与契约测试。确需分两人 PR：先约定同一契约，后端 PR 明示“后端交付 / Mock与页面待接”，toge接入 PR 链接它；未联调前不宣称产品完成，不发布依赖未完成 Mock 的新入口。
 5. 新增可选字段优先；删除/改义字段提供旧工程与调用方迁移方案。新流程的结果应用与失败保护按 [API 说明](ARCHITECTURE.md#public-api)和交接执行。
 
-Mock 为浏览器内部 transport，不回落真实后端。测试音显式 isDemo/mock，任务状态不伪造真实推理；存档用 `songyu-mock-project-v1`，真实用 `songyu-project-v1`，Mock 工程/WAV 文件名带 .mock，PV 是 JSON 回执。真实模式拒绝 Mock 响应/歌声资产。新自由创作的 Mock 来源协议仍需确认，不能把 fixture 记为真实 LLM 成功。
+Mock 为浏览器内部 transport，不回落真实后端。测试音显式 isDemo/mock，任务状态不伪造真实推理；存档用 `songyu-mock-project-v1`，真实用 `songyu-project-v1`，Mock 工程/WAV 文件名带 .mock，PV 是 JSON 回执。真实模式拒绝 Mock 响应/歌声资产。新自由创作沿用 mock:true，工程记录为 local-rules / mock，具体限定授权与字段见契约变更记录；不能把 fixture 记为真实 LLM 成功。
 
 ## 分支、提交与 PR
 

@@ -4,6 +4,17 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+<a id="a1-free-creation-mock"></a>
+
+## 2026-11-07 · 工单 5 A1 自由创作 Mock 完成
+
+- 工单：[5 · A1](../CC-Tasks/5-toge-free-creation.md)；限定授权与兼容：[契约记录](../shared/contracts/CHANGELOG.md)；调用方法与测试限制：[架构 Mock 说明](ARCHITECTURE.md#mock)。toge 在本会话审阅提案后明确回复「可以，继续做完」，仅按列出的共享字段、来源适配与 Mock 范围实施。
+- 在现有 transport 补 compose / melody / production 创建、轮询、失败、任务丢失和单句重试。默认固定夹具不调用模型；独立测试 factory 可选择故障场景，不新增公共请求字段。保留手写词、锁定及非目标句；部分音符锁定时保留整句现有音符。测试伴奏使用原浏览器 synth，歌声为明确标记的本地 PCM 测试音。
+- 同步 FreeResult / MelodyResponse / MelodyDraft / ProductionJob 的可选 Mock 标记与声明；buildFreeScore 只传递来源，Mock 工程 planning 为 local-rules / mock，模板词为 local-template。Client 在解析前后拒绝真实模式收到的已知嵌套 Mock 数据；工程导入及启动恢复沿用同一检查，保留被拒绝的原存档并禁止自动覆盖。未修改真实 LLM、音乐算法、引擎桥接或混音实现。
+- 验证：`npm run build` 通过；`node --import tsx --test tests/mock-free.test.ts tests/api.test.ts tests/free-composition.test.ts tests/melody.test.ts tests/production.test.ts` 30/30 通过；`npm run test:e2e:mock -- --output=D:/vibe-coding_/temp/songyu-a1-mock-test-results` 3/3 通过。新增浏览器用例验证新 Mock API 的制作、存档/导入恢复与非静音混音，全程零真实 API 请求；原页面锁定、歌声、播放、保存和导出回归通过。定向测试含失败、404、单句/多句重试保留兄弟资产、手写/锁定保护、旧真实响应兼容和 Mock 来源拒收。
+- 环境与限制：Node 26.1.0 / Windows，按 lockfile 安装依赖及当前 Playwright Chromium headless shell 后执行；初次因缺依赖/测试浏览器无法启动。一次浏览器下载临时文件触发 Vite Windows EBUSY 退出，改用仓库外测试输出后通过；新增测试曾误拦截 src/api 模块请求，已将拦截范围限定为 URL 的 /api/ 前缀并通过。构建仍提示 Zod 注释和大包。`git diff --check` 与文档文件链接通过。
+- A1 两项已勾选，A2 / C 及[共同验收 6](../CC-Tasks/6-joint-acceptance.md)保持未完成；本次没有正式新页面输入入口、真实 LLM/声库调用、真实 MP4、手机/Safari 或人工听感验收。测试 PCM 非静音不代表中文演唱。代码和文档仅本地提交，未推送、创建 PR 或部署。
+
 ## 2026-11-07 · 工单 5 A1 Mock 来源提案
 
 - 工单：[5 · 自由创作 A1](../CC-Tasks/5-toge-free-creation.md)；提案：[契约变更记录](../shared/contracts/CHANGELOG.md)；确认规则：[团队工作流](TEAM_WORKFLOW.md#接口先行与-mock-交接)。

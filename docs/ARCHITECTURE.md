@@ -87,7 +87,7 @@ SongProject 保存稳定 ID、版本、音符、歌词来源、锁定/静音和�
 
 ## 公共 HTTP 接口与统一 Client
 
-基础契约在 `shared/contracts/index.mjs`，自由作曲/旋律/制作分别在同目录 `free-composition.mjs`、`melody.mjs`、`production.mjs`，TypeScript 声明在相邻 `.d.mts`。SongPlan 只使用 `shared/song-plan.mjs`。业务 JSON 请求统一 `Content-Type: application/json`，HTTP 错误为非 2xx + `{error:string}`；已受理的制作任务也可能在后续 200 响应中返回 state=failed。契约只含公共音乐数据，不含后台设置或密钥。接口存在不代表新页面/Mock已接通，进度见[Toge 工单](../CC-Tasks/5-toge-free-creation.md)。
+基础契约在 `shared/contracts/index.mjs`，自由作曲/旋律/制作分别在同目录 `free-composition.mjs`、`melody.mjs`、`production.mjs`，TypeScript 声明在相邻 `.d.mts`。SongPlan 只使用 `shared/song-plan.mjs`。业务 JSON 请求统一 `Content-Type: application/json`，HTTP 错误为非 2xx + `{error:string}`；已受理的制作任务也可能在后续 200 响应中返回 state=failed。契约只含公共音乐数据，不含后台设置或密钥。接口与 A1 Mock 已提供；这不代表 A2 新页面已接通，进度见[Toge 工单](../CC-Tasks/5-toge-free-creation.md)。
 
 | 方法 / 路径 | 请求 | 成功响应 / 契约 | 客户端超时 |
 |---|---|---|---|
@@ -221,12 +221,16 @@ Performance 可选 mode=auto/manual、energy、locked、overrides。旧 JSON 无
 
 直接 compose 调用的 Client plan 状态表示一次请求 running/succeeded/failed；不提供它的独立逐阶段订阅。自动制作请使用 v0.3.2 的 production 创建/轮询接口取得真实阶段，不必为了已有轮询能力另造 SSE 协议，也不能用定时器假装阶段推进。管理接口继续仅本机访问。
 
-toge需补 `/api/compose`、`/api/melody` Mock；现有 Mock 是关闭的路由列表，未知路由明确404，不会偷连真实后端。可用固定且显式 mock:true 的数据开发，但正式 api.compose 不接受把它当 llm 结果；需要同步响应 Mock 标记与 projectFromComposition 的开发分支协议。该扩展未由红茶代改。
+A1 已补 `/api/compose`、`/api/melody`、`/api/production` Mock。仍为关闭的本地路由列表，未知路径或不支持的方法明确404，不回落真实后端。FreeResult / MelodyResponse / MelodyDraft / ProductionJob 支持可选 mock:true；Mock compose 保留兼容的 source=llm 接口格式并带 model=mock-fixture-no-inference，draft 为 local-rules / mock。projectFromComposition 复用 buildFreeScore 后，工程 planning 为 local-rules / mock，模板词为 local-template，手写词仍为 manual。真实响应及旧工程不必补字段。
 
 现有管理面板“检查引擎”通过 /api/admin/check 的 engines 分支读取 qixuan / FluidSynth / FFmpeg / GPU 等状态。管理 API 保留本机 Host/Origin/CSRF/DPAPI 限制。禁止为查状态电脑操控 OpenUtau 或将后台暴露到公网；必要的新状态项由后端增加诊断接口。
 
 Performance 支持 natural/soft/strong、Auto/Manual、人工 overrides/锁定；只改表现后仅重唱该句。分轨与混音不是新增 HTTP 导出路由：浏览器 `renderAudio` 支持 vocal-dry/vocal-processed/instrumental/mix，原 WAV/PV 用例复用该入口。逐音符 overrides 按当前句音符索引，UI 调整顺序需核对。
 
-当前 Mock **未定义** compose / melody / production；上述接口返回404，不连接真实模型。新增 fixture 的来源标记、工程应用协议需双方确认，不能把 source=llm 的夹具记为实际 LLM 调用。后端与 Mock 可按团队流程分 PR，但必须明确未接入项。
+Client 在解析前后检查顶层及已知嵌套 Mock 来源（project、composition、draft、melodyDraft、planning、歌声资产及历史），真实模式拒收；Mock 新三类响应必须显式带标记。导入及启动恢复复用相同检查，拒绝的存档保留并停用自动覆盖。API Mock 可用与正式新页面接通分别记录，当前 A2 尚未实施。
+
+默认 Mock 制作阶段由轮询推进固定测试状态，不是实际引擎进度。测试可用 `createMockRequest(scenario)` 从 src/api/mock.ts 建立独立 transport；scenario 为 success / planning-failure / singing-failure / lost，不向公共请求加测试字段。歌声失败保留已完成测试音，逐句 retry 可复用已有 composition / project；ready-for-mix 后仍须浏览器混音。伴奏使用既有浏览器 synth，歌声为显式 isDemo/mock 的本地 PCM 测试音；没有安装或调用 FluidSynth / 绮萱。部分音符锁定时，Mock 保留该句全部现有音符，不假装真实 LLM 续写；无法满足音乐约束的过密或无可唱字符歌词明确失败。
+
+A1 授权见[契约记录](../shared/contracts/CHANGELOG.md)，当前证据见[A1 迭代记录](iteration-log.md#a1-free-creation-mock)。Windows 浏览器回归建议将下载临时输出放在仓库外：`npm run test:e2e:mock -- --output=D:/vibe-coding_/temp/songyu-a1-mock-test-results`，避免 Vite 监视被占用的下载临时文件。
 
 方法与边界见[自由创作](#composition)、[自动制作](#production)；真实历史执行与人工/网页验收缺口见 [v0.3.2 报告](iteration-log.md#v032)。
