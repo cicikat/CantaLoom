@@ -30,22 +30,22 @@ Mock 示例提供人 / 实现人 / 待接入 PR：
 
 ## v0.3 MelodyDraft / Performance（用户已统一确认，2026-11-05）
 
-Owner 红茶；用户在本轮明确授权“由我统一确认，按工单实现契约”。不代表小由 UI 已接入。
+Owner 红茶；用户在本轮明确授权“由我统一确认，按工单实现契约”。不代表toge UI 已接入。
 
 新增 `melody.mjs` / `.d.mts` 与 POST `/api/melody`：intent、bpm、现有 songPlan、动态数量 phrases、可选 targetIds、source。空 text 表示请 LLM 原创歌词；非空 text 原样保护。phrase.locked 冻结整句；notes[].locked 冻结指定音符；只生成 targetIds，其他句逐字段保留。notes 使用绝对 beat，syllable 为单字或 `+` 连音，间隙表示休止。响应 draft.source 明确 llm / local-rules，附模型与 token/耗时记录，不返回 Key 或上游错误。
 
 SongProject 新增可选 melodyDraft；Note 新增可选 locked；Lyric 新增可选 performance。旧 JSON 无需迁移。绮萱请求新增可选 performance；未提供时保留旧行为与旧缓存。新表现参数与音符锁定相关依赖只影响当前句，不改兄弟缓存。
 
-小由接入：通过共享客户端 melody(request) 获取完整验证结果，再用 src/melody.ts 的 applyMelodyDraft 原子应用；按 phrase ID / note ID 操作锁定。只改表现可用 setPhrasePerformance，无需重作曲。natural/soft/strong 是内部 preset ID；UI 中文分别自然/轻柔/强烈。Mock 扩展由小由维护，本轮不改其文件。
+toge接入：通过共享客户端 melody(request) 获取完整验证结果，再用 src/melody.ts 的 applyMelodyDraft 原子应用；按 phrase ID / note ID 操作锁定。只改表现可用 setPhrasePerformance，无需重作曲。natural/soft/strong 是内部 preset ID；UI 中文分别自然/轻柔/强烈。Mock 扩展由toge维护，本轮不改其文件。
 
 验收：契约约束、歌词/音符对齐、锁定和局部生成、和声检查、失败原子性、旧缓存兼容、真实 LLM 与歌声实测；详细证据见 docs/V03_BACKEND.md。
 
 ## v0.3.1 自由创作（历史工单2授权记录）
 
 原工单2未随本仓库保存；此处保留当时授权记录，现行接入方法与验收条件以下方交接及当前计划为准。
-新增 POST /api/compose，输入 intent、可选 lyrics[]、bpm、targetSeconds；响应为一次事务完成的宏观规划、分配时间轴和 MelodyDraft，含 requestId/model 来源。新工程 mode=free/style=自由创作，不从旧模板初始化。旧模式不迁移不改音符。前端接入与 Mock 属于小由，见 docs/V031_FRONTEND_HANDOFF.md。
+新增 POST /api/compose，输入 intent、可选 lyrics[]、bpm、targetSeconds；响应为一次事务完成的宏观规划、分配时间轴和 MelodyDraft，含 requestId/model 来源。新工程 mode=free/style=自由创作，不从旧模板初始化。旧模式不迁移不改音符。前端接入与 Mock 属于toge，见 docs/V031_FRONTEND_HANDOFF.md。
 
 ## v0.3.2（历史工单3及当时授权记录）
 
 原工单3未随本仓库保存；历史授权不延伸为后续修改许可。此阶段后端已合并，前端/Mock与共同验收仍见当前计划。
-Performance 增加可选 mode=auto/manual、energy、locked、逐音符 overrides；无新字段仍走旧参数映射。SongProject 增加可选混音设置和调教历史。共享类型/校验/客户端由红茶维护，UI/Mock 仍交接小由。新增制作任务接口复用 compose、FluidSynth、绮萱无窗口桥接；ready-for-mix 不表示浏览器导出完成。主题为创作意图而非歌词原文，允许自由歌体。
+Performance 增加可选 mode=auto/manual、energy、locked、逐音符 overrides；无新字段仍走旧参数映射。SongProject 增加可选混音设置和调教历史。共享类型/校验/客户端由红茶维护，UI/Mock 仍交接toge。新增制作任务接口复用 compose、FluidSynth、绮萱无窗口桥接；ready-for-mix 不表示浏览器导出完成。主题为创作意图而非歌词原文，允许自由歌体。

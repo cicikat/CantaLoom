@@ -4,7 +4,7 @@
 
 分支：feature/backend-dynamic-melody。用户要求先推送并停止后续工作。
 
-已更新 AGENT.md / AGENTS.md：红茶只改后端、音乐核心和经授权的共享边界；小由负责组件、hooks、CSS、Mock 与前端 E2E。原有用户工单和协作文件不代为提交。
+已更新 AGENT.md / AGENTS.md：红茶只改后端、音乐核心和经授权的共享边界；toge负责组件、hooks、CSS、Mock 与前端 E2E。原有用户工单和协作文件不代为提交。
 
 已实现：shared/contracts/melody 的 MelodyDraft / PhrasePlan / Performance；POST /api/melody；共享客户端 melody；src/melody.ts 的 createFreeProject、melodyRequest、applyMelodyDraft、setPhrasePerformance。支持 1–8 句自由歌词、主题生成、指定句生成、整句及单音符锁定、歌词保护、失败原子性、调式/强拍和弦/时值/重叠/对齐校验。旧 JSON 不自动改写音符。新本地规则采用非均匀节奏与重复音，不伪称 LLM。
 
@@ -20,6 +20,6 @@ A 手写忧伤歌词：38.396 秒、1205 输入 / 5974 输出 tokens；B 主题�
 
 已完成 npm run build、npm test（39/39）。此前整轮真实 E2E 11/11、Mock 2/2 已通过；最后本地节奏规则调整后重新发起浏览器回归，停止时结果以执行日志为准，不把此前结果冒充最后版本验收。
 
-小由待接入：用 createFreeProject 建短歌；melodyRequest 构造请求；api.melody 返回后用 applyMelodyDraft 原子应用；只调教用 setPhrasePerformance，然后单句重唱。钢琴卷帘、调教面板及新 /api/melody Mock 未实现，按分工留给小由。本轮没有改其 UI/Mock/前端 E2E。
+toge待接入：用 createFreeProject 建短歌；melodyRequest 构造请求；api.melody 返回后用 applyMelodyDraft 原子应用；只调教用 setPhrasePerformance，然后单句重唱。钢琴卷帘、调教面板及新 /api/melody Mock 未实现，按分工留给toge。本轮没有改其 UI/Mock/前端 E2E。
 
 后续先确认最终两套 E2E 日志，再进行主观试听、更多歌词/延音/多音字覆盖。新的曲线映射仍需更广泛的发音质量验收；当前宏观 SongPlan 沿用现有契约。

@@ -23,7 +23,7 @@ Mock 当前覆盖旧工作台；compose / melody / production 仍待扩展，不
 
 | Owner | 路径和职责 |
 |---|---|
-| 小由 / Frontend / UX | `src/App.tsx`、`components/`、`*Panel.tsx`、`hooks/`、CSS、Canvas 展示、钢琴卷帘与调教交互、`src/api/mock.ts`、前端浏览器测试 |
+| toge / Frontend / UX | `src/App.tsx`、`components/`、`*Panel.tsx`、`hooks/`、CSS、Canvas 展示、钢琴卷帘与调教交互、`src/api/mock.ts`、前端浏览器测试 |
 | 红茶 / Backend / Music Engine | `server/`、引擎/实测 scripts、音乐核心计算、服务端音频缓存与 FFmpeg、后端测试；`src/composer.ts`、`guided-composer.ts`、`song-plan.ts`、`composition.ts`、`singing.ts`、`melody.ts` |
 | 跨层适配，双方确认 | `src/audio.ts` / `audio-mix.ts` 浏览器混音、`external-audio.ts` 资产适配、`src/features/` 用例；先明确此次修改 Owner、调用点与影响，由另一方看接口，不为目录所有权搬进 Node |
 | 公共契约与配置，双方确认 | `shared/`（契约、声明、共用纯音乐计算）、`src/model.ts`、`src/api/client.ts`、Vite/package/Playwright/CI 配置 |
@@ -62,8 +62,8 @@ Mock 当前覆盖旧工作台；compose / melody / production 仍待扩展，不
 
 1. 需要新字段或改变含义时，先在[共享变更记录](../shared/contracts/CHANGELOG.md)写提案：Owner、字段/调用点、兼容方式、Mock/测试负责人、确认状态与关联任务/PR。
 2. 双方确认，或 toge 明确授权限定范围后实施。历史“本轮授权”只属于其记录的任务，不能延伸到后续任务。
-3. 红茶提供合规、无密钥的响应示例与失败/阶段语义；小由扩展既有 Mock 并接页面。字段、来源标记与工程应用方式先确认，禁止各造一套契约。
-4. 默认一个 PR 同步运行时 `.mjs`、声明 `.d.mts`、Client、Mock 与契约测试。确需分两人 PR：先约定同一契约，后端 PR 明示“后端交付 / Mock与页面待接”，小由接入 PR 链接它；未联调前不宣称产品完成，不发布依赖未完成 Mock 的新入口。
+3. 红茶提供合规、无密钥的响应示例与失败/阶段语义；toge扩展既有 Mock 并接页面。字段、来源标记与工程应用方式先确认，禁止各造一套契约。
+4. 默认一个 PR 同步运行时 `.mjs`、声明 `.d.mts`、Client、Mock 与契约测试。确需分两人 PR：先约定同一契约，后端 PR 明示“后端交付 / Mock与页面待接”，toge接入 PR 链接它；未联调前不宣称产品完成，不发布依赖未完成 Mock 的新入口。
 5. 新增可选字段优先；删除/改义字段提供旧工程与调用方迁移方案。新流程的结果应用与失败保护按 [API 说明](API_CONTRACT.md)和交接执行。
 
 Mock 为浏览器内部 transport，不回落真实后端。测试音显式 isDemo/mock，任务状态不伪造真实推理；存档用 `songyu-mock-project-v1`，真实用 `songyu-project-v1`，Mock 工程/WAV 文件名带 .mock，PV 是 JSON 回执。真实模式拒绝 Mock 响应/歌声资产。新自由创作的 Mock 来源协议仍需确认，不能把 fixture 记为真实 LLM 成功。

@@ -7,12 +7,12 @@
 先读 `docs/TEAM_WORKFLOW.md`、`协作.md` 和任务对应计划。当前进度与后续分工只在 `docs/plans/free-creation-integration.md` 维护 checkbox；`cc-tasks/` 是历史工单。没有明确 Owner 时先按当前任务范围工作，不接管另一人的区域。
 
 - **红茶 / Backend / Music Engine**：server、引擎桥接 scripts、音乐核心计算（含 `src/melody.ts`）、音频缓存、FFmpeg、后端测试。浏览器混音与跨层适配按团队工作流共同确认。
-- **小由 / Frontend / UX**：App.tsx、components、hooks、\*Panel.tsx、CSS、钢琴卷帘与调教交互、前端 Mock、前端 E2E。红茶不得顺手改这些文件，不以修构建、优化架构或完善功能为由扩大范围。
+- **toge / Frontend / UX**：App.tsx、components、hooks、\*Panel.tsx、CSS、钢琴卷帘与调教交互、前端 Mock、前端 E2E。红茶不得顺手改这些文件，不以修构建、优化架构或完善功能为由扩大范围。
 - 前端 Agent 同样不得自行改真实 LLM、作曲算法、声库、推理、服务端缓存和桥接器。
 - **共享边界**：shared、src/model.ts、src/api/client.ts 及跨层业务适配。先在 shared/contracts/CHANGELOG.md 写字段、兼容性、调用点和测试说明，经双方或 toge 明确授权后再改。具体授权必须关联任务/范围；历史工单授权不自动延伸到新任务，也不授权代改另一方 UI。
 - 开始、提交、推送前检查 git status / diff；只暂存本轮拥有的文件。保留其他人的未提交改动与工单，不执行全仓 git add、reset、clean、覆盖还原或强推。
 - 各自使用 `feature/frontend-*` / `feature/backend-*` 分支；main 保持可演示。跨区发现问题写交接说明，不擅自代改。测试失败若属于另一方工作，报告具体影响和证据。
-- 完成时写清实际实现、契约接入方式、真实与 Mock 测试边界、交接项和提交；不得把后端接口完成说成小由 UI 已接通。
+- 完成时写清实际实现、契约接入方式、真实与 Mock 测试边界、交接项和提交；不得把后端接口完成说成toge UI 已接通。
 
 ## 产品与范围
 

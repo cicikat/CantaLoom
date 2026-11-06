@@ -104,7 +104,7 @@
 - 绮萱 CPU 实际重唱、缓存保护、FluidSynth 及 25 秒 H.264/AAC MP4 已测试；本轮没有新增真实上游 LLM 调用，不以 Mock 或接口夹具替代真实推理。
 
 # 2026-11-06 v0.3.1 后端
-完整自动回归通过；新自由网页与人工听感待小由接线后验收，详见 [V031_BACKEND_ACCEPTANCE.md](V031_BACKEND_ACCEPTANCE.md)。
+完整自动回归通过；新自由网页与人工听感待toge接线后验收，详见 [V031_BACKEND_ACCEPTANCE.md](V031_BACKEND_ACCEPTANCE.md)。
 
 # 2026-11-06 v0.3.2 自动调教/混音
 最终 build、48/48 单元接口、11/11 真实引擎 E2E、2/2 Mock、启动检查通过。三组新输入真实后端制作和浏览器试听/导出完成；新正式网页输入与人工听感未验收，详见 [V032_BACKEND_ACCEPTANCE.md](V032_BACKEND_ACCEPTANCE.md)。
@@ -113,6 +113,6 @@
 
 - 基线 main `da54e03`，延续 `feature/frontend-docs`；整理 README、Agent/团队规则、协作导航、API/后台/Provider 说明及历史文档范围标记。修复旧入口与不存在的工单引用，未修改功能、测试、配置或契约运行时代码。
 - 沿用本仓库原有“ACCEPTANCE 按日期汇总 + 版本验收 + 前端交接”方式，不额外要求双方维护另一份迭代日志；共同任务 checkbox 集中在[自由创作接入计划](plans/free-creation-integration.md)。文档规则见 [TEAM_WORKFLOW](TEAM_WORKFLOW.md)。
-- 明确 package 0.2.1 与后端能力 v0.3.2 的区别：后端接口/核心已有交付，当前正式页面与 Mock 的新流程待接，真实新网页闭环和人工听感未验收。小由先接 Mock/最小页面，红茶提供接口材料与可复现环境，双方共同验收。
+- 明确 package 0.2.1 与后端能力 v0.3.2 的区别：后端接口/核心已有交付，当前正式页面与 Mock 的新流程待接，真实新网页闭环和人工听感未验收。toge先接 Mock/最小页面，红茶提供接口材料与可复现环境，双方共同验收。
 - 验证范围：逐项对照源码中的接口/Client/Schema、Mock、页面入口与启动配置；本地 Markdown 相对文件链接检查和 git diff --check 通过。仅检查本地文件链接，未检查所有外部链接或远端 CI/main 保护。
 - 未运行 build、npm test、浏览器测试、真实模型/引擎或音频验收，不将历史测试数当成本次结果。工作区原有 AGENT.md 删除保持原状，不纳入本次提交；本次仅本地提交，不推送或创建 PR。

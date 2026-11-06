@@ -1,4 +1,4 @@
-# v0.3.1 红茶 → 小由接入交接
+# v0.3.1 红茶 → toge接入交接
 
 历史交接基线：origin/main `480c924`，分支 `feature/backend-free-composition`；当时只实现后端/音乐核心及授权共享字段，未修改 React、hooks、CSS、Mock、前端 E2E。该后端 PR #2 已合并，当前接线基于最新 main，并同时阅读 [v0.3.2 交接](V032_FRONTEND_HANDOFF.md)。当前待办统一见[接入计划](plans/free-creation-integration.md)，本文件保留 compose 接入方法。
 
@@ -35,7 +35,7 @@ const next = projectFromComposition(result);
 
 直接 compose 调用的 Client plan 状态表示一次请求 running/succeeded/failed；不提供它的独立逐阶段订阅。自动制作请使用 v0.3.2 的 production 创建/轮询接口取得真实阶段，不必为了已有轮询能力另造 SSE 协议，也不能用定时器假装阶段推进。管理接口继续仅本机访问。
 
-小由需补 `/api/compose`、`/api/melody` Mock；现有 Mock 是关闭的路由列表，未知路由明确404，不会偷连真实后端。可用固定且显式 mock:true 的数据开发，但正式 api.compose 不接受把它当 llm 结果；需要同步响应 Mock 标记与 projectFromComposition 的开发分支协议。该扩展未由红茶代改。
+toge需补 `/api/compose`、`/api/melody` Mock；现有 Mock 是关闭的路由列表，未知路由明确404，不会偷连真实后端。可用固定且显式 mock:true 的数据开发，但正式 api.compose 不接受把它当 llm 结果；需要同步响应 Mock 标记与 projectFromComposition 的开发分支协议。该扩展未由红茶代改。
 
 现有管理面板“检查引擎”通过 /api/admin/check 的 engines 分支读取 qixuan / FluidSynth / FFmpeg / GPU 等状态。管理 API 保留本机 Host/Origin/CSRF/DPAPI 限制。禁止为查状态电脑操控 OpenUtau 或将后台暴露到公网；必要的新状态项由后端增加诊断接口。
 
