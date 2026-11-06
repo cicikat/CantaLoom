@@ -37,3 +37,6 @@ SongProject 新增可选 melodyDraft；Note 新增可选 locked；Lyric 新增�
 
 ## v0.3.1 自由创作（工单2授权）
 新增 POST /api/compose，输入 intent、可选 lyrics[]、bpm、targetSeconds；响应为一次事务完成的宏观规划、分配时间轴和 MelodyDraft，含 requestId/model 来源。新工程 mode=free/style=自由创作，不从旧模板初始化。旧模式不迁移不改音符。前端接入与 Mock 属于小由，见 docs/V031_FRONTEND_HANDOFF.md。
+
+## v0.3.2（工单3及用户本轮授权）
+Performance 增加可选 mode=auto/manual、energy、locked、逐音符 overrides；无新字段仍走旧参数映射。SongProject 增加可选混音设置和调教历史。共享类型/校验/客户端由红茶维护，UI/Mock 仍交接小由。新增制作任务接口复用 compose、FluidSynth、绮萱无窗口桥接；ready-for-mix 不表示浏览器导出完成。主题为创作意图而非歌词原文，允许自由歌体。

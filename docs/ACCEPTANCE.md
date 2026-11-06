@@ -92,3 +92,6 @@
 
 # 2026-11-06 v0.3.1 后端
 完整自动回归通过；新自由网页与人工听感待小由接线后验收，详见 [V031_BACKEND_ACCEPTANCE.md](V031_BACKEND_ACCEPTANCE.md)。
+
+# 2026-11-06 v0.3.2 自动调教/混音
+最终 build、48/48 单元接口、11/11 真实引擎 E2E、2/2 Mock、启动检查通过。三组新输入真实后端制作和浏览器试听/导出完成；新正式网页输入与人工听感未验收，详见 [V032_BACKEND_ACCEPTANCE.md](V032_BACKEND_ACCEPTANCE.md)。

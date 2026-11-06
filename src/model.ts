@@ -1,3 +1,4 @@
+import {mixSettingsSchema} from '../shared/contracts/production.mjs';
 import {melodyDraftSchema,performanceSchema,type MelodyDraft,type Performance} from '../shared/contracts/melody.mjs';
 import {songPlanSchema,planningSchema,type SongPlan,type Planning} from '../shared/song-plan.mjs';
 import type {MidiTrackKind,MidiNote} from '../shared/midi.mjs';
@@ -10,6 +11,7 @@ export interface Track { id:string; sectionId:string; kind:TrackKind; version:nu
 export interface Lyric { id:string; sectionId:string; text:string; start:number; end:number; notes:Note[]; version:number; locked:boolean; source:'manual'|'local-template'|'llm' }
 export interface SongProject { schemaVersion:1; id:string; metadata:{title:string; idea:string; createdAt:string; updatedAt:string}; bpm:number; timeSignature:[4,4]; style:Style; mood:string; sections:Section[]; tracks:Track[]; lyrics:Lyric[]; vocalPreset:'澄音'|'星羽'|'雾歌'; visualScenes:{id:string; sectionId:string; theme:number; source:'procedural'}[]; assetReferences:{id:string; type:string; source:string}[]; versions:{at:string; action:string}[]; subtitleStyle:SubtitleStyle; tapTimes:number[] }
 export interface Lyric {performance?:Performance}
+export interface SongProject {performanceHistory?:Record<string,Performance[]>;mixSettings?:{enabled:boolean;vocalGain?:number;bandGain?:number;reverb?:number}}
 export interface SongProject {mode?:'free';creationRequestId?:string}
 export interface SongProject {melodyDraft?:MelodyDraft}
 export interface SongProject {songPlan?:SongPlan;planning?:Planning;rhythmCompletion?:boolean;}
@@ -32,6 +34,8 @@ export function validateProject(data:unknown):SongProject {
  let end=0;const ids=new Set<string>();const checkId=(id:string)=>{if(typeof id!=='string'||ids.has(id))throw Error('工程含重复或无效 ID');ids.add(id)};
  p.sections.forEach(s=>{checkId(s.id);if(s.start!==end||!Number.isInteger(s.beats)||s.beats<4||s.beats>64||typeof s.name!=='string')throw Error('段落时间轴无效');end+=s.beats;});
  if(duration(p)>35||duration(p)<15)throw Error('仅支持 15–35 秒短篇工程');
+ if(p.mixSettings)mixSettingsSchema.parse(p.mixSettings);
+ if(p.performanceHistory){for(const versions of Object.values(p.performanceHistory)){if(!Array.isArray(versions)||versions.length>3)throw Error('调教历史无效');versions.forEach(v=>performanceSchema.parse(v))}}
  if(p.melodyDraft!==undefined)melodyDraftSchema.parse(p.melodyDraft);
  p.lyrics.forEach(l=>{if(l.performance)performanceSchema.parse(l.performance)});
  if(p.songPlan!==undefined)songPlanSchema.parse(p.songPlan);

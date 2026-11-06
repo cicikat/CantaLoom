@@ -1,3 +1,4 @@
+import {mountProduction} from './routes/production.mjs';
 import {mountFreeComposition} from './routes/free-composition.mjs';
 import {mountMelody} from './routes/melody.mjs';
 import {createVideoService} from './services/export.mjs';
@@ -26,13 +27,15 @@ mountInstruments(app);
 mountSinging(app);
 mountQixuan(app);
 const video=await createVideoService(root);
+const production=mountProduction(app,{isPaused:()=>jobs.isPaused(),ffmpegReady:()=>video.ready});
+jobs.addSource(()=>production.list().map(job=>({...job,type:'自动制作'})));
 let planner=createPlanner();
 mountAdmin(app,{store:settings,jobs,root:externalRoot,publicDirectory:path.join(root,'server/public'),onConfig:async()=>{planner=createPlanner();await video.refresh()},diagnostics:async()=>{
  const instruments=await new InstrumentRenderer().status();
  const probe=async(command,args)=>{try{return {available:true,version:(await runProcess(command,args,externalRoot,10000)).split(/\r?\n/)[0]}}catch{return {available:false,message:'未安装、路径错误或运行失败'}}};
  const python=process.env.DIFFSINGER_PYTHON||path.join(externalRoot,'DiffSinger/.venv/Scripts/python.exe');
  const openutau=process.env.OPENUTAU_PATH||path.join(externalRoot,'OpenUtau/OpenUtau.exe');let openUtauInstalled=false;try{await access(openutau);openUtauInstalled=true}catch{}
- return {instruments,qixuan:await qixuanStatus(),ffmpeg:await probe(video.binary,['-version']),python:await probe(python,['--version']),diffSingerDependencies:await probe(python,['-c','import torch,librosa,pyworld; print("PyTorch " + torch.__version__ + "; CUDA " + str(torch.cuda.is_available()))']),openUtau:{installed:openUtauInstalled,mode:'官方组件桥接 + GUI 工程交换'},gpu:await probe('nvidia-smi',['--query-gpu=name,memory.total,memory.used,driver_version','--format=csv,noheader'])};
+ return {production:production.list(),instruments,qixuan:await qixuanStatus(),ffmpeg:await probe(video.binary,['-version']),python:await probe(python,['--version']),diffSingerDependencies:await probe(python,['-c','import torch,librosa,pyworld; print("PyTorch " + torch.__version__ + "; CUDA " + str(torch.cuda.is_available()))']),openUtau:{installed:openUtauInstalled,mode:'官方组件桥接 + GUI 工程交换'},gpu:await probe('nvidia-smi',['--query-gpu=name,memory.total,memory.used,driver_version','--format=csv,noheader'])};
 }});
 mountPlanning(app,{planner:()=>planner,video});
 mountExport(app,video);
