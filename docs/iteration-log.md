@@ -4,6 +4,14 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+<a id="module-documentation-policy"></a>
+
+## 2026-11-06 · 文档按模块扩展
+
+- 工单：[8 · 文档整理](../CC-Tasks/已完成/8-docs-consolidation.md)；规则：[AGENTS](../AGENTS.md#project-workflow)、[团队工作流](TEAM_WORKFLOW.md)；导航：[README](../README.md#文档与验证入口)。
+- 修正上一轮对文档整理要求的理解：取消固定数量限制；同类内容合并维护，新模块有独立说明价值时可新增文档，并同步 README 索引。README 已列出当前文档入口，无需声明数量。
+- 验证：核对规则与导航一致性、本地 Markdown 链接/锚点及 git diff --check。仅文档调整，未运行构建或引擎测试。
+
 <a id="completed-ticket-archive"></a>
 
 ## 2026-11-06 · 已完成工单归档

@@ -12,7 +12,7 @@
 - **已完成工单移入 CC-Tasks/已完成/**，保留原编号和文件名，迁移时同步修正内外引用；待实施、待排期与未明确关闭的历史工单保留在根目录。
 - 每张工单写明 Owner、状态、范围、依赖、应做 checkbox、验收与交接入口；完成一项及时更新该工单，不在导航或日志复制另一套 checkbox。
 - **唯一迭代日志是 [docs/iteration-log.md](docs/iteration-log.md)**，按日期倒序，新条目写在最上方。每条必须注明对应工单与相关文档的可点击地址，并写实际结果、验证边界、未完成交接；不再分散新增 ACCEPTANCE 或版本验收报告。
-- **docs 只保留四份**：[协作流程](docs/TEAM_WORKFLOW.md)、[架构与接口](docs/ARCHITECTURE.md)、[引擎与后台](docs/ENGINES.md)、[迭代日志](docs/iteration-log.md)。同类说明合入对应章节；计划放 CC-Tasks，历史方案、版本交接过程、审计与验收数字归入日志，不另铺散文件。
+- **docs 按主题组织**，文档入口统一挂在 [README](README.md#文档与验证入口)。同类说明合入已有文档；新的模块有独立说明价值时可新增文档，并同步 README 索引。计划放 CC-Tasks，历史过程、版本交接过程、审计与验收数字归入迭代日志。
 - Blacktea 与 Toge 的各自清单，以及共同验收，从 [README 协作工单](README.md#协作工单)进入；稳定边界/联调/Git 规则见 [TEAM_WORKFLOW](docs/TEAM_WORKFLOW.md)。工单内容不是自动跨区授权。
 - 本项目沿用 feature/frontend-*、feature/backend-* 功能分支与 PR；当前已有任务保留分支。按范围验证、更新工单和日志后本地提交；推送、PR 与发布遵守当前任务授权，不自动合并 main。
 

@@ -13,6 +13,8 @@ Owner：Toge / 文档。日期：2026-11-06。状态：已完成。
 
 - [x] 后续按要求将已完成工单 7/8 移入 CC-Tasks/已完成/，更新规则、索引及所有相对链接。
 
+- [x] 根据后续澄清移除文档数量限制：按主题合并，新模块可独立建文档并挂到 README。
+
 ## 结果与验证
 
 [协作流程](../../docs/TEAM_WORKFLOW.md)、[架构与接口](../../docs/ARCHITECTURE.md)、[引擎与后台](../../docs/ENGINES.md)、[本轮迭代记录](../../docs/iteration-log.md#docs-consolidation)。
