@@ -1,6 +1,6 @@
 # 本地后台管理
 
-2026-11-06 文档核对：绮萱、真实 LLM 与成片的历史验证见 [QIXUAN.md](QIXUAN.md)，最新后端制作能力见 [v0.3.2 验收](V032_BACKEND_ACCEPTANCE.md)。新页面接入与人工听感仍待完成，见[接入计划](plans/free-creation-integration.md)。本次没有重新检查本机引擎或调用模型。
+2026-11-06 文档核对：绮萱、真实 LLM 与成片的历史验证见 [QIXUAN.md](QIXUAN.md)，最新后端制作能力见 [v0.3.2 验收](iteration-log.md#v032)。新页面接入与人工听感仍待完成，见[Toge 工单](../CC-Tasks/5-toge-free-creation.md)。本次没有重新检查本机引擎或调用模型。
 
 入口：启动后端后直接打开 `http://127.0.0.1:3001/admin`（端口随后端 PORT 变化）。Vite 的 5173 不代理管理页面或管理 API，对这些路径返回 403；不要通过前端代理访问后台。沿用 Express，不需要额外服务或数据库。
 

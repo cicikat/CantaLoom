@@ -1,6 +1,6 @@
 # SONGYU v0.2 · 绮萱真实演唱
 
-本文件保留 v0.2 的引擎接入与原机器验收记录，不表示当前电脑已安装相同资源。v0.3.2 的调教、缓存修订与分轨补充见[最新交接](V032_FRONTEND_HANDOFF.md)及[验收](V032_BACKEND_ACCEPTANCE.md)；当前待办见[接入计划](plans/free-creation-integration.md)。下方绝对路径/构建命令是原机器示例，执行前按自己的资源根目录调整。
+本文件保留 v0.2 的引擎接入与原机器验收记录，不表示当前电脑已安装相同资源。v0.3.2 的调教、缓存修订与分轨补充见[最新交接](V032_FRONTEND_HANDOFF.md)及[验收](iteration-log.md#v032)；当前待办见[Toge 工单](../CC-Tasks/5-toge-free-creation.md)。下方绝对路径/构建命令是原机器示例，执行前按自己的资源根目录调整。
 
 ## 当前链路
 

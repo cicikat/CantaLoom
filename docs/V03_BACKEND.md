@@ -1,6 +1,6 @@
 # v0.3 后端工单交接
 
-> 这是 v0.3 当时的交付快照，保留停止点与测试边界，不作为当前接入顺序。后续 compose / production 已取代下文早期建工程建议，接入须读 [v0.3.1](V031_FRONTEND_HANDOFF.md) / [v0.3.2](V032_FRONTEND_HANDOFF.md) 与[当前计划](plans/free-creation-integration.md)。历史停止/授权不延伸到新任务。
+> 这是 v0.3 当时的交付快照，保留停止点与测试边界，不作为当前接入顺序。后续 compose / production 已取代下文早期建工程建议，接入须读 [v0.3.1](V031_FRONTEND_HANDOFF.md) / [v0.3.2](V032_FRONTEND_HANDOFF.md) 与[当前前端工单](../CC-Tasks/5-toge-free-creation.md)。历史停止/授权不延伸到新任务。
 
 分支：feature/backend-dynamic-melody。用户要求先推送并停止后续工作。
 

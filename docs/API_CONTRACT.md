@@ -1,6 +1,6 @@
 # SONGYU 公共 API（含 v0.3.2 后端能力）
 
-2026-11-06 按源码核对；本次未运行接口。基础契约在 `shared/contracts/index.mjs`，自由作曲/旋律/制作分别在同目录 `free-composition.mjs`、`melody.mjs`、`production.mjs`，TypeScript 声明在相邻 `.d.mts`。SongPlan 只使用 `shared/song-plan.mjs`。业务 JSON 请求统一 `Content-Type: application/json`，HTTP 错误为非 2xx + `{error:string}`；已受理的制作任务也可能在后续 200 响应中返回 state=failed。契约只含公共音乐数据，不含后台设置或密钥。接口存在不代表新页面/Mock已接通，进度见[接入计划](plans/free-creation-integration.md)。
+2026-11-06 按源码核对；本次未运行接口。基础契约在 `shared/contracts/index.mjs`，自由作曲/旋律/制作分别在同目录 `free-composition.mjs`、`melody.mjs`、`production.mjs`，TypeScript 声明在相邻 `.d.mts`。SongPlan 只使用 `shared/song-plan.mjs`。业务 JSON 请求统一 `Content-Type: application/json`，HTTP 错误为非 2xx + `{error:string}`；已受理的制作任务也可能在后续 200 响应中返回 state=failed。契约只含公共音乐数据，不含后台设置或密钥。接口存在不代表新页面/Mock已接通，进度见[Toge 工单](../CC-Tasks/5-toge-free-creation.md)。
 
 | 方法 / 路径 | 请求 | 成功响应 / 契约 | 客户端超时 |
 |---|---|---|---|
@@ -48,4 +48,4 @@ Performance 支持 natural/soft/strong、Auto/Manual、人工 overrides/锁定�
 
 当前 Mock **未定义** compose / melody / production；上述接口返回404，不连接真实模型。新增 fixture 的来源标记、工程应用协议需双方确认，不能把 source=llm 的夹具记为实际 LLM 调用。后端与 Mock 可按团队流程分 PR，但必须明确未接入项。
 
-方法与边界见 [v0.3.1 交接](V031_FRONTEND_HANDOFF.md)、[v0.3.2 交接](V032_FRONTEND_HANDOFF.md)；真实历史执行与人工/网页验收缺口见 [v0.3.2 报告](V032_BACKEND_ACCEPTANCE.md)。
+方法与边界见 [v0.3.1 交接](V031_FRONTEND_HANDOFF.md)、[v0.3.2 交接](V032_FRONTEND_HANDOFF.md)；真实历史执行与人工/网页验收缺口见 [v0.3.2 报告](iteration-log.md#v032)。

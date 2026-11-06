@@ -1,6 +1,6 @@
 # 公共契约变更
 
-2026-11-06 文档说明：下文 v0.3–v0.3.2 的授权是对应历史任务记录，不适用于新字段或新任务；本次只整理说明，未修改任何 Schema、类型、Client 或 Mock。现行流程见[团队工作流](../../docs/TEAM_WORKFLOW.md)，当前缺口见[接入计划](../../docs/plans/free-creation-integration.md)。
+2026-11-06 文档说明：下文 v0.3–v0.3.2 的授权是对应历史任务记录，不适用于新字段或新任务；本次只整理说明，未修改任何 Schema、类型、Client 或 Mock。现行流程见[团队工作流](../../docs/TEAM_WORKFLOW.md)，当前缺口见[Toge 工单](../../CC-Tasks/5-toge-free-creation.md)。
 
 ## v0.2.1
 

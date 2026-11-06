@@ -2,11 +2,23 @@
 
 远端仓库：[cicikat/CantaLoom](https://github.com/cicikat/CantaLoom)；Git 拉取地址：`https://github.com/cicikat/CantaLoom.git`。
 
+<a id="project-workflow"></a>
+
+## 本项目专属工作流：优先于通用文档习惯
+
+这是 Blacktea 与 Toge 的协作项目。以下规则覆盖全局中不适用于本项目的计划目录、日志和分支约定；数据安全与明确授权要求继续遵守。
+
+- **计划采用工单模式**，唯一目录为 [CC-Tasks/](CC-Tasks/)，文件名为 数字-任务简略描述.md（例如 5-toge-free-creation.md），数字在前、描述清楚。新工单使用未占用且未在历史引用中使用过的编号，不复用已关闭或缺失的旧编号；不再在 docs/plans/ 新建本项目计划。
+- 每张工单写明 Owner、状态、范围、依赖、应做 checkbox、验收与交接入口；完成一项及时更新该工单，不在导航或日志复制另一套 checkbox。
+- **唯一迭代日志是 [docs/iteration-log.md](docs/iteration-log.md)**，按日期倒序，新条目写在最上方。每条必须注明对应工单与相关文档的可点击地址，并写实际结果、验证边界、未完成交接；不再分散新增 ACCEPTANCE 或版本验收报告。
+- Blacktea 与 Toge 的各自清单，以及共同验收，从 [README 协作工单](README.md#协作工单)进入；稳定边界/联调/Git 规则见 [TEAM_WORKFLOW](docs/TEAM_WORKFLOW.md)。工单内容不是自动跨区授权。
+- 本项目沿用 feature/frontend-*、feature/backend-* 功能分支与 PR；当前已有任务保留分支。按范围验证、更新工单和日志后本地提交；推送、PR 与发布遵守当前任务授权，不自动合并 main。
+
 ## 双人分工：所有 Agent 必须遵守
 
-先读 `docs/TEAM_WORKFLOW.md`、`协作.md` 和任务对应计划。当前进度与后续分工只在 `docs/plans/free-creation-integration.md` 维护 checkbox；`cc-tasks/` 是历史工单。没有明确 Owner 时先按当前任务范围工作，不接管另一人的区域。
+先读 [团队工作流](docs/TEAM_WORKFLOW.md)和 README 索引的本人/共同工单；当前进度只在 CC-Tasks 对应工单维护 checkbox，旧工单须看状态与日期。没有明确 Owner 时先按当前任务范围工作，不接管另一人的区域。
 
-- **红茶 / Backend / Music Engine**：server、引擎桥接 scripts、音乐核心计算（含 `src/melody.ts`）、音频缓存、FFmpeg、后端测试。浏览器混音与跨层适配按团队工作流共同确认。
+- **Blacktea（红茶） / Backend / Music Engine**：server、引擎桥接 scripts、音乐核心计算（含 `src/melody.ts`）、音频缓存、FFmpeg、后端测试。浏览器混音与跨层适配按团队工作流共同确认。
 - **toge / Frontend / UX**：App.tsx、components、hooks、\*Panel.tsx、CSS、钢琴卷帘与调教交互、前端 Mock、前端 E2E。红茶不得顺手改这些文件，不以修构建、优化架构或完善功能为由扩大范围。
 - 前端 Agent 同样不得自行改真实 LLM、作曲算法、声库、推理、服务端缓存和桥接器。
 - **共享边界**：shared、src/model.ts、src/api/client.ts 及跨层业务适配。先在 shared/contracts/CHANGELOG.md 写字段、兼容性、调用点和测试说明，经双方或 toge 明确授权后再改。具体授权必须关联任务/范围；历史工单授权不自动延伸到新任务，也不授权代改另一方 UI。
@@ -18,7 +30,7 @@
 
 声屿 SONGYU 是面向零音乐基础的本地音乐创作 Web Demo，保留 V3 创意积木视觉。旧模式维持四段/六轨和约 24 秒流程；自由作曲模式保留四段，但支持 1–8 行歌词、20–30 秒目标时长，不能把四句固定模板限制套到新模式。
 
-当前能力、版本含义与证据入口见 `README.md`；任务进度见当前接入计划。已有真实 LLM、绮萱演唱与导出历史记录，不得继续写成“尚未接入”；也不得把历史记录当成本机刚刚通过的验收。最新后端能力不等于正式新页面已接通，Mock、真实引擎、人工听感必须分别报告。
+当前能力、版本含义与证据入口见 `README.md`；任务进度见 README 索引的当前工单。已有真实 LLM、绮萱演唱与导出历史记录，不得继续写成“尚未接入”；也不得把历史记录当成本机刚刚通过的验收。最新后端能力不等于正式新页面已接通，Mock、真实引擎、人工听感必须分别报告。
 
 ## 架构与职责边界
 
@@ -88,6 +100,6 @@ start.bat --check
 
 测试应验证真实 PCM 非静音、同 ID/版本的不同意图产生实际音符/声音差异、锁定数据不变、失败保留工程、无 API 可本地创作，并保留原有节奏/保存/字幕/WAV/MP4 回归。夹具响应须明确标注；真实手机、Safari 和真实 LLM 只在实际测试后宣称通过。
 
-按 `docs/TEAM_WORKFLOW.md` 的文档职责维护：当前能力看 README，待办 checkbox 留在对应计划。本协作仓库沿用原有记录方式：阶段完成摘要按日期追加到 `docs/ACCEPTANCE.md`，具体证据放版本验收报告，接入方法放交接文档；不再重复维护另一份迭代日志。纯文档任务检查链接、内容一致性与 diff，不运行构建/引擎测试。历史方案和验收按日期保留，不能作为当前待办或复用为新测试结果。
+按 [团队工作流](docs/TEAM_WORKFLOW.md)维护：当前能力看 README，待办 checkbox 只在 CC-Tasks 对应工单；完成记录和具体测试证据统一写入 [迭代日志](docs/iteration-log.md)，日期倒序并注明工单和相关文档地址，接入方法仍放交接文档。纯文档任务检查链接、内容一致性与 diff，不运行构建/引擎测试。历史证据保留当时结果与限制，不能当作当前机器的新验收。
 
 推送排除 `node_modules/`、`dist/`、`.env`、`exports/`、测试输出和构建缓存，保留 `.env.example`。不要为了上传而修改仓库可见性或强推覆盖远端历史。

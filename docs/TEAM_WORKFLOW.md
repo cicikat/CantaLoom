@@ -1,6 +1,6 @@
 # SONGYU 两人协作工作流
 
-本文件维护稳定流程与目录所有权；当前能力见 [README](../README.md)，任务 checkbox 见[接入计划](plans/free-creation-integration.md)。包版本与能力阶段不是同一概念；后端交付、Mock 可用、页面接线和完整验收分别记录。
+本文件维护稳定流程与目录所有权；当前能力见 [README](../README.md)，任务 checkbox 见 [README 协作工单](../README.md#协作工单)索引的 CC-Tasks 清单。包版本与能力阶段不是同一概念；后端交付、Mock 可用、页面接线和完整验收分别记录。
 
 ## 开发入口与依赖
 
@@ -17,14 +17,14 @@ Mock 当前覆盖旧工作台；compose / melody / production 仍待扩展，不
 
 跨电脑优先 SSH 将队友公共 API 转发到自己的 loopback 端口。不修改后端 `127.0.0.1` 监听地址，不公开管理端口，不为联调解除 Host / Origin / CSRF / DPAPI 限制。后台只能直接访问后端本机地址，默认 `http://127.0.0.1:3001/admin`；Vite 不代理 `/api/admin`、`/admin`、`/admin-assets`。
 
-真实演唱需要已授权声库、声码器与 OpenUtau 桥接，器乐可选 FluidSynth，真实 MP4 需要 FFmpeg。第三方资源与密钥不进 Git。部分实测脚本仍有原机器绝对路径，按[计划 B](plans/free-creation-integration.md)核对，不承诺环境变量能覆盖所有历史脚本。
+真实演唱需要已授权声库、声码器与 OpenUtau 桥接，器乐可选 FluidSynth，真实 MP4 需要 FFmpeg。第三方资源与密钥不进 Git。部分实测脚本仍有原机器绝对路径，按[Blacktea 工单 B2](../CC-Tasks/4-blacktea-integration.md)核对，不承诺环境变量能覆盖所有历史脚本。
 
 ## 文件所有权
 
 | Owner | 路径和职责 |
 |---|---|
 | toge / Frontend / UX | `src/App.tsx`、`components/`、`*Panel.tsx`、`hooks/`、CSS、Canvas 展示、钢琴卷帘与调教交互、`src/api/mock.ts`、前端浏览器测试 |
-| 红茶 / Backend / Music Engine | `server/`、引擎/实测 scripts、音乐核心计算、服务端音频缓存与 FFmpeg、后端测试；`src/composer.ts`、`guided-composer.ts`、`song-plan.ts`、`composition.ts`、`singing.ts`、`melody.ts` |
+| Blacktea（红茶） / Backend / Music Engine | `server/`、引擎/实测 scripts、音乐核心计算、服务端音频缓存与 FFmpeg、后端测试；`src/composer.ts`、`guided-composer.ts`、`song-plan.ts`、`composition.ts`、`singing.ts`、`melody.ts` |
 | 跨层适配，双方确认 | `src/audio.ts` / `audio-mix.ts` 浏览器混音、`external-audio.ts` 资产适配、`src/features/` 用例；先明确此次修改 Owner、调用点与影响，由另一方看接口，不为目录所有权搬进 Node |
 | 公共契约与配置，双方确认 | `shared/`（契约、声明、共用纯音乐计算）、`src/model.ts`、`src/api/client.ts`、Vite/package/Playwright/CI 配置 |
 | 文档 | 各自更新任务相关说明与证据；协作规则/共同计划变更在任务或 PR 说明，不能通过改文档暗中扩大代码授权 |
@@ -50,8 +50,8 @@ Mock 当前覆盖旧工作台；compose / melody / production 仍待扩展，不
 | `shared/*.mjs`、`.d.mts` | 唯一 SongPlan、MIDI、旋律/调教/时间轴/伴奏纯逻辑 |
 | `scripts/`、`openutau-bridge/` | 启动、实测/报告工具、小型 .NET 引擎桥接 |
 | `tests/`、`tests/browser/` | 单元/接口及 Playwright 页面流程 |
-| `docs/`、`docs/plans/` | 稳定说明/验收证据、正式任务计划 |
-| `cc-tasks/` | 历史工单原文，不能当作新任务或持续授权 |
+| docs/ | 稳定说明、前端交接与唯一迭代日志 |
+| CC-Tasks/数字-任务简述.md | 本项目计划/工单，含清单、Owner、依赖、验收和 checkbox；旧工单标明历史范围 |
 | `.github/`、根目录配置 | CI、npm 命令、Vite/TS/Playwright 配置与环境示例 |
 | `03_patchlab_playful.html` | 视觉原型参考，不是当前应用入口 |
 | `dist/`、`node_modules/`、测试输出 | 可生成的本机产物，忽略提交；不自行清理他人文件 |
@@ -73,9 +73,9 @@ Mock 为浏览器内部 transport，不回落真实后端。测试音显式 isDe
 - 本仓库采用功能分支 + PR，这是针对本仓库的协作安排。两人默认各自独立 clone；不要求每项任务另建 worktree。
 - 新任务核对当前分支、工作区和最新 main，从最新 main 开 `feature/frontend-*` 或 `feature/backend-*`；延续任务保留原分支，不顺手切换或清理。
 - 开始、暂存、提交及推送前检查 status/diff；只暂存本次已完成且验证过的文件，不做全仓 git add，不覆盖其他人的改动。
-- 完成步骤先更新计划 checkbox 与 ACCEPTANCE 阶段摘要，再本地提交。进入协作交付时推送本人分支并开 PR，另一方 review；明确要求仅本地/不推送的任务停在本地提交。
+- 完成步骤先更新对应工单 checkbox，并在 docs/iteration-log.md 顶部写明日期、实际结果、验证边界、工单和相关文档地址，再本地提交。进入协作交付时推送本人分支并开 PR，另一方 review；明确要求仅本地/不推送的任务停在本地提交。
 - 合并前更新分支并按范围回归；发生冲突先报告文件和原因，不擅自选一方覆盖，不强推或自动合并 main。
-- PR 写清实际结果、契约/调用点、Mock与真实测试边界、未完成交接，以及计划/验收链接。main 可保留向后兼容但尚无页面入口的 API；这不代表新产品阶段已完成。
+- PR 写清实际结果、契约/调用点、Mock与真实测试边界、未完成交接，以及工单/迭代日志链接。main 可保留向后兼容但尚无页面入口的 API；这不代表新产品阶段已完成。
 - CI 配置在 main、匹配的 feature/codex 分支 push 和 PR 运行。维护者需实际核实远端运行及 main 的 `checks` 必需检查，配置文件存在不表示保护设置已经启用。
 
 ## 验证与完成标准
@@ -102,19 +102,23 @@ npm run test:e2e
 
 E2E 自动启动隔离服务，不必预先启动 dev；默认真实前端 5183、API 3101、Mock 前端 5184，可用 E2E_FRONTEND_PORT / E2E_API_PORT / E2E_MOCK_PORT 调整，不复用运行中实例。完整套件需真实资源；绮萱还依赖既有本机工程，缺资源可 skip，必须报告跳过。CI 排除部分 FluidSynth / Qixuan / FFmpeg 用例，不等于真实生成验收。
 
-每个功能分开记录“后端/核心完成、Mock可用、页面接线、真实联调、共同验收”；checkbox 仅存在对应计划。请求成功、Schema通过、非静音、PCM差异均不能替代从正式页面创作和人工听感。制作 ready-for-mix 也不等于已导出作品。
+每个功能分开记录“后端/核心完成、Mock可用、页面接线、真实联调、共同验收”；checkbox 仅存在对应 CC-Tasks 工单。请求成功、Schema通过、非静音、PCM差异均不能替代从正式页面创作和人工听感。制作 ready-for-mix 也不等于已导出作品。
 
 ## 文档职责与更新
 
+本项目的计划目录与记录方式按 [AGENTS 专属工作流](../AGENTS.md#project-workflow)执行；不套用通用 docs/plans 习惯。
+
 | 文档 | 维护什么 |
 |---|---|
-| README | 当前能力/缺口、启动、阅读入口；不堆历次测试日志 |
-| AGENTS / TEAM_WORKFLOW | 长期边界 / 稳定流程；不写临时授权或滚动待办 |
-| 协作.md | 导航与双方职责摘要，链接计划，不维护第二套 checkbox |
-| docs/plans/主题.md | 当前任务、Owner、依赖、验收、checkbox；小写英文主题文件名，不建索引 |
-| API_CONTRACT / contracts/CHANGELOG | 现行用法 / 提案、确认与兼容记录；历史授权标明范围 |
-| *_FRONTEND_HANDOFF | 具体接入方法、限制与交接基线；进度回链计划 |
-| ACCEPTANCE / 版本验收 | 沿用原工作流：汇总按日期追加简短阶段完成记录，版本报告保存当时实际结果；不把旧数字改成新执行结果 |
-| IMPLEMENTATION / P21 / DECOUPLING_AUDIT / V03_BACKEND / cc-tasks | 历史方案、快照或原工单，保留日期；不作为当前状态入口 |
+| README | 当前能力、启动与 Blacktea/Toge/共同工单索引 |
+| AGENTS / TEAM_WORKFLOW | 项目专属规则、稳定边界与联调/Git 流程 |
+| CC-Tasks/数字-任务简述.md | 计划/工单；Owner、状态、范围、依赖、验收、交接和唯一 checkbox |
+| docs/iteration-log.md | 唯一迭代日志；日期倒序，每条链接工单与相关文档，保存实际结果、证据和未验收边界 |
+| API_CONTRACT / contracts/CHANGELOG | 现行接口用法、字段提案、确认与兼容记录；历史授权标明范围 |
+| *_FRONTEND_HANDOFF | 接入方法、限制与交接基线，当前任务回链工单 |
+| IMPLEMENTATION / P21 / DECOUPLING_AUDIT / V03_BACKEND | 历史方案或技术快照，不能当作新任务或持续授权 |
+| ADMIN / QIXUAN / PROVIDERS | 后台、资源、歌声路线与许可说明 |
 
-完工时更新相关计划、ACCEPTANCE 阶段摘要与必要现状说明；不要求双方额外维护另一份 iteration-log。历史证据只补时间/范围标识，不篡改当时失败或限制。新结论有日期和来源，避免在每份文档复制整套进度。
+工单文件名以数字开头，后接简短主题；新工单不复用历史编号。原协作.md 和接入计划已拆入 Blacktea/Toge/共同工单，不再维护额外的滚动清单。旧 ACCEPTANCE 和版本验收已合入迭代日志，不再各写一份报告。
+
+完成一项后立即更新工单并在日志顶部记录；相关代码、工单和日志通过范围相称的验证后一起本地提交。日志必须写明文档地址，让另一方 agent 能找到依据。历史失败、未执行或环境限制不得用后来的成功覆盖；Mock、真实引擎、正式页面与人工听感分别报告。

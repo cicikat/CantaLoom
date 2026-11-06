@@ -1,6 +1,6 @@
 # v0.3.2 红茶 → toge
 
-2026-11-06 文档核对：本阶段后端已合并至 main（`da54e03`）；下文分支信息是交付历史。前端、Mock 与共同验收的当前 checkbox 只在[接入计划](plans/free-creation-integration.md)维护。本次不改功能代码、不重新执行推理。
+2026-11-06 文档核对：本阶段后端已合并至 main（`da54e03`）；下文分支信息是交付历史。前端与 Mock 的 checkbox 见 [Toge 工单](../CC-Tasks/5-toge-free-creation.md)，共同验收见 [工单 6](../CC-Tasks/6-joint-acceptance.md)。本次不改功能代码、不重新执行推理。
 
 开始时基于 v0.3.1 后端分支 `799229c`；交付前核实 PR #2 已合并（main `10c1574`），本轮分支 `feature/backend-auto-performance-mix`。不自动合并 main，不修改toge的组件、hooks、CSS、Mock 或 E2E 源码。
 
