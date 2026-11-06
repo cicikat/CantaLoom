@@ -11,6 +11,7 @@
 - **计划采用工单模式**，唯一目录为 [CC-Tasks/](CC-Tasks/)，文件名为 数字-任务简略描述.md（例如 5-toge-free-creation.md），数字在前、描述清楚。新工单使用未占用且未在历史引用中使用过的编号，不复用已关闭或缺失的旧编号；不再在 docs/plans/ 新建本项目计划。
 - 每张工单写明 Owner、状态、范围、依赖、应做 checkbox、验收与交接入口；完成一项及时更新该工单，不在导航或日志复制另一套 checkbox。
 - **唯一迭代日志是 [docs/iteration-log.md](docs/iteration-log.md)**，按日期倒序，新条目写在最上方。每条必须注明对应工单与相关文档的可点击地址，并写实际结果、验证边界、未完成交接；不再分散新增 ACCEPTANCE 或版本验收报告。
+- **docs 只保留四份**：[协作流程](docs/TEAM_WORKFLOW.md)、[架构与接口](docs/ARCHITECTURE.md)、[引擎与后台](docs/ENGINES.md)、[迭代日志](docs/iteration-log.md)。同类说明合入对应章节；计划放 CC-Tasks，历史方案、版本交接过程、审计与验收数字归入日志，不另铺散文件。
 - Blacktea 与 Toge 的各自清单，以及共同验收，从 [README 协作工单](README.md#协作工单)进入；稳定边界/联调/Git 规则见 [TEAM_WORKFLOW](docs/TEAM_WORKFLOW.md)。工单内容不是自动跨区授权。
 - 本项目沿用 feature/frontend-*、feature/backend-* 功能分支与 PR；当前已有任务保留分支。按范围验证、更新工单和日志后本地提交；推送、PR 与发布遵守当前任务授权，不自动合并 main。
 
@@ -34,7 +35,7 @@
 
 ## 架构与职责边界
 
-`server/admin-config.mjs` 负责仓库外原子配置与 Windows DPAPI；`server/admin.mjs` 负责仅限本机的管理 API、任务与资源台；`server/public/` 为无构建管理页面。管理 API 不得返回密钥、记录请求体或上游原始错误，不能回退明文存储。外部引擎在 server/services 与保留的 singing 文件交换入口，`src/singing.ts` 负责工程交换与依赖，`src/audio.ts` 为试听与导出的统一混音入口。依赖与后台边界见 `docs/ADMIN.md`；Mock/Web Audio 不要求声库，真实演唱需要已授权资源。
+`server/admin-config.mjs` 负责仓库外原子配置与 Windows DPAPI；`server/admin.mjs` 负责仅限本机的管理 API、任务与资源台；`server/public/` 为无构建管理页面。管理 API 不得返回密钥、记录请求体或上游原始错误，不能回退明文存储。外部引擎在 server/services 与保留的 singing 文件交换入口，`src/singing.ts` 负责工程交换与依赖，`src/audio.ts` 为试听与导出的统一混音入口。依赖与后台边界见 [引擎与后台](docs/ENGINES.md#admin)；Mock/Web Audio 不要求声库，真实演唱需要已授权资源。
 
 这是**单仓库、前后端分层、浏览器端承担创作计算的轻量 Web 架构**。不是大型 Agent 系统，没有数据库、登录或微服务。
 
@@ -43,7 +44,7 @@
 - `shared/song-plan.mjs` 是前后端共用的纯 Zod 数据契约，相邻 `.d.mts` 提供 TS 类型。不得添加服务器 I/O、环境变量读取或秘密。
 - `src/composition.ts` 负责原子应用计划、异步规划入口、锁定和手工内容保护；`src/guided-composer.ts` 将计划变成实际音符；`src/composer.ts` 保留旧工程作曲器、量化、版本与单轨操作。
 - `src/App.tsx` 只组合页面；`src/hooks/` 协调状态、播放器和歌声操作，`src/features/` 管工程、导出和生成结果事务。不要在 UI 中新增 fetch / 缓存依赖校验。`src/api/client.ts` 是统一 API 边界，Mock 只用于开发测试。
-- `shared/contracts/` 统一公开请求/响应；运行时 `.mjs` 与相邻 `.d.mts`、Mock、测试必须同步。SongPlan 只在原共享文件定义。团队分工与 Git 规范见 `docs/TEAM_WORKFLOW.md`，接口见 `docs/API_CONTRACT.md`。
+- `shared/contracts/` 统一公开请求/响应；运行时 `.mjs` 与相邻 `.d.mts`、Mock、测试必须同步。SongPlan 只在原共享文件定义。团队分工与 Git 规范见 `docs/TEAM_WORKFLOW.md`，接口见 [架构与接口](docs/ARCHITECTURE.md#public-api)。
 - `shared/` 还包含 melody、performance、free-timeline、free-score 等共用纯计算；不把共享目录理解为只有 Schema，也不在其中加入 Node I/O。
 - `server/routes/` 管 HTTP，`server/services/` 管引擎服务。旧 instruments/qixuan/planner 入口只是兼容导出。禁止服务端导入 React 或 src。
 - 所有事件以 beat 保存，播放、字幕、导出统一按 `beat * 60 / bpm` 换算。
@@ -100,6 +101,6 @@ start.bat --check
 
 测试应验证真实 PCM 非静音、同 ID/版本的不同意图产生实际音符/声音差异、锁定数据不变、失败保留工程、无 API 可本地创作，并保留原有节奏/保存/字幕/WAV/MP4 回归。夹具响应须明确标注；真实手机、Safari 和真实 LLM 只在实际测试后宣称通过。
 
-按 [团队工作流](docs/TEAM_WORKFLOW.md)维护：当前能力看 README，待办 checkbox 只在 CC-Tasks 对应工单；完成记录和具体测试证据统一写入 [迭代日志](docs/iteration-log.md)，日期倒序并注明工单和相关文档地址，接入方法仍放交接文档。纯文档任务检查链接、内容一致性与 diff，不运行构建/引擎测试。历史证据保留当时结果与限制，不能当作当前机器的新验收。
+按 [团队工作流](docs/TEAM_WORKFLOW.md)维护：当前能力看 README，待办 checkbox 只在 CC-Tasks 对应工单；完成记录和具体测试证据统一写入 [迭代日志](docs/iteration-log.md)，日期倒序并注明工单和相关文档地址，接入方法更新到架构文档对应章节。纯文档任务检查链接、内容一致性与 diff，不运行构建/引擎测试。历史证据保留当时结果与限制，不能当作当前机器的新验收。
 
 推送排除 `node_modules/`、`dist/`、`.env`、`exports/`、测试输出和构建缓存，保留 `.env.example`。不要为了上传而修改仓库可见性或强推覆盖远端历史。

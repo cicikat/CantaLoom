@@ -31,32 +31,9 @@ Mock 当前覆盖旧工作台；compose / melody / production 仍待扩展，不
 
 不得以修构建、完善功能为由代改另一方区域。跨区问题写清证据和影响后交接。没有明确 Owner 时只做当前明确范围。UI 触发用例，HTTP 经统一 Client；服务端不导入 React 或 `src/`；shared 不做 I/O、不读取环境或秘密。保留有真实调用方的旧模块路径。
 
-## 目录用途
+## 架构与资源入口
 
-| 目录／文件 | 用途 |
-|---|---|
-| `src/main.tsx`、`App.tsx` | 浏览器入口与页面组合 |
-| `src/components/`、`*Panel.tsx`、CSS | 展示与交互；`visual.ts` 管程序化画面/字幕 |
-| `src/hooks/` | useStudio / usePlayer / useQixuan，协调状态与交互 |
-| `src/features/project`、`export`、`singing` | 工程恢复/保存、导出、歌声结果与历史事务 |
-| `src/api/` | client：请求/超时/校验；mock：独立测试 transport |
-| `src/model.ts`、音乐模块 | 工程数据、保护策略、计划/旋律/调教；浏览器运行不等于 UI 所有权 |
-| `src/audio.ts`、`audio-mix.ts`、`external-audio.ts` | 共同试听/混音入口、处理、外部资产适配 |
-| `server/index.mjs` | 启动、装配与配置 |
-| `server/routes/`、`services/` | HTTP 与引擎服务，含 melody / free-composition / production |
-| `server/admin*.mjs`、`public/` | 本机管理 API、DPAPI 配置与无构建管理页面 |
-| `server/singing.mjs`、旧平铺导出 | 既有文件交换接口与 instruments/qixuan/planner 兼容导出 |
-| `shared/contracts/` | API Zod Schema、相邻 TS 声明与变更记录 |
-| `shared/*.mjs`、`.d.mts` | 唯一 SongPlan、MIDI、旋律/调教/时间轴/伴奏纯逻辑 |
-| `scripts/`、`openutau-bridge/` | 启动、实测/报告工具、小型 .NET 引擎桥接 |
-| `tests/`、`tests/browser/` | 单元/接口及 Playwright 页面流程 |
-| docs/ | 稳定说明、前端交接与唯一迭代日志 |
-| CC-Tasks/数字-任务简述.md | 本项目计划/工单，含清单、Owner、依赖、验收和 checkbox；旧工单标明历史范围 |
-| `.github/`、根目录配置 | CI、npm 命令、Vite/TS/Playwright 配置与环境示例 |
-| `03_patchlab_playful.html` | 视觉原型参考，不是当前应用入口 |
-| `dist/`、`node_modules/`、测试输出 | 可生成的本机产物，忽略提交；不自行清理他人文件 |
-
-引擎、模型、缓存与后台配置在仓库外。`SONGYU_EXTERNAL_ROOT` 默认路径及引擎配置见 [ADMIN](ADMIN.md)；不存在就不能假定已安装，不自动下载或迁移。
+目录和层间调用见 [ARCHITECTURE](ARCHITECTURE.md)，引擎/后台/资源见 [ENGINES](ENGINES.md)。这里维护所有权与协作规则，避免多份文档重复定义结构。
 
 ## 接口先行与 Mock 交接
 
@@ -64,7 +41,7 @@ Mock 当前覆盖旧工作台；compose / melody / production 仍待扩展，不
 2. 双方确认，或 toge 明确授权限定范围后实施。历史“本轮授权”只属于其记录的任务，不能延伸到后续任务。
 3. 红茶提供合规、无密钥的响应示例与失败/阶段语义；toge扩展既有 Mock 并接页面。字段、来源标记与工程应用方式先确认，禁止各造一套契约。
 4. 默认一个 PR 同步运行时 `.mjs`、声明 `.d.mts`、Client、Mock 与契约测试。确需分两人 PR：先约定同一契约，后端 PR 明示“后端交付 / Mock与页面待接”，toge接入 PR 链接它；未联调前不宣称产品完成，不发布依赖未完成 Mock 的新入口。
-5. 新增可选字段优先；删除/改义字段提供旧工程与调用方迁移方案。新流程的结果应用与失败保护按 [API 说明](API_CONTRACT.md)和交接执行。
+5. 新增可选字段优先；删除/改义字段提供旧工程与调用方迁移方案。新流程的结果应用与失败保护按 [API 说明](ARCHITECTURE.md#public-api)和交接执行。
 
 Mock 为浏览器内部 transport，不回落真实后端。测试音显式 isDemo/mock，任务状态不伪造真实推理；存档用 `songyu-mock-project-v1`，真实用 `songyu-project-v1`，Mock 工程/WAV 文件名带 .mock，PV 是 JSON 回执。真实模式拒绝 Mock 响应/歌声资产。新自由创作的 Mock 来源协议仍需确认，不能把 fixture 记为真实 LLM 成功。
 
@@ -106,19 +83,18 @@ E2E 自动启动隔离服务，不必预先启动 dev；默认真实前端 5183�
 
 ## 文档职责与更新
 
-本项目的计划目录与记录方式按 [AGENTS 专属工作流](../AGENTS.md#project-workflow)执行；不套用通用 docs/plans 习惯。
+本项目计划使用 CC-Tasks，日志倒序；规则见 [AGENTS 专属工作流](../AGENTS.md#project-workflow)。
 
-| 文档 | 维护什么 |
+| 入口 | 维护内容 |
 |---|---|
-| README | 当前能力、启动与 Blacktea/Toge/共同工单索引 |
-| AGENTS / TEAM_WORKFLOW | 项目专属规则、稳定边界与联调/Git 流程 |
-| CC-Tasks/数字-任务简述.md | 计划/工单；Owner、状态、范围、依赖、验收、交接和唯一 checkbox |
-| docs/iteration-log.md | 唯一迭代日志；日期倒序，每条链接工单与相关文档，保存实际结果、证据和未验收边界 |
-| API_CONTRACT / contracts/CHANGELOG | 现行接口用法、字段提案、确认与兼容记录；历史授权标明范围 |
-| *_FRONTEND_HANDOFF | 接入方法、限制与交接基线，当前任务回链工单 |
-| IMPLEMENTATION / P21 / DECOUPLING_AUDIT / V03_BACKEND | 历史方案或技术快照，不能当作新任务或持续授权 |
-| ADMIN / QIXUAN / PROVIDERS | 后台、资源、歌声路线与许可说明 |
+| README | 当前能力、启动与工单/文档索引 |
+| AGENTS / TEAM_WORKFLOW | Agent 规则、职责、接口协作、分支和验证流程 |
+| ARCHITECTURE | 系统目录、工程/音乐数据、HTTP 契约、页面接线、调教与混音 |
+| ENGINES | 无窗口引擎、后台配置、安全、资源与许可 |
+| CC-Tasks/数字-任务简述.md | 当前或历史计划；Owner、状态、范围、依赖、验收及唯一 checkbox |
+| iteration-log | 唯一完成与历史记录；日期倒序，必须链接工单和相关文档 |
+| shared/contracts/CHANGELOG.md | 共享字段提案、确认与兼容记录，保留在契约旁边 |
 
-工单文件名以数字开头，后接简短主题；新工单不复用历史编号。原协作.md 和接入计划已拆入 Blacktea/Toge/共同工单，不再维护额外的滚动清单。旧 ACCEPTANCE 和版本验收已合入迭代日志，不再各写一份报告。
+docs 只保留本流程、架构、引擎和迭代日志四份文档。同类说明更新到对应主题的章节，不另建版本交接、审计、验收或历史方案文件。遗留/新计划统一进 CC-Tasks；历史过程、测试数字、旧环境、失败和停止点进迭代日志。历史工单标明已被后续交付覆盖，不能直接当作新的执行授权。
 
-完成一项后立即更新工单并在日志顶部记录；相关代码、工单和日志通过范围相称的验证后一起本地提交。日志必须写明文档地址，让另一方 agent 能找到依据。历史失败、未执行或环境限制不得用后来的成功覆盖；Mock、真实引擎、正式页面与人工听感分别报告。
+完成一项后立即更新工单并在日志顶部记录日期、实际结果、验证边界、工单与相关文档地址；按范围验证后一起本地提交。Mock、真实引擎、正式页面和人工听感分别报告。按任务授权推送/PR，不自动合并 main。

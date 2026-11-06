@@ -6,7 +6,7 @@ Owner：Blacktea（红茶 / Backend / Music Engine）。状态：待实施。
 
 ## 先读与边界
 
-先读 [AGENTS](../AGENTS.md)、[团队工作流](../docs/TEAM_WORKFLOW.md)、[API 契约](../docs/API_CONTRACT.md)和 [v0.3.2 交接](../docs/V032_FRONTEND_HANDOFF.md)。
+先读 [AGENTS](../AGENTS.md)、[团队工作流](../docs/TEAM_WORKFLOW.md)、[API 契约](../docs/ARCHITECTURE.md#public-api)和 [v0.3.2 交接](../docs/ARCHITECTURE.md#production)。
 负责 server、引擎桥接、音乐核心、缓存、FFmpeg 及后端测试；不代改 Toge 的页面、hooks、Mock 和前端 E2E。共享字段先在 [契约记录](../shared/contracts/CHANGELOG.md)确认。
 
 ## 应做清单（原计划 B）

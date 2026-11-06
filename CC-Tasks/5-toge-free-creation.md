@@ -6,7 +6,7 @@ Owner：Toge（toge / Frontend / UX）。状态：待实施。
 
 ## 先读与现状
 
-先读 [AGENTS](../AGENTS.md)、[团队工作流](../docs/TEAM_WORKFLOW.md)、[API 契约](../docs/API_CONTRACT.md)和 [v0.3.1](../docs/V031_FRONTEND_HANDOFF.md) / [v0.3.2](../docs/V032_FRONTEND_HANDOFF.md)交接。
+先读 [AGENTS](../AGENTS.md)、[团队工作流](../docs/TEAM_WORKFLOW.md)、[API 契约](../docs/ARCHITECTURE.md#public-api)和 [v0.3.1](../docs/ARCHITECTURE.md#composition) / [v0.3.2](../docs/ARCHITECTURE.md#production)交接。
 接口材料与联调环境由 Blacktea 按 [工单 4](4-blacktea-integration.md)交付；共享字段仍须确认。
 
 - compose、melody、production API 及统一 Client 已在代码中；`src/melody.ts` 有结果应用、局部旋律、调教和历史逻辑，`src/audio.ts` 有统一分轨渲染。
@@ -23,7 +23,7 @@ Owner：toge；红茶配合确认接口。先做 A1，再做 A2；不把完整�
 - [ ] **A2 最小页面接线**：自由主题/可选手写歌词 → `startProduction` → 轮询实际 state/stage → 校验完整 project → 一次应用 → 试听。处理失败、404、离开页面或编辑导致结果过期；保留原工程，不显示伪造百分比。
 - [ ] **A2 页面测试**：没有后端时完成上述交互；验证新旧存档隔离、错误保留工程与过期结果不覆盖。页面/Mock 完成不勾选真实验收。
 
-接入说明：[v0.3.2 交接](../docs/V032_FRONTEND_HANDOFF.md)。`ready-for-mix` 只表示资产就绪，浏览器仍需混音/导出。直接 compose 模式应用 `projectFromComposition`，不能调用旧 `applySongPlan/composeFromIdea` 覆盖新旋律。
+接入说明：[v0.3.2 交接](../docs/ARCHITECTURE.md#production)。`ready-for-mix` 只表示资产就绪，浏览器仍需混音/导出。直接 compose 模式应用 `projectFromComposition`，不能调用旧 `applySongPlan/composeFromIdea` 覆盖新旋律。
 
 ## C：局部编辑与调教
 

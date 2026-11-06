@@ -9,9 +9,9 @@
 | 能力 | 当前状态 | 证据与边界 |
 |---|---|---|
 | 现有四页工作台 | 已有节奏录入、分轨、歌词编辑、试听、锁定、保存、WAV/PV 导出 | [v0.2.1 验收](docs/iteration-log.md#v021)；真实 MP4 需要 FFmpeg |
-| 真实中文演唱与 LLM | 历史记录已有真实调用、绮萱 CPU / DirectML、缓存与成片实测 | [绮萱说明](docs/QIXUAN.md)；不证明新电脑已装好引擎或当前 Key 可用 |
-| 自由作曲与动态旋律 | compose / melody 接口、共享客户端及工程应用逻辑已提供 | [v0.3.1 交接](docs/V031_FRONTEND_HANDOFF.md)；正式新入口仍待前端接入 |
-| 自动制作、调教与混音 | 制作任务、Auto/Manual、历史、分轨渲染已有实现；有真实后端制作与浏览器加载工程导出记录 | [v0.3.2 交接](docs/V032_FRONTEND_HANDOFF.md)、[验收](docs/iteration-log.md#v032) |
+| 真实中文演唱与 LLM | 历史记录已有真实调用、绮萱 CPU / DirectML、缓存与成片实测 | [绮萱历史记录](docs/iteration-log.md#qixuan)；不证明新电脑已装好引擎或当前 Key 可用 |
+| 自由作曲与动态旋律 | compose / melody 接口、共享客户端及工程应用逻辑已提供 | [自由创作接入](docs/ARCHITECTURE.md#composition)；正式新入口仍待前端接入 |
+| 自动制作、调教与混音 | 制作任务、Auto/Manual、历史、分轨渲染已有实现；有真实后端制作与浏览器加载工程导出记录 | [自动制作接入](docs/ARCHITECTURE.md#production)、[验收](docs/iteration-log.md#v032) |
 | 新流程 Mock 与页面 | **待完成**：当前页面仍走旧创作入口；Mock 未覆盖 compose / melody / production，未知接口返回 404 | 缺口与双方待办见下方[协作工单](#协作工单) |
 | 新网页完整流程及听感 | **待双方验收**：现场新输入 → 制作 → 试听/导出，以及人工听感 | 旧页面测试、后端实测与非静音指标不能代替这项验收 |
 
@@ -39,7 +39,7 @@ npm run dev:mock
 - 真实 MP4：需要带 libx264 / libass 的 FFmpeg，可设 `FFMPEG_PATH`。
 - 引擎、模型、缓存、后台配置均在仓库外；`SONGYU_EXTERNAL_ROOT` 指定资源根目录。部分实测脚本仍写死原机器路径，使用前按 Blacktea 工单核对，不能仅改环境变量就假定全部可移植。
 
-本机管理后台直接打开 **`http://127.0.0.1:3001/admin`**（端口随后端配置变化）；Vite 的 5173 **不代理后台**。密钥由 Windows DPAPI 加密，换电脑需重新配置。详见[后台说明](docs/ADMIN.md)。
+本机管理后台直接打开 **`http://127.0.0.1:3001/admin`**（端口随后端配置变化）；Vite 的 5173 **不代理后台**。密钥由 Windows DPAPI 加密，换电脑需重新配置。详见[引擎与后台](docs/ENGINES.md#admin)。
 
 ## 本地演示
 
@@ -77,19 +77,21 @@ npm start
 | Blacktea（红茶） | [4 · 接口交接与真实联调准备](CC-Tasks/4-blacktea-integration.md)：字段/示例、可移植实测工具、授权资源与联调环境 |
 | Toge（toge） | [5 · 自由创作 Mock、页面与局部编辑](CC-Tasks/5-toge-free-creation.md)：先补 Mock/最小页面，再接旋律、调教和混音 |
 | 双方共同验收 | [6 · 正式新页面真实闭环与听感](CC-Tasks/6-joint-acceptance.md)：依赖 4/5 就绪，分别记录 Mock、真实引擎、页面和人工听感 |
-| 本轮文档整理 | [7 · 项目工作流整理](CC-Tasks/7-documentation-workflow.md)：已完成的范围与验证入口 |
-| 历史需求 | [1 · 动态旋律与歌声表现力](CC-Tasks/1-dynamic-melody-and-performance.md)：保留原需求，不重复实现已交付部分；旧 2/3 未随仓库保存，不复用编号 |
+| 前一轮工单整理 | [7 · 项目工作流整理](CC-Tasks/7-documentation-workflow.md)：已完成的范围与验证入口 |
+| 本轮文档合并 | [8 · 文档主题合并与历史归位](CC-Tasks/8-docs-consolidation.md) |
+| 后台后续方向 | [12 · 后台与资源管理](CC-Tasks/12-admin-backlog.md)，待排期 |
+| 历史方案 | [1 · 动态旋律](CC-Tasks/1-dynamic-melody-and-performance.md)、[9 · 初始工作台](CC-Tasks/9-initial-workbench.md)、[10 · P2.1 后续建议](CC-Tasks/10-guided-composition.md)、[11 · 解耦迁移](CC-Tasks/11-frontend-backend-decoupling.md)；旧 2/3 未随仓库保存，不复用编号 |
 
 ## 文档与验证入口
 
 | 需要了解什么 | 阅读入口 |
 |---|---|
 | Agent 长期规则 | [AGENTS.md](AGENTS.md) |
-| 两人分工、目录、分支、联调、文档维护 | [TEAM_WORKFLOW.md](docs/TEAM_WORKFLOW.md)与上方[协作工单](#协作工单) |
-| 当前接入缺口、双方下一步、验收条件 | 上方[Blacktea / Toge / 共同工单](#协作工单) |
-| API 用法与共享字段变更 | [API_CONTRACT.md](docs/API_CONTRACT.md)、[契约变更记录](shared/contracts/CHANGELOG.md) |
-| 阶段完成记录、已执行与未验收项 | [迭代日志](docs/iteration-log.md)，按日期倒序 |
-| 后台、资源、歌声与许可记录 | [ADMIN.md](docs/ADMIN.md)、[QIXUAN.md](docs/QIXUAN.md)、[PROVIDERS.md](docs/PROVIDERS.md) |
+| 分工、联调、Git 与验证规则 | [TEAM_WORKFLOW.md](docs/TEAM_WORKFLOW.md) |
+| 系统目录、工程数据、API 与页面接入 | [ARCHITECTURE.md](docs/ARCHITECTURE.md)；字段提案在[契约变更记录](shared/contracts/CHANGELOG.md) |
+| 引擎、后台配置、资源与许可 | [ENGINES.md](docs/ENGINES.md) |
+| 当前任务与各自清单 | 上方[协作工单](#协作工单) |
+| 完成记录、历史过程与验收证据 | [iteration-log.md](docs/iteration-log.md)，日期倒序 |
 
 验证按改动范围执行，条件见团队工作流。E2E 会自行启动隔离服务，不用先运行开发服务。CI 不安装声库，不等于真实引擎或人工听感通过。真实手机及 Safari 音频不能由 Chromium 模拟检查代替。
 
