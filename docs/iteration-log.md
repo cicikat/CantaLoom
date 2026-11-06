@@ -4,6 +4,18 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+<a id="c-piano-roll"></a>
+
+## 2026-11-07 · 工单 5 C 钢琴卷帘与局部旋律
+
+- 工单：[5 · C 前两项](../CC-Tasks/5-toge-free-creation.md)；接线与边界：[钢琴卷帘](ARCHITECTURE.md#piano-roll)；分工：[团队工作流](TEAM_WORKFLOW.md)。按 toge 本轮明确要求，只接钢琴卷帘、句锁/音符锁与指定句旋律生成；未修改共享字段、model、Client、server 或音乐算法定义。
+- 自由作品「虚拟歌姬」页新增钢琴卷帘，支持鼠标/触摸拖动、右柄改长度、方向键/Shift 组合及数值编辑；宽屏网格自适应铺开，窄屏内部滚动并提供音符下拉选择。手工编辑保持 ID、歌词原文、逐字对齐和锁定；人声显示轨只替换对应句片段，保留兄弟句显示音符 ID 与其他轨道。修复初始选择只跟随数组第一项导致重排后跳选的问题，改为一直按 ID 保持选中项。
+- 调用 melodyRequest / api.melody / applyMelodyDraft，只应用指定句；非目标句/草稿完整保留、手写词与锁定音符不变。编辑/切句/离页/停止等待后的迟到响应不应用。改动句音频按已有依赖检查标记过期，其他句与伴奏保留；实际从页面完成只重唱该句及试听。旧音频不删除，失效的演唱不再标成当前有效演唱。
+- current performance / history 的 overrides 按 note ID 重排；新生成 ID 无法承接手工或锁定控制时，原子拒绝整次结果。仅 Auto 且 origin=auto、未锁定的控制复用已有 automaticPhrase 规则重算；没有新增调教模式或混音控件。Mock 局部生成补两版固定八度变化，明确测试来源；部分音符锁定仍保留整句，不伪装真实 LLM 续写。
+- 验证：最终 `npm run build` 通过；`node --import tsx --test tests/phrase-edit.test.ts tests/production-page.test.ts tests/mock-free.test.ts tests/api.test.ts tests/free-composition.test.ts tests/melody.test.ts tests/production.test.ts` 39/39 通过。完整 `npm run test:e2e:mock -- --output=D:/vibe-coding_/temp/songyu-c-piano-test-results` 23/23 通过（原 14 项加 C 的 9 项）；末次自动控制适配后，C 页面定向回归 `--output=D:/vibe-coding_/temp/songyu-c-piano-final-check --grep="C piano|C targeted"` 9/9 再次通过。覆盖拖动/缩放/键盘、保存/刷新、重排索引、重叠拒绝、句锁/音符锁、局部重作与重唱保留兄弟资产、迟到/异常响应及 A1/A2/旧页回归。
+- 视效检查：Windows / Node 26.1.0 / Playwright Chromium headless shell，1440 像素桌面和 390 像素窄屏截图均检查、无横向溢出；`D:/vibe-coding_/temp/songyu-c-piano-desktop.png`、`D:/vibe-coding_/temp/songyu-c-piano-mobile.png`。测试夹具仍受既有音乐校验约束，没有降低断言或放宽音乐规则。构建仍有 Zod 注释与大包提示；文档文件链接与 `git diff --check` 通过。
+- C 前两项已勾选；调教模式、表达历史操作、混音控件及对应后续测试保持未完成，工单不归档。[共同验收 6](../CC-Tasks/6-joint-acceptance.md)未勾选：没有执行真实模型、真实声库/MP4、手机/Safari 或人工听感。后端现有调式/和弦约束及跨新 ID 手工控制迁移边界已写工单交接；只本地提交，未推送、PR、合并或部署。
+
 <a id="a2-free-creation-page"></a>
 
 ## 2026-11-07 · 工单 5 A2 首页输入到试听

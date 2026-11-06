@@ -21,6 +21,21 @@ async function holdProduction(page:import('@playwright/test').Page){
  });
 }
 const mockStored=(page:import('@playwright/test').Page)=>page.evaluate(()=>JSON.parse(localStorage.getItem('songyu-mock-project-v1')!));
+async function openPiano(page:import('@playwright/test').Page,withOverrides=false){
+ await page.goto('/');
+ await page.evaluate(async withOverrides=>{
+  // @ts-expect-error browser API; fresh fixture creation, not real inference
+  const {api}=await import('/src/api/client.ts');
+  let job=await api.startProduction({intent:'钢琴卷帘页面夹具',lyrics:['甲乙丙丁戊','己庚辛壬癸','云上明月光']});
+  for(let i=0;i<20&&job.state==='running';i++)job=await api.production(job.id);
+  if(job.state!=='succeeded')throw Error('Fixture production failed');
+  const p=job.project;
+  if(withOverrides){p.lyrics[0].performance.overrides=[{index:0,dynamics:8,origin:'manual'}];p.performanceHistory={[p.lyrics[0].id]:[{preset:'soft',overrides:[{index:0,dynamics:2}]}]}}
+  localStorage.setItem('songyu-mock-project-v1',JSON.stringify(p));
+ },withOverrides);
+ await page.reload();await page.getByRole('navigation').getByRole('button',{name:/虚拟歌姬/}).click();await expect(page.getByRole('region',{name:'单句钢琴卷帘'})).toBeVisible();
+ return mockStored(page);
+}
 
 test('frontend alone supports planning, locks, singing, sibling cache, playback, reload and exports with zero API requests',async({page})=>{
  const requests:string[]=[],errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
@@ -161,4 +176,74 @@ test('A2 page retains the project on request timeout or invalid response and nev
   await page.getByLabel('自由创作主题',{exact:true}).fill(message);await page.getByRole('button',{name:'制作新作品',exact:true}).click();
   await expect(page.locator('.production-error')).toContainText(message);await expect(page.locator('.production-error')).not.toContainText('internal_schema_details');expect(await mockStored(page)).toEqual(before);
  }
+});
+
+test('C piano editor saves pitch/length, honors locks and persists edits without losing sibling assets',async({page})=>{
+ const before=await openPiano(page),roll=page.getByRole('region',{name:'单句钢琴卷帘'});
+ await roll.getByLabel('选中音符音高',{exact:true}).fill('72');await roll.getByLabel('选中音符长度',{exact:true}).fill('.125');await roll.getByRole('button',{name:'保存音符修改',exact:true}).click();
+ await expect.poll(async()=>(await mockStored(page)).lyrics[0].notes[0].midi).toBe(72);
+ const edited=await mockStored(page);expect(edited.lyrics[0].notes[0].id).toBe(before.lyrics[0].notes[0].id);expect(edited.lyrics.slice(1)).toEqual(before.lyrics.slice(1));expect(edited.vocalAssets).toEqual(before.vocalAssets);
+ await expect(page.locator('.qixuan-line').nth(0)).toContainText('需要重新演唱');await expect(page.locator('.qixuan-line').nth(1)).toContainText('演唱已就绪');
+ await roll.getByRole('button',{name:'锁定这个音符',exact:true}).click();await expect(roll.getByLabel('选中音符音高',{exact:true})).toBeDisabled();
+ await roll.getByRole('button',{name:'解锁这个音符',exact:true}).click();await roll.getByRole('button',{name:'锁定这一句',exact:true}).click();await expect(roll.getByLabel('选中音符音高',{exact:true})).toBeDisabled();
+ await roll.getByRole('button',{name:'解锁这一句',exact:true}).click();
+ await page.screenshot({path:'D:/vibe-coding_/temp/songyu-c-piano-desktop.png',fullPage:true});
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);await page.screenshot({path:'D:/vibe-coding_/temp/songyu-c-piano-mobile.png',fullPage:true});
+ await page.reload();expect((await mockStored(page)).lyrics[0].notes[0].midi).toBe(72);
+});
+
+test('C piano editor reorders stable notes and expression indices, rejects overlaps atomically',async({page})=>{
+ const before=await openPiano(page,true),roll=page.getByRole('region',{name:'单句钢琴卷帘'}),line=before.lyrics[0];
+ await roll.getByLabel('选中音符长度',{exact:true}).fill('.125');await roll.getByRole('button',{name:'保存音符修改',exact:true}).click();
+ await roll.getByLabel('选中音符位置',{exact:true}).fill(String(line.end-line.start-.125));await roll.getByRole('button',{name:'保存音符修改',exact:true}).click();
+ await expect.poll(async()=>(await mockStored(page)).lyrics[0].notes.at(-1).id).toBe(line.notes[0].id);
+ const p=await mockStored(page);expect(p.lyrics[0].notes.map((n:any)=>n.syllable)).toEqual(Array.from(line.text));expect(p.lyrics[0].performance.overrides[0].index).toBe(4);expect(p.performanceHistory[line.id][0].overrides[0].index).toBe(4);
+ await roll.getByLabel('选中音符位置',{exact:true}).fill(String(p.lyrics[0].notes[0].beat-line.start));await roll.getByRole('button',{name:'保存音符修改',exact:true}).click();
+ await expect(roll.locator('.phrase-status')).toContainText('不能重叠');expect(await mockStored(page)).toEqual(p);
+});
+
+test('C piano notes support pointer movement, resizing and keyboard changes',async({page})=>{
+ const before=await openPiano(page),roll=page.getByRole('region',{name:'单句钢琴卷帘'}),first=roll.getByRole('button',{name:/^音符1 /});
+ await first.scrollIntoViewIfNeeded();let box=(await first.boundingBox())!;
+ await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.mouse.move(box.x+box.width/2,box.y+box.height/2-20,{steps:3});await page.mouse.up();
+ await expect.poll(async()=>(await mockStored(page)).lyrics[0].notes[0].midi).toBe(before.lyrics[0].notes[0].midi+1);
+ const handle=roll.getByRole('button',{name:'调整音符1长度',exact:true});await handle.scrollIntoViewIfNeeded();box=(await handle.boundingBox())!;
+ const beatWidth=(await roll.locator('.piano-ruler').boundingBox())!.width/(before.lyrics[0].end-before.lyrics[0].start);
+ await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.mouse.move(box.x+box.width/2-beatWidth*.125,box.y+box.height/2,{steps:3});await page.mouse.up();
+ await expect.poll(async()=>(await mockStored(page)).lyrics[0].notes[0].duration).toBeCloseTo(before.lyrics[0].notes[0].duration-.125,6);
+ await first.focus();await first.press('ArrowDown');await expect.poll(async()=>(await mockStored(page)).lyrics[0].notes[0].midi).toBe(before.lyrics[0].notes[0].midi);
+});
+
+test('C targeted melody preserves the other phrases and accompaniment, then re-sings only that line',async({page})=>{
+ const before=await openPiano(page),roll=page.getByRole('region',{name:'单句钢琴卷帘'});
+ await roll.getByLabel('局部旋律要求',{exact:true}).fill('第一句更高一点');await roll.getByRole('button',{name:'只重作这一句',exact:true}).click();await expect(roll.locator('.phrase-status')).toContainText('已应用');
+ const next=await mockStored(page);expect(next.lyrics[0].notes).not.toEqual(before.lyrics[0].notes);expect(next.lyrics[0].text).toBe(before.lyrics[0].text);expect(next.lyrics.slice(1)).toEqual(before.lyrics.slice(1));expect(next.melodyDraft.phrases.slice(1)).toEqual(before.melodyDraft.phrases.slice(1));expect(next.tracks.filter((t:any)=>t.kind!=='vocal')).toEqual(before.tracks.filter((t:any)=>t.kind!=='vocal'));expect(next.vocalAssets).toEqual(before.vocalAssets);
+ const rows=page.locator('.qixuan-line');await rows.nth(0).getByRole('button',{name:'绮萱演唱',exact:true}).click();await expect(rows.nth(0)).toContainText('MOCK 测试音已就绪');
+ expect((await mockStored(page)).vocalAssets[before.lyrics[1].id]).toEqual(before.vocalAssets[before.lyrics[1].id]);await roll.getByRole('button',{name:'试听当前演唱',exact:true}).click();await expect(page.getByRole('button',{name:'暂停全曲',exact:true})).toBeVisible({timeout:20000});
+});
+
+for(const action of ['edit','phrase','navigate','cancel'])test(`C piano editor discards a late melody after ${action}`,async({page})=>{
+ await openPiano(page);
+ await page.evaluate(async()=>{
+  // @ts-expect-error browser client
+  const {api}=await import('/src/api/client.ts');const original=api.melody;
+  api.melody=async(input:unknown)=>{const result=await original(input);await new Promise<void>(resolve=>{(window as any).releaseMelody=resolve});(window as any).melodyDelivered=true;return result};
+ });
+ const roll=page.getByRole('region',{name:'单句钢琴卷帘'});await roll.getByLabel('局部旋律要求',{exact:true}).fill('迟到的局部旋律');await roll.getByRole('button',{name:'只重作这一句',exact:true}).click();
+ await expect.poll(()=>page.evaluate(()=>typeof (window as any).releaseMelody)).toBe('function');
+ if(action==='edit'){await roll.getByLabel('选中音符音高',{exact:true}).fill('72');await roll.getByRole('button',{name:'保存音符修改',exact:true}).click()}
+ if(action==='phrase')await roll.getByRole('button',{name:/^第 2 句/}).click();
+ if(action==='navigate')await page.getByRole('navigation').getByRole('button',{name:/音乐积木/}).click();
+ if(action==='cancel')await roll.getByRole('button',{name:'停止等待',exact:true}).click();
+ const expected=await mockStored(page);await page.evaluate(()=>(window as any).releaseMelody());await expect.poll(()=>page.evaluate(()=>(window as any).melodyDelivered)).toBe(true);expect(await mockStored(page)).toEqual(expected);
+});
+
+test('C piano editor rejects a response that changes a sibling and preserves the project',async({page})=>{
+ await openPiano(page);const before=await mockStored(page),roll=page.getByRole('region',{name:'单句钢琴卷帘'});
+ await page.evaluate(async()=>{
+  // @ts-expect-error browser client
+  const {api}=await import('/src/api/client.ts');const original=api.melody;
+  api.melody=async(input:unknown)=>{const result=await original(input);result.draft.phrases[1].notes[0].midi++;return result};
+ });
+ await roll.getByLabel('局部旋律要求',{exact:true}).fill('错误响应测试');await roll.getByRole('button',{name:'只重作这一句',exact:true}).click();await expect(roll.locator('.phrase-status')).toContainText('原工程已保留');expect(await mockStored(page)).toEqual(before);
 });

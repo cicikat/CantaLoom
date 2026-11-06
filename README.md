@@ -2,20 +2,21 @@
 
 面向零音乐基础的本地音乐创作工作台：输入灵感或歌词，编曲、编辑、试听，由绮萱演唱并导出作品。仓库：[cicikat/CantaLoom](https://github.com/cicikat/CantaLoom)。
 
-## 当前进度（2026-11-07 A2 更新）
+## 当前进度（2026-11-07 钢琴卷帘更新）
 
-`package.json` 版本仍为 **0.2.1**；v0.3 / v0.3.1 / v0.3.2 是后续能力与验收阶段名，不代表对应新版页面已经发布。后端能力文档核对基线为 main `da54e03`；11 月 7 日已验证 A1 Mock 与 A2 最小页面的构建、定向测试和浏览器回归；新入口已在本地分支接通，真实模型与引擎没有重跑。
+`package.json` 版本仍为 **0.2.1**；v0.3 / v0.3.1 / v0.3.2 是后续能力与验收阶段名，不代表对应新版页面已经发布。后端能力文档核对基线为 main `da54e03`；11 月 7 日已验证 A1 Mock、A2 最小页面及 C 钢琴卷帘/局部旋律的构建、定向测试和浏览器回归；均在本地分支接通，真实模型与引擎没有重跑。
 
 | 能力 | 当前状态 | 证据与边界 |
 |---|---|---|
 | 现有四页工作台 | 已有节奏录入、分轨、歌词编辑、试听、锁定、保存、WAV/PV 导出 | [v0.2.1 验收](docs/iteration-log.md#v021)；真实 MP4 需要 FFmpeg |
 | 真实中文演唱与 LLM | 历史记录已有真实调用、绮萱 CPU / DirectML、缓存与成片实测 | [绮萱历史记录](docs/iteration-log.md#qixuan)；不证明新电脑已装好引擎或当前 Key 可用 |
-| 自由作曲与动态旋律 | compose / melody 接口、共享客户端及工程应用逻辑已提供 | [自由创作接入](docs/ARCHITECTURE.md#composition)；首页最小入口已本地接入，局部编辑仍待工单 5 C |
+| 自由作曲与动态旋律 | compose / melody 接口、共享客户端及工程应用逻辑已提供 | [自由创作接入](docs/ARCHITECTURE.md#composition)；首页最小入口及单句旋律编辑已本地接入 |
 | 自动制作、调教与混音 | 制作任务、Auto/Manual、历史、分轨渲染已有实现；有真实后端制作与浏览器加载工程导出记录 | [自动制作接入](docs/ARCHITECTURE.md#production)、[验收](docs/iteration-log.md#v032) |
 | 新流程 Mock 与页面 | **A1 / A2 已完成**：首页主题/可选歌词 → 制作状态 → 完整结果应用 → 试听已接通；支持取消、失败保留与缺失句重试。旧入口保留，未知 Mock 接口返回 404 | [A1 验证](docs/iteration-log.md#a1-free-creation-mock)、[A2 验证](docs/iteration-log.md#a2-free-creation-page)；双方待办见下方[协作工单](#协作工单) |
+| 钢琴卷帘与局部旋律 | **已接线并通过 Mock**：在虚拟歌姬页按句编辑音高/位置/长度、锁定及指定句重作曲；改动句重唱，保留其他句与伴奏 | [编辑入口](docs/ARCHITECTURE.md#piano-roll)、[本轮验证](docs/iteration-log.md#c-piano-roll)；调教和混音控件仍待办 |
 | 新网页完整流程及听感 | **待双方验收**：现场新输入 → 制作 → 试听/导出，以及人工听感 | Mock 页面测试、后端历史实测与非静音指标不能代替这项验收 |
 
-最小页面已可在 Mock 中从新输入制作并试听；真实最小闭环仍需结合工单 4 / 6 验收，局部编辑、调教和混音控件跟踪在工单 5 C。详细 checkbox 只维护在对应 CC-Tasks 工单中。
+最小页面已可在 Mock 中从新输入制作并试听；真实最小闭环仍需结合工单 4 / 6 验收，钢琴卷帘与局部旋律已可用，调教和混音控件继续跟踪在工单 5 C。详细 checkbox 只维护在对应 CC-Tasks 工单中。
 
 ## 开始开发
 
@@ -75,7 +76,7 @@ npm start
 | 谁 / 任务 | 应做清单与依赖 |
 |---|---|
 | Blacktea（红茶） | [4 · 接口交接与真实联调准备](CC-Tasks/4-blacktea-integration.md)：字段/示例、可移植实测工具、授权资源与联调环境 |
-| Toge（toge） | [5 · 自由创作 Mock、页面与局部编辑](CC-Tasks/5-toge-free-creation.md)：A1 / A2 已完成，C 局部旋律编辑、调教和混音控件待实施 |
+| Toge（toge） | [5 · 自由创作 Mock、页面与局部编辑](CC-Tasks/5-toge-free-creation.md)：A1 / A2 及 C 钢琴卷帘/局部旋律已完成，调教和混音控件待实施 |
 | 双方共同验收 | [6 · 正式新页面真实闭环与听感](CC-Tasks/6-joint-acceptance.md)：依赖 4/5 就绪，分别记录 Mock、真实引擎、页面和人工听感 |
 | 前一轮工单整理 | [7 · 项目工作流整理](CC-Tasks/已完成/7-documentation-workflow.md)：已完成的范围与验证入口 |
 | 本轮文档合并 | [8 · 文档主题合并与历史归位](CC-Tasks/已完成/8-docs-consolidation.md) |

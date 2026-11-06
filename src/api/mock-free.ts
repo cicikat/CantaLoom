@@ -16,6 +16,13 @@ export function mockMelody(input:MelodyRequest){
  const generation={...request,phrases:request.phrases.map(p=>({...p,text:p.text||'风吹过测试小岛',locked:p.locked||p.notes.some(n=>n.locked)}))};
  const draft=localMelody(generation);
  draft.phrases=draft.phrases.map((p,i)=>({...p,locked:request.phrases[i].locked}));
+ // Two deterministic octave variants exercise targeted edits without pretending to infer.
+ if(request.targetIds)for(const phrase of draft.phrases){
+  const before=request.phrases.find(p=>p.id===phrase.id)!;
+  if(!request.targetIds.includes(phrase.id)||before.locked||before.notes.some(n=>n.locked))continue;
+  const shifted=before.notes[0]?.midi===phrase.notes[0]?.midi+12;
+  if(!shifted)phrase.notes=phrase.notes.map(n=>({...n,midi:n.midi+12}));
+ }
  return melodyResponseSchema.parse({mock:true,model,draft:validateMelody(request,{...draft,mock:true})});
 }
 
