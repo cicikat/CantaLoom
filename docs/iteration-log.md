@@ -4,6 +4,31 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+## 2026-11-07 · 夜间表面层次与低饱和色彩
+
+- 工单：[14 · 后台视觉](../CC-Tasks/已完成/14-admin-themes.md)；按用户最新反馈改善黑白夜间层次。保留 #000 页面底，侧栏 / 面板 / 控件分层，添加克制的紫色主色，三张状态卡使用暗粉、暗绿、暗蓝底与深色顶线；日间与布局不变。
+- 主题验证通过日夜切换、持久化/回退、黑底与三层表面差异、相同布局及320/390px抽屉；已检查夜间截图。git diff --check 通过。
+
+## 2026-11-07 · 对齐标题排版与状态卡顶线
+
+- 工单：[14 · 后台视觉](../CC-Tasks/已完成/14-admin-themes.md)。按用户截图调整紫色大写眉题、标题字重/字距与字号，加入星形装饰及参考副标题；为三张彩色状态卡添加粉、绿、蓝的深色顶线，纯黑模式使用灰色线。
+- `node scripts/verify-admin-themes.mjs` 通过日夜切换、持久化、布局一致、320/390px 检查，已核对日间截图。未改引擎或业务流程。
+
+## 2026-11-07 · 主题简化为糖果日间与纯黑夜间
+
+- 工单：[14 · 主题切换](../CC-Tasks/已完成/14-admin-themes.md)；说明：[后台](ENGINES.md#admin)。按用户新要求删除极光/贴纸主题及选择框，改为右上角月亮/太阳图标按钮，有标题、可访问名称和按下状态。
+- 糖果为默认日间；夜间背景、侧栏、面板为 #000，其他控件使用中性灰阶，无彩色渐变。保存图标切换结果，旧 aurora/pop 偏好回退日间。布局与精简文案保持。
+- `node scripts/verify-admin-themes.mjs` 通过：默认/图标切换/刷新保存/旧值与禁用存储回退、纯黑背景断言、日夜几何尺寸一致、未保存字段保留、320/390px 抽屉。已核对截图，git diff --check 通过；仅后台样式和交互改动，无引擎运行。截图：外部根目录 `runtime/exports/admin-themes-20261107/black.png`。
+
+## 2026-11-07 · 后台三套主题与文案精简
+
+- 工单：[14 · 主题与文案](../CC-Tasks/已完成/14-admin-themes.md)；使用：[后台](ENGINES.md#admin)。Owner：Blacktea。参考用户本地管理面板原型的配色，原型原文保留不改。
+- 右上角添加糖果 Bento / 虹彩极光 / 多巴胺贴纸，第一版默认，localStorage 只保存主题标识；异常或未知标识回退第一版。仅使用原型的颜色与渐变，不搬入其布局、卡片尺寸或边框厚度。
+- 删除重复解释、技术旁白和防御性提示，保留必要状态与操作结果；LLM 检查成功文案改为「LLM 连接正常」，后台浏览器测试同步该文案断言。
+- `node scripts/verify-admin-themes.mjs` 通过：三套配色、刷新保留、未知/禁用存储回退、切换不覆盖未保存字段、桌面几何尺寸一致、320/390px 无横向溢出且抽屉正常。三套桌面与窄屏截图位于外部根目录 `runtime/exports/admin-themes-20261107/`，已视觉核对。
+- `node scripts/verify-admin-pipeline.mjs --layout-only` 通过导航、抽屉、失败重试和计划/音符夹具检查；`npm run test:e2e -- tests/browser/admin.spec.ts` 1/1 通过；git diff --check 通过。没有改引擎、音频或公开契约，本轮没有重复运行模型生成。
+- 本地提交；无远端推送。原型文件仍由用户保留在工作区。
+
 ## 2026-11-07 · 后台浏览器测试随导航更新
 
 - 工单：[13 · 后台管理](../CC-Tasks/已完成/13-admin-pipeline.md)。用户明确授权仅更新后台管理测试。将 tests/browser/admin.spec.ts 的旧标题、单页配置/资源操作更新为当前侧栏导航，补窄屏抽屉的打开与选中后收起检查；不修改其他前端 E2E 或正式 UI。`npm run test:e2e -- tests/browser/admin.spec.ts` 1/1 通过。
