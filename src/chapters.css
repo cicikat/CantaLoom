@@ -69,18 +69,24 @@
    Each act is a tall track; its 100vh stage is pinned with sticky. The page after it lives in .act-pin, which pulls
    that page up under the stage and pins it there for the last --act-reveal of scrolling, so the curtain can be pulled
    down to uncover it in place. ChapterActs.tsx writes the per-frame transforms. Track lengths are tuned here. */
-:root{--act-bench-text:115vh;--act-bench-reveal:95vh;--act-mv-text:200vh;--act-mv-reveal:95vh;--bench:#ece7f8;--bench-line:#ddd4f3;--bench-line-strong:#cbbdee}
-/* The track overlaps the pinned page, so only the coloured layers themselves may catch clicks. */
+:root{--act-bench-text:130vh;--act-bench-reveal:95vh;--act-mv-text:220vh;--act-mv-reveal:95vh;--bench:#ece7f8;--bench-line:#ddd4f3;--bench-line-strong:#cbbdee}
+/* The track overlaps the pinned page, so only the stage itself may catch clicks. */
 .act{position:relative;z-index:2;height:calc(100vh + var(--act-text) + var(--act-reveal));pointer-events:none}
 .act-bench{--act-text:var(--act-bench-text);--act-reveal:var(--act-bench-reveal)}
 .act-mv{--act-text:var(--act-mv-text);--act-reveal:var(--act-mv-reveal)}
-/* The clip keeps pulled-away curtains from showing below the stage but leaves room above it for cast shadows. */
-.act-stage{position:sticky;top:0;height:100vh;clip-path:inset(-140px 0 0 0);pointer-events:none;contain:layout style}
-.act-panel{position:absolute;inset:0;border-top:3px solid var(--ink);background:var(--tone);pointer-events:auto}
-.act-panel+.act-panel,.say-curtain{will-change:transform}
+/* Each stage continues the page above it (dotted hero paper / workbench mat). The discs may rise over that page as
+   it scrolls away (the clip only cuts the bottom, where pulled curtains leave), but they catch no clicks until the
+   stage is pinned, so the page above stays fully usable. Once a disc covers the screen the paper is dropped and
+   clicks pass to whatever the disc uncovers when it is pulled away. */
+.act-stage{position:sticky;top:0;height:100vh;clip-path:inset(-100vh 0 0 0);pointer-events:auto;contain:layout style}
+.act-bench .act-stage{background:var(--off) radial-gradient(#d6d9ce 1px,transparent 1px) 0 0/24px 24px}
+.act-mv .act-stage{background-color:var(--bench);background-image:linear-gradient(var(--bench-line-strong) 1.5px,transparent 1.5px),linear-gradient(90deg,var(--bench-line-strong) 1.5px,transparent 1.5px),linear-gradient(var(--bench-line) 1px,transparent 1px),linear-gradient(90deg,var(--bench-line) 1px,transparent 1px);background-size:128px 128px,128px 128px,32px 32px,32px 32px}
+.act-stage.is-covered,.act-stage.is-filled{background:none;pointer-events:none}
+.act-ring{position:absolute;left:0;top:0;border:3px solid var(--ink);border-radius:50%;background:var(--c);box-shadow:0 -10px 0 rgba(32,33,35,.08);pointer-events:none;visibility:hidden;will-change:transform}
+.is-pinned>.act-ring{pointer-events:auto}
+.is-covered>.act-ring:not(.is-last),.is-filled>.act-ring{visibility:hidden!important}
+.say-curtain{will-change:transform}
 .act-cast{position:absolute;left:0;right:0;bottom:100%;height:64px;background:linear-gradient(to top,rgba(32,33,35,.14),rgba(32,33,35,0));pointer-events:none}
-.tone-yellow{--tone:var(--yellow)}.tone-orange{--tone:var(--orange)}.tone-violet{--tone:var(--violet)}
-.is-covered>.act-panel:not(.act-curtain),.is-filled>.act-panel{visibility:hidden}
 /* Sticky boxes never move into their parent's padding, so the extra pinned distance is a spacer after the page. */
 .act-pin{position:relative;z-index:1;margin-top:calc(-100vh - var(--act-reveal))}
 .act-pin::after{content:"";display:block;height:var(--act-reveal)}

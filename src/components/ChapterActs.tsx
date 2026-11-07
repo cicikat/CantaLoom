@@ -1,5 +1,5 @@
 import {memo,useEffect,useRef,type CSSProperties,type RefObject} from 'react';
-import {actProgress,cascade,easeBack,easeInOut,easeOut,lerp,span,stepSwap,swapTarget} from './chapter-motion';
+import {actProgress,cascade,coverRadius,easeBack,easeInOut,easeOut,lerp,ringFrame,span,stepSwap,swapTarget} from './chapter-motion';
 
 // Two scroll "acts" sit between the three content chapters:
 //   hero → BenchAct ("Music Blocks") → workbench → MvAct ("Let's …") → MV theatre.
@@ -9,7 +9,8 @@ import {actProgress,cascade,easeBack,easeInOut,easeOut,lerp,span,stepSwap,swapTa
 // own clock but is clamped by scroll), so scrolling back replays the act in reverse. Only transforms, opacity and the
 // one text block's size change per frame; nothing in the content chapters is covered once its curtain is gone.
 
-type Act={enter:number;text:number;reveal:number};
+/** Progress of an act (see actProgress) plus `top`, the stage's top edge in viewport pixels. */
+type Act={enter:number;text:number;reveal:number;lead:number;top:number};
 interface Scene{measure():void;draw(act:Act|null,now:number):boolean}
 
 /** Writes a style value only when it changed, so idle scroll frames touch nothing. */
@@ -19,7 +20,34 @@ function writer(){
   const seen=last.get(el)??{};if(seen[prop]===value)return;seen[prop]=value;last.set(el,seen);el.style.setProperty(prop,value);
  };
 }
+type Put=ReturnType<typeof writer>;
 const move=(x:number,y:number)=>`translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0)`;
+
+/**
+ * The discs of an act: each rises from below the bottom centre of the screen and grows until the last one covers
+ * everything, so the eye always has a centre to follow. Positions are worked out in viewport pixels and shifted by
+ * the stage's own top, so the discs rise steadily (over the page above) even while the stage is still scrolling in.
+ * They only catch clicks once the stage is pinned (`is-pinned`), so the page above stays usable underneath.
+ */
+function discs(stage:HTMLElement,put:Put){
+ const all=Array.from(stage.querySelectorAll<HTMLElement>(':scope>.act-ring'));let R=0;
+ return {
+  get radius(){return R},
+  measure(W:number,H:number){R=coverRadius(W,H);all.forEach(d=>{d.style.width=d.style.height=`${(2*R).toFixed(1)}px`})},
+  /** `progress(i)` is disc i's 0–1 rise; `drop` pulls the last disc down like a curtain. Returns whether the last covers the screen. */
+  draw(W:number,H:number,top:number,progress:(i:number)=>number,drop=0){
+   let covered=false;
+   all.forEach((d,i)=>{
+    const t=progress(i),{x,y,scale}=ringFrame(t,W,H,R),last=i===all.length-1;if(last)covered=t>=1;
+    put(d,'transform',`translate3d(${(x-R).toFixed(1)}px,${(y-R-top+(last?drop:0)).toFixed(1)}px,0) scale(${scale.toFixed(4)})`);
+    put(d,'visibility',t>0?'visible':'hidden');
+   });
+   stage.classList.toggle('is-covered',covered);stage.classList.toggle('is-pinned',top<=.5);
+   return covered;
+  },
+ };
+}
+const Discs=({colors}:{colors:readonly string[]})=><>{colors.map((c,i)=><span key={i} className={`act-ring${i===colors.length-1?' is-last':''}`} style={{'--c':c} as CSSProperties}/>)}</>;
 /** Length of the spacer that keeps a page pinned under its curtain (0 when reduced motion removes it). */
 function pinReveal(pin:HTMLElement){const after=getComputedStyle(pin,'::after');return after.display==='none'?0:parseFloat(after.height)||0}
 
@@ -30,7 +58,7 @@ function useScrollAct(trackRef:RefObject<HTMLDivElement|null>,build:(track:HTMLD
   if(!track||!stage||!pin?.classList.contains('act-pin'))return;
   const motion=matchMedia('(prefers-reduced-motion: reduce)'),scene=buildRef.current(track,stage,pin);
   let frame=0,reveal=0;
-  const read=():Act=>{const t=track.getBoundingClientRect();return actProgress(t.top,t.height,stage.offsetHeight,pin.getBoundingClientRect().top,reveal)};
+  const read=():Act=>{const t=track.getBoundingClientRect();return {...actProgress(t.top,t.height,stage.offsetHeight,pin.getBoundingClientRect().top,reveal),top:stage.getBoundingClientRect().top}};
   const tick=(now:number)=>{
    frame=0;const act=motion.matches?null:read();
    pin.classList.toggle('is-open',!act||act.reveal>=1);
@@ -61,48 +89,44 @@ export function chapterScrollTop(id:string){
  return Math.ceil(top(pin)+reveal+(el.getBoundingClientRect().top-page.getBoundingClientRect().top));
 }
 
-// ---------- Act 1 · Music Blocks: three paper layers rise, then the front one is pulled down off the workbench ----------
+// ---------- Act 1 · Music Blocks: discs rise to the centre, then the violet one is pulled down off the workbench ----------
 const BLOCKS=[['B','var(--yellow)'],['l','var(--mint)'],['o','var(--orange)'],['c','var(--blue)'],['k','var(--off)'],['s','#f2b8d8']] as const;
+const DISCS_1=['var(--yellow)','var(--orange)','var(--mint)','var(--blue)','var(--violet)'] as const;
 
 export const BenchAct=memo(function BenchAct(){
  const track=useRef<HTMLDivElement>(null);
- useScrollAct(track,(el,stage)=>{
-  const [,mid,front]=Array.from(stage.querySelectorAll<HTMLElement>(':scope>.act-panel'));
+ useScrollAct(track,(_el,stage)=>{
   const title=stage.querySelector<HTMLElement>('.act-title')!,word=stage.querySelector<HTMLElement>('.bridge-word')!;
   const letters=Array.from(stage.querySelectorAll<HTMLElement>('.bridge-music>span')),tiles=Array.from(stage.querySelectorAll<HTMLElement>('.bridge-blocks>span'));
   const fades=Array.from(stage.querySelectorAll<HTMLElement>('[data-at]'));
-  const put=writer();let H=0,em=0;
+  const put=writer(),ring=discs(stage,put);let W=0,H=0,em=0;
   return {
-   measure(){H=stage.offsetHeight;em=parseFloat(getComputedStyle(word).fontSize)||100},
+   measure(){W=stage.clientWidth;H=stage.offsetHeight;ring.measure(W,H);em=parseFloat(getComputedStyle(word).fontSize)||100},
    draw(act){
-    // The hero is left alone (it stays fully usable); the layers only stack over one another inside the stage.
-    const {text:P,reveal:r}=act??{text:.7,reveal:0};
-    const rise=H*.5*(1-easeInOut(span(P,.03,.34))),pull=easeInOut(r)*(H+120);
-    put(mid,'transform',move(0,H*.24*(1-easeInOut(span(P,0,.24)))));
-    put(front,'transform',move(0,rise+pull));
-    stage.classList.toggle('is-covered',rise<.5);
+    // `q` runs from the stage peeking in under the hero to the end of the title page; the hero itself is left alone.
+    const {lead:q,reveal:r,top}=act??{lead:.9,reveal:0,top:0};
+    // The violet disc is the curtain: pulled down, it uncovers the workbench behind a curved edge.
+    const drop=easeInOut(r)*(H/2+ring.radius+24);
+    ring.draw(W,H,top,i=>span(q,.04+i*.08,.3+i*.08),drop);
     // The step lights only blink while the title page can be seen.
-    stage.classList.toggle('is-titled',P>.3&&r<1);
-    // Title rides the front layer; it drifts up while held and sinks a little faster than the curtain when pulled.
-    put(title,'transform',move(0,-span(P,.45,1)*H*.04+easeInOut(r)*H*.14));
-    letters.forEach((ch,i)=>{const t=span(P,.08+i*.035,.27+i*.035),k=easeBack(t);put(ch,'transform',`translate3d(0,${((1-k)*em*.9).toFixed(1)}px,0) rotate(${((1-k)*(i%2?9:-9)).toFixed(1)}deg)`);put(ch,'opacity',Math.min(1,t*4).toFixed(3))});
+    stage.classList.toggle('is-titled',q>.62&&r<1);
+    // Title rides the violet disc; it drifts up while held and sinks a little faster than the disc when pulled.
+    put(title,'transform',move(0,-span(q,.8,1)*H*.04+drop+easeInOut(r)*H*.06));
+    letters.forEach((ch,i)=>{const t=span(q,.58+i*.02,.7+i*.02),k=easeBack(t);put(ch,'transform',`translate3d(0,${((1-k)*em*.9).toFixed(1)}px,0) rotate(${((1-k)*(i%2?9:-9)).toFixed(1)}deg)`);put(ch,'opacity',Math.min(1,t*4).toFixed(3))});
     // The tiles are tossed up from below one after another, spinning, and land with a bounce.
-    tiles.forEach((tile,j)=>{const t=span(P,.16+j*.04,.36+j*.04),k=easeBack(t,2.2);put(tile,'transform',`translate3d(0,${((1-k)*em*1.3).toFixed(1)}px,0) rotate(${((1-k)*(j%2?-40:40)).toFixed(1)}deg)`);put(tile,'opacity',Math.min(1,t*5).toFixed(3))});
-    fades.forEach(node=>{const at=Number(node.dataset.at),k=easeOut(span(P,at,at+.1));put(node,'opacity',k.toFixed(3));put(node,'transform',move(0,(1-k)*16))});
+    tiles.forEach((tile,j)=>{const t=span(q,.64+j*.022,.78+j*.022),k=easeBack(t,2.2);put(tile,'transform',`translate3d(0,${((1-k)*em*1.3).toFixed(1)}px,0) rotate(${((1-k)*(j%2?-40:40)).toFixed(1)}deg)`);put(tile,'opacity',Math.min(1,t*5).toFixed(3))});
+    fades.forEach(node=>{const at=Number(node.dataset.at),k=easeOut(span(q,at,at+.06));put(node,'opacity',k.toFixed(3));put(node,'transform',move(0,(1-k)*16))});
     return false;
    },
   };
  });
  return <div className="act act-bench" ref={track} aria-hidden="true"><div className="act-stage">
-  <div className="act-panel tone-yellow"><i className="act-cast"/></div>
-  <div className="act-panel tone-orange"><i className="act-cast"/></div>
-  <div className="act-panel tone-violet act-curtain"><i className="act-cast"/>
-   <div className="act-title">
-    <p className="bridge-kicker" data-at=".3">CHAPTER 02 · 音乐积木工作台</p>
-    <p className="bridge-word"><span className="bridge-music">{Array.from('Music').map((ch,j)=><span key={j}>{ch}</span>)}</span><span className="bridge-blocks">{BLOCKS.map(([ch,color],j)=><span key={j} style={{'--c':color,'--r':`${j%2?5:-6}deg`} as CSSProperties}>{ch}</span>)}</span></p>
-    <span className="bridge-steps" data-at=".34">{Array.from({length:8},(_,k)=><i key={k} style={{'--k':k} as CSSProperties}/>)}</span>
-    <p className="bridge-hint" data-at=".4">↓ 继续往下，拉开幕布开始搭积木</p>
-   </div>
+  <Discs colors={DISCS_1}/>
+  <div className="act-title">
+   <p className="bridge-kicker" data-at=".6">CHAPTER 02 · 音乐积木工作台</p>
+   <p className="bridge-word"><span className="bridge-music">{Array.from('Music').map((ch,j)=><span key={j}>{ch}</span>)}</span><span className="bridge-blocks">{BLOCKS.map(([ch,color],j)=><span key={j} style={{'--c':color,'--r':`${j%2?5:-6}deg`} as CSSProperties}>{ch}</span>)}</span></p>
+   <span className="bridge-steps" data-at=".66">{Array.from({length:8},(_,k)=><i key={k} style={{'--k':k} as CSSProperties}/>)}</span>
+   <p className="bridge-hint" data-at=".72">↓ 继续往下，拉开幕布开始搭积木</p>
   </div>
  </div></div>;
 });
@@ -126,6 +150,7 @@ const IN:Keyframe[]=[
 const SWAP_MS=1600,OUT_GAP=.045,OUT_LEN=.32,IN_AT=.12,IN_GAP=.04,IN_LEN=.44;
 const GAP=.3,PAD_X=.32,PAD_Y=.1;
 const MINT=[188,228,187],VIOLET=[187,164,248];
+const DISCS_2=['var(--violet)','var(--orange)','var(--mint)','var(--yellow)'] as const;
 
 function Phrase({text}:{text:string}){
  return <span className="say-phrase">{Array.from(text).map((ch,i)=>ch===' '?<span key={i} className="say-gap"/>:<span key={i} className="say-ch">{ch}</span>)}</span>;
@@ -134,7 +159,6 @@ function Phrase({text}:{text:string}){
 export const MvAct=memo(function MvAct(){
  const track=useRef<HTMLDivElement>(null);
  useScrollAct(track,(el,stage)=>{
-  const [,mid,front]=Array.from(stage.querySelectorAll<HTMLElement>(':scope>.act-panel'));
   const curtain=stage.querySelector<HTMLElement>('.say-curtain')!,block=stage.querySelector<HTMLElement>('.say-block')!,text=stage.querySelector<HTMLElement>('.say-text')!;
   const lets=text.querySelector<HTMLElement>('.say-lets')!,[from,to]=Array.from(text.querySelectorAll<HTMLElement>('.say-phrase')),hint=stage.querySelector<HTMLElement>('.say-hint')!;
   const timing={duration:1000,fill:'both'as const};
@@ -142,13 +166,13 @@ export const MvAct=memo(function MvAct(){
   const ins=Array.from(to.querySelectorAll<HTMLElement>('.say-ch')).map(ch=>ch.animate(IN,timing));
   [...outs,...ins].forEach(a=>{a.pause();a.currentTime=0});
   const total=Math.max((outs.length-1)*OUT_GAP+OUT_LEN,IN_AT+(ins.length-1)*IN_GAP+IN_LEN);
-  const put=writer();
+  const put=writer(),ring=discs(stage,put);
   const outChars=Array.from(from.querySelectorAll<HTMLElement>('.say-ch')),inChars=Array.from(to.querySelectorAll<HTMLElement>('.say-ch'));
   let W=0,H=0,f=100,stacked=false,letsW=0,wB=0,lineH=0,edgeA:number[]=[],edgeB:number[]=[];
   let m=0,target:0|1=0,shown=-1,clock=0;
   return {
    measure(){
-    W=stage.clientWidth;H=stage.offsetHeight;
+    W=stage.clientWidth;H=stage.offsetHeight;ring.measure(W,H);
     text.style.fontSize='100px';
     // Everything is measured once at 100px and scaled, so text size never feeds back into the measurement.
     const l=lets.offsetWidth,b=to.offsetWidth,h=to.offsetHeight;
@@ -162,10 +186,12 @@ export const MvAct=memo(function MvAct(){
     const k=f/100;letsW=l*k;wB=b*k;lineH=h*k;edgeA=rawA.map(x=>x*k);edgeB=rawB.map(x=>x*k);shown=-1;
    },
    draw(act,now){
-    const live=!!act,{text:P,reveal:r}=act??{text:.5,reveal:0};
+    const live=!!act,{text:P,reveal:r,lead:q,top}=act??{text:.5,reveal:0,lead:1,top:0};
+    // Discs rise out of the workbench mat exactly like Act 1; the last (yellow) one is the backdrop for "Let's".
+    ring.draw(W,H,top,i=>span(q,.03+i*.06,.2+i*.06));
     const dt=clock?Math.min(64,now-clock):16;
-    const was=m;target=swapTarget(P,target,.3,.22);
-    m=live?stepSwap(m,target,dt,SWAP_MS,P,[.1,.16],[.5,.58]):1;
+    const was=m;target=swapTarget(P,target,.4,.34);
+    m=live?stepSwap(m,target,dt,SWAP_MS,P,[.3,.36],[.54,.62]):1;
     const running=live&&m!==target&&m!==was;clock=running?now:0;
     if(m!==shown){
      outs.forEach((a,i)=>{a.currentTime=cascade(m,i,0,OUT_GAP,OUT_LEN,total)*1000});
@@ -173,10 +199,10 @@ export const MvAct=memo(function MvAct(){
      shown=m;
     }
     el.classList.toggle('is-swapped',m>=1);
-    // Layers rise like Act 1; "Let's" and the block arrive on separate beats.
-    const midY=H*.24*(1-easeInOut(span(P,0,.2))),frontY=H*.5*(1-easeInOut(span(P,.02,.28)));
-    const letsLag=(1-easeBack(span(P,.06,.24)))*f*.9,blockLag=(1-easeBack(span(P,.1,.3)))*f*1.4;
-    put(mid,'transform',move(0,midY));put(front,'transform',move(0,frontY));
+    // Once the yellow disc covers the screen, "Let's" and the block pop up on separate beats.
+    const letsIn=span(P,.1,.16),blockIn=span(P,.14,.2);
+    const letsLag=(1-easeBack(span(P,.1,.24)))*f*.9,blockLag=(1-easeBack(span(P,.14,.3)))*f*1.4;
+    put(lets,'opacity',letsIn.toFixed(3));[from,to,block].forEach(n=>put(n,'opacity',blockIn.toFixed(3)));
     // The block's right edge tracks the furthest letter still standing: old letters hold it until they roll away,
     // new ones push it out as they land, so the block stretches and shrinks in step with the swap (both ways).
     // Old letters: the furthest one still showing (a leaving letter slides the edge back to its neighbour).
@@ -189,7 +215,7 @@ export const MvAct=memo(function MvAct(){
     const padX=PAD_X*f,padY=PAD_Y*f,bw=Math.max(reach,f*.6)+2*padX,bh=lineH+2*padY,cy=H*.47;
     // After the swap the block takes two beats: it swallows "Let's" (the words close up into one sentence),
     // then grows over the whole screen and is pulled down off the MV like Act 1's curtain.
-    const join=easeInOut(span(P,.62,.7)),ex=easeInOut(span(P,.7,.92));
+    const join=easeInOut(span(P,.66,.72)),ex=easeInOut(span(P,.72,.92));
     let lx:number,ly:number,px:number,by:number,wrap:[number,number,number,number];
     if(stacked){
      const gap=f*.16;lx=(W-letsW)/2;ly=cy-gap/2-lineH;px=(W-bw)/2+padX;by=cy+gap/2;
@@ -198,9 +224,9 @@ export const MvAct=memo(function MvAct(){
      const space=.28*f,sentence=letsW+space+wB,lx0=(W-(letsW+GAP*f+bw))/2,lx1=(W-sentence)/2;
      lx=lerp(lx0,lx1,join);px=lerp(lx0+letsW+GAP*f+padX,lx1+letsW+space,join);ly=cy-lineH/2;by=cy-bh/2;wrap=[lx1-padX,by,sentence+2*padX,bh];
     }
-    put(lets,'transform',move(lx,ly+frontY+letsLag));
-    put(from,'transform',move(px,by+padY+frontY+blockLag));put(to,'transform',move(px,by+padY+frontY+blockLag));
-    const rest=[px-padX,by+frontY+blockLag,bw,bh],full=[-14,-14,W+28,H+28];
+    put(lets,'transform',move(lx,ly+letsLag));
+    put(from,'transform',move(px,by+padY+blockLag));put(to,'transform',move(px,by+padY+blockLag));
+    const rest=[px-padX,by+blockLag,bw,bh],full=[-14,-14,W+28,H+28];
     const [X,Y,BW,BH]=rest.map((v,i)=>lerp(lerp(v,wrap[i],join),full[i],ex));
     put(block,'transform',move(X,Y));
     put(block,'width',`${BW.toFixed(1)}px`);put(block,'height',`${BH.toFixed(1)}px`);
@@ -209,17 +235,15 @@ export const MvAct=memo(function MvAct(){
     stage.classList.toggle('is-filled',ex>=1);
     put(text,'transform',`translate3d(0,${(easeInOut(r)*H*.12).toFixed(1)}px,0) scale(${(1+.08*ex).toFixed(4)})`);
     put(curtain,'transform',move(0,easeInOut(r)*(H+120)));
-    const h=live?span(m,.8,1)*(1-span(P,.6,.66)):0;
-    put(hint,'opacity',h.toFixed(3));put(hint,'transform',move(0,frontY+(1-h)*12));
+    const h=live?span(m,.8,1)*(1-span(P,.62,.68)):0;
+    put(hint,'opacity',h.toFixed(3));put(hint,'transform',move(0,(1-h)*12));
     return running;
    },
    dispose(){[...outs,...ins].forEach(a=>a.cancel())},
   };
  });
  return <div className="act act-mv" ref={track} aria-hidden="true"><div className="act-stage">
-  <div className="act-panel tone-violet"><i className="act-cast"/></div>
-  <div className="act-panel tone-orange"><i className="act-cast"/></div>
-  <div className="act-panel tone-yellow"><i className="act-cast"/></div>
+  <Discs colors={DISCS_2}/>
   <div className="say-curtain"><i className="act-cast"/>
    <div className="say-block"/>
    <p className="say-text"><span className="say-lets">Let's</span><Phrase text={PHRASES[0]}/><Phrase text={PHRASES[1]}/></p>

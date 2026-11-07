@@ -1,3 +1,11 @@
+<a id="scroll-transition-discs"></a>
+
+## 2026-11-08 滚动转场改回圆形
+
+关联：[工单 29](../CC-Tasks/29-five-chapter-scroll-transitions.md)、[转场组件](../src/components/ChapterActs.tsx)。toge 反馈横向色带「没有重心、像塑料」：第一段改回从底部中间依次升起长大的五个圆，紫圆即幕布，向下拉开时露出圆弧边；工作台 → Let's 的入场也改为四个圆，黄圆盖满后文字弹入。Let's → MV（色块撑满后拉开）按要求不变。圆在舞台钉住前可越过上一页，但不接收点击；舞台背景延续首页点点纸 / 工作台格纸。Music Blocks 拼好后的停留约半屏滚动距离，短于原五圆版的约一屏，未调整。
+
+验证：tsc、build 通过；`tests/chapter-motion.test.ts` 4/4；Mock 页面回归（`CHOKIDAR_USEPOLLING=true`）**35/35**。按 toge 要求本轮未再截图或测帧，未做人工滚动验收；无跨端交接。
+
 <a id="five-chapter-scroll-transitions"></a>
 
 ## 2026-11-08 五章节滚动转场：幕布揭开与 Let's 文字翻转

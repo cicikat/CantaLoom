@@ -6,7 +6,8 @@ import {actProgress,cascade,easeBack,span,stepSwap,swapTarget} from '../src/comp
 const V=800,REVEAL=760,TRACK=V+920+REVEAL;
 
 test('act progress: stage enters, text page runs, then the pinned page is uncovered',()=>{
- assert.deepEqual(actProgress(V,TRACK,V,V+920,REVEAL),{enter:0,text:0,reveal:0});
+ assert.deepEqual(actProgress(V,TRACK,V,V+920,REVEAL),{enter:0,text:0,reveal:0,lead:0});
+ assert.equal(actProgress(-920,TRACK,V,0,REVEAL).lead,1,'lead ends with the text page');
  const half=actProgress(-460,TRACK,V,460,REVEAL);assert.equal(half.enter,1);assert.equal(half.text,.5);assert.equal(half.reveal,0);
  const open=actProgress(-920-380,TRACK,V,-380,REVEAL);assert.equal(open.text,1);assert.equal(open.reveal,.5);
  assert.equal(actProgress(-4000,TRACK,V,-3080,REVEAL).reveal,1);
