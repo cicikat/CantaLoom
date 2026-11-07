@@ -23,6 +23,53 @@ async function holdProduction(page:import('@playwright/test').Page){
  });
 }
 const mockStored=(page:import('@playwright/test').Page)=>page.evaluate(()=>JSON.parse(localStorage.getItem('songyu-mock-project-v1')!));
+
+test('lyrics from creation settings sync to stickers, MV canvas and saved project',async({page})=>{
+ await page.goto('/');const before=await mockStored(page);
+ const lyrics=before.lyrics.map((l:any,i:number)=>i===0?'把今天写进一封信里':l.text);
+ await creationSettings(page);await page.getByLabel('自由创作歌词',{exact:true}).fill(lyrics.join('\n'));
+ await page.getByRole('button',{name:'同步歌词到当前作品',exact:true}).click();
+ await expect(page.getByLabel('第1句歌词',{exact:true})).toHaveValue(lyrics[0]);
+ expect((await mockStored(page)).lyrics.map((l:any)=>l.text)).toEqual(lyrics);
+ await page.evaluate(()=>{
+  const drawn:string[]=[];const original=CanvasRenderingContext2D.prototype.fillText;
+  CanvasRenderingContext2D.prototype.fillText=function(text:string,...args:any[]){drawn.push(text);return original.call(this,text,...args as [number,number])};
+  (window as any).lyricDrawn=drawn;
+ });
+ const current=await mockStored(page),time=current.lyrics[0].start*60/current.bpm+.1;
+ await page.getByRole('slider',{name:'PV 进度',exact:true}).fill(String(time));
+ await expect.poll(()=>page.evaluate(()=>(window as any).lyricDrawn)).toContain(lyrics[0]);
+ expect((await mockStored(page)).lyrics.slice(1)).toEqual(before.lyrics.slice(1));
+ await page.evaluate(async()=>{
+  // @ts-expect-error Vite browser module
+  const {api}=await import('/src/api/client.ts');const original=api.exportVideo;
+  api.exportVideo=async(input:any,...args:any[])=>{(window as any).exportedLyrics=input.lyrics;return original(input,...args)};
+ });
+ const download=page.waitForEvent('download');await page.getByRole('button',{name:'模拟导出 MP4',exact:true}).click();await download;
+ expect((await page.evaluate(()=>(window as any).exportedLyrics)).map((l:any)=>l.text)).toEqual(lyrics);
+ await page.reload();await expect(page.getByLabel('第1句歌词',{exact:true})).toHaveValue(lyrics[0]);
+});
+
+test('local blocks use entered lyrics instead of replacing them with template text',async({page})=>{
+ await page.goto('/');const before=await mockStored(page),lyrics=before.lyrics.map((l:any,i:number)=>i===0?'我把星星放进口袋':l.text);
+ await page.getByRole('button',{name:'🌙 深夜宇宙',exact:true}).click();
+ await creationSettings(page);await page.getByLabel('自由创作歌词',{exact:true}).fill(lyrics.join('\n'));
+ await page.getByRole('button',{name:'本地搭建积木',exact:true}).click();
+ await expect(page.getByLabel('第1句歌词',{exact:true})).toHaveValue(lyrics[0]);
+ expect((await mockStored(page)).lyrics.map((l:any)=>l.text)).toEqual(lyrics);
+});
+
+test('free lyric synchronization keeps its melody editable and rejects mismatches without changing the project',async({page})=>{
+ const before=await openPiano(page),lyrics=before.lyrics.map((l:any,i:number)=>i===0?'风吹过海面':l.text);
+ await creationSettings(page);await page.getByLabel('自由创作歌词',{exact:true}).fill(lyrics.join('\n'));
+ await page.getByRole('button',{name:'同步歌词到当前作品',exact:true}).click();
+ await expect(page.getByLabel('第1句歌词',{exact:true})).toHaveValue(lyrics[0]);
+ const current=await mockStored(page);expect(current.lyrics.slice(1)).toEqual(before.lyrics.slice(1));
+ expect(current.melodyDraft.phrases[0].text).toBe(lyrics[0]);expect(current.melodyDraft.phrases[0].notes).toEqual(current.lyrics[0].notes);
+ await creationSettings(page);lyrics[0]+='远处';await page.getByLabel('自由创作歌词',{exact:true}).fill(lyrics.join('\n'));
+ await page.getByRole('button',{name:'同步歌词到当前作品',exact:true}).click();
+ await expect(page.getByRole('status').filter({hasText:'字数一致'})).toBeVisible();expect(await mockStored(page)).toEqual(current);
+});
 // Clicking while the asynchronous environment check is still running opens its settings instead of producing.
 async function startMaking(page:import('@playwright/test').Page){const button=page.getByRole('button',{name:'制作新作品',exact:true});await expect(button).not.toHaveAttribute('title');await button.click()}
 async function openPiano(page:import('@playwright/test').Page,withOverrides=false){

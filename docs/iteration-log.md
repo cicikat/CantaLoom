@@ -1,3 +1,13 @@
+<a id="lyrics-current-project-sync"></a>
+
+## 2026-11-07 首屏改词同步便利贴与 MV
+
+关联：[工单 5](../CC-Tasks/5-toge-free-creation.md)、[首页接线](ARCHITECTURE.md#production)。toge 确认改的是首屏铅笔中的歌词；原输入仅存于 useProduction 草稿，本地搭建又只传主题/风格，因此便利贴与 MV 继续读旧工程。
+
+补「同步歌词到当前作品」与「用当前歌词填写」。同步维持当前作品句数，先检查全部改动，再一次发布工程；本地搭建同样带上草稿，将修改句标为手写，避免模板替换。自由作品复用既有等唱字数改词方法，保留音高/时值并同步 melodyDraft 文本与音节；字数不符、句/人声轨/相关音符锁定时保留原作品并提示。歌声不自动重制，改动句需重新演唱；兄弟句及伴奏保留。前端 Hook/组件完成，没有修改 shared、模型、Client、音乐核心或导出路径，无新增跨端交接。
+
+验证：`npm run build` 通过（先修正前端 Note 到草稿的必填 syllable 类型，重跑通过）；`npx tsx --test tests/lyric-edit.test.ts tests/phrase-edit.test.ts` **9/9**；定向 Mock 页面 **5/5**，覆盖首屏同步、实际 Canvas.fillText 的新字幕、PV 导出请求新歌词、刷新保存、本地搭建使用输入、自由作品草稿一致与字数失败保护，以及既有本地创作/演唱/导出/五句自由制作回归。补强本地搭建的换风格场景后，构建及该用例再次通过：显式输入中与原文相同的未锁定句也标为 manual，换风格不覆盖这些句子。页面测试使用 `CHOKIDAR_USEPOLLING=true`，沿用既有 Windows 文件监听规避。Mock 导出仍是 JSON 回执；未调用真实 LLM/绮萱、未运行真实 FFmpeg 编码或人工听感验收，继续工单 6。构建仅有既有 Zod 注释与 chunk 提示。本轮本地提交，不推送、不重启服务。
+
 <a id="frontend-interface-sync"></a>
 
 ## 2026-11-07 已交付接口前端补接

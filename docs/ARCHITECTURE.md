@@ -238,6 +238,8 @@ production 串联规划、旋律、器乐与歌声。stage 契约枚举为 queue
 
 首页 `PatchlabCreation` 在原型首屏负责主题、可选手写歌词、可选 BPM 和目标时长；底部播放器继续复用 useStudio / usePlayer。原 FreeCreation 组件不再挂载。`useProduction` 通过既有 Client 的 `startProduction` / `production` / `retryProduction` 协调请求，不在组件内新增 fetch，不改公开契约、服务或音乐算法。Owner 为 toge，调用原有 validateProject / validateMelody / currentVocalAsset 进行只读校验。
 
+首屏歌词输入先作为制作草稿；点击「同步歌词到当前作品」才更新现有作品。「用当前歌词填写」可载入当前各句，便于局部改词。`hooks/lyric-edit.ts` 先校验全部修改，再经 `useStudio.change` 一次更新；歌词卡片、Landscape / drawPV、自动保存及既有导出均读取同一份工程。同步维持当前句数，增减句数仍走自由制作（1–8 行），不套用旧模板的四句限制。本地搭建也先应用已填写的词，标为 manual，避免被模板替换；失败不发布中间工程。自由作品调用既有 `setLyricText(...,{keepMelody:true})`，同步 melodyDraft 的文本与音节；唱字数不匹配或会改动锁定内容时拒绝，保留原作品。修改仅使对应句的歌声依赖过期，需重新演唱；其他句与伴奏保留。没有新增契约或修改音乐/导出核心，验证见[歌词同步记录](iteration-log.md#lyrics-current-project-sync)。
+
 - 先按 freeInputSchema 校验输入；空行忽略，非空手写行保留原字词与空格，支持 1–8 行、每行最多 100 字。未填写歌词时由对应真实服务或明确 Mock 夹具提供；不调用旧 composeFromIdea。
 - 以约一秒间隔依次查询任务，展示返回的 state/stage 和已完成句数，不假定能观察到全部阶段，不显示百分比。Mock 显示“测试阶段”。
 - 仅 succeeded / ready-for-mix 后校验完整自由工程、20–30 秒时间轴、手写词/来源与输入一致、旋律和实际音符一致、每句演唱引用有效，再经 useStudio.change 一次应用并复用原播放器。不重建谱面、不把部分 project 提前存入当前工程，也不把 ready-for-mix 称为已导出视频。
