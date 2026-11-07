@@ -4,6 +4,15 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+<a id="backend-music-review-tickets"></a>
+
+## 2026-11-07 · 专业音乐人视角后端评审与四张新工单
+
+- 工单：新建 [19 · 渲染音质与创作产物导出](../CC-Tasks/后端/19-render-quality-and-artifacts.md)、[20 · 鼓组律动与演奏人性化](../CC-Tasks/后端/20-groove-and-humanization.md)、[21 · 和声、声部连接与拍号速度](../CC-Tasks/后端/21-harmony-voice-leading-form.md)、[22 · 制作后端治理](../CC-Tasks/后端/22-backend-production-ops.md)；关联 [15 P2-A/P3](../CC-Tasks/后端/15-p0.md) 与 [12 · 后台待排期](../CC-Tasks/12-admin-backlog.md)；交接：[21-harmony-contracts](../CROSS-END-HANDOFF.md#21-harmony-contracts)。
+- 评审：以专业制作用户视角通读 server/ 与 shared/ 生成渲染链路。结论摘要：工程侧严谨（契约校验、缓存完整性、密钥与失败保护），音乐侧薄弱——和声为 4 个级内三和弦循环且无转位/voice leading、贝斯恒根音、鼓无 backbeat/fill 且全事件落网格、FluidSynth 24kHz 单 SF2 干声、已生成的 MIDI/USTX/分轨不提供下载、导出无响度归一。
+- 落单：P0 快赢（48kHz、产物下载、loudnorm、LUFS 测量）→ 19；鼓组律动与确定性人性化 → 20；和声/经过音/voice leading/贝斯织体/拍号速度 → 21（契约提案，待授权，依赖 15-P2A-contracts 一并评审）；缓存配额/任务持久化/渲染并发池 → 22（领取工单 12 第 1/3 项）。混音效果链与分轨混音仍归 15 P3，长歌曲式仍归 15 P2-A，新工单未复制其 checkbox。
+- 验证：纯文档任务，仅检查本轮 Markdown 本地链接、README 索引一致性与 Git diff；未运行构建、LLM 或真实引擎测试，不改变任何既有验收状态。本轮仅本地提交，未推送。
+
 <a id="backend-p1-p2b-publish"></a>
 
 ## 2026-11-07 · 交付 P1/P2-B 并修复启动测试临时路径
