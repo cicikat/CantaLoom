@@ -4,6 +4,18 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+<a id="expression-mix-controls"></a>
+
+## 2026-11-07 · 每句演唱调教与现有混音控件接线
+
+- 工单：[5 C](../CC-Tasks/5-toge-free-creation.md)；说明：[调教与混音接入](ARCHITECTURE.md#performance)、[前端参数速读](INTERFACES.md#前端速读哪些数字需要做成控件)。toge 在参数说明后要求实施，并明确选择「只接前端，核心问题交接红茶」。沿用 LOOP! 原版首屏、卡片与字体/颜色，只增加按需展开的控件；未修改后端、音乐算法、公共契约、Client、统一混音或导出算法。
+- 实现：`PerformanceControls` 接自然/轻柔/强烈、Auto/Manual、句级四项参数、逐音符人工覆盖/锁定、句级表达锁、最多三版恢复；复用 `setPhrasePerformance` / `autoTuneProject` / `restorePerformance`。数值边界直接读取共享 Schema。保留既有 Pitch 曲线，显式清除音符覆盖时才清除所选整项。表达修改仅失效目标句，通过原 QixuanPanel 重新演唱；不调 LLM/旋律接口，不清空兄弟句与器乐资产，重唱失败保留旧资产。元音演示不冒充支持真实调教，相关控件禁用。
+- 混音：`MixControls` 写入既有 mixSettings，`usePlayer` 透传现有 stem 并从头试听；干人声、处理人声、伴奏、全混音均接通，改参数停止旧声音。人声音量/混响仅在 external 启用；伴奏音量仅在 fluidsynth 启用。浏览器 synth 尚未应用 bandGain，禁用并解释，已登记 [5-C-synth-mix](../CROSS-END-HANDOFF.md#5-c-synth-mix) 交红茶；未擅改 audio.ts。表达锁元数据仍进入既有演唱依赖，切换后可能提示重唱，按既有保守校验处理。
+- 构建与定向测试：`npm run build` 通过（保留依赖注释及大包提示）；`npx tsx --test tests/performance-edit.test.ts tests/melody.test.ts tests/p0-tuning.test.ts tests/mock-free.test.ts tests/phrase-edit.test.ts` **31/31** 通过。覆盖非法/非有限数值原子拒绝、Pitch/兄弟句/音符保留、锁定与自动保护、三版历史及既有局部编辑/来源隔离。
+- Mock 页面：新增三项调教/混音用例通过；全套 **29 项已逐项通过**：首次全套 28 通过，旧 A2 迟到响应测试因抢在环境就绪前点击而失败，补就绪等待后该项定向复测通过，未把首次全套写成全绿。全套输出 `temp/expression-mix-regression/`，复测 `temp/expression-mix-a2-recheck/`。断言单句重唱调用范围、失败保留、锁定/历史/重载，四种 stem 实际进入播放器；渲染实测人声音量归零使 processed 静音、dry 非静音，混响 0→0.12 改变 PCM；FluidSynth Mock 双路归零后，下载 WAV 的 PCM 与送往 PV 的 WAV 均静音，不只检查 JSON 值。
+- 环境与版式：首轮页面测试遇 Windows Vite watch 下载 `.crdownload` 的 EBUSY，测试命令仅增加 `CHOKIDAR_USEPOLLING=true` 后完成，未改 Vite 配置或杀其他服务。新增下拉框补明确的可访问名称。既有首屏/卡片几何回归通过；390px 无横向溢出，已检查截图 `temp/songyu-expression-desktop.png`、`temp/songyu-expression-mobile.png`，混音截图 `temp/songyu-expression-mix-mobile.png`。
+- 真实模式本地页面：`npm run test:e2e -- studio.spec.ts plan.spec.ts launch.spec.ts --grep-invert 'FFmpeg exports' --output temp/expression-mix-real-mode` **10/10** 通过；包含本地合成 PCM、保存/锁定/字幕/播放、缺项说明及接口夹具，未运行真实 LLM/声库/FluidSynth/FFmpeg 编码或手机/Safari。本轮 PV 是 Mock JSON 回执，测试音不代表实际歌声或人工听感；工单 6 保持未验收。本轮仅本地提交，不推送。
+
 <a id="cross-end-handoff"></a>
 
 ## 2026-11-07 · 根目录跨端交接与按需上下文

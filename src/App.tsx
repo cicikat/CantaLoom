@@ -8,6 +8,7 @@ import {PianoRoll} from './components/PianoRoll';
 import {QixuanPanel} from './QixuanPanel';
 import {EnginePanel} from './EnginePanel';
 import {PatchlabCreation} from './components/PatchlabCreation';
+import {MixControls} from './components/MixControls';
 
 const clock=(t:number)=>`${Math.floor(t/60).toString().padStart(2,'0')}:${Math.floor(t%60).toString().padStart(2,'0')}`;
 export default function App(){
@@ -44,7 +45,8 @@ export default function App(){
    <section className="sections lyrics-section" id="lyrics"><div className="stepheader"><div><span className="number">STEP 02 / WORD BY WORD</span><h2>歌词也能像便利贴一样改！</h2></div><small>想改哪一句？点那张卡就行。<br/>其他歌词和演唱会保留。</small></div><div className="lyricrows" id="lyricRows">{p.lyrics.map((line,i)=><article className="lyric" key={line.id}><div className="lyric-heading"><small>LYRIC STICKER / {String(i+1).padStart(2,'0')} ✦</small><div className="lyric-shortcuts"><button className="quiet-icon" aria-label={`试听第${i+1}句`} title="试听这一句" disabled={!!busy||!line.notes.length} onClick={()=>void s.play({lyricId:line.id})}>▶</button>{p.mode!=='free'&&<button className="quiet-icon" aria-label={`锁定第${i+1}句`} title={line.locked?'解锁这一句':'锁定这一句'} disabled={s.lyricLocked(line.sectionId)} aria-pressed={line.locked} onClick={()=>s.mutate('切换乐句锁定',next=>{next.lyrics.find(l=>l.id===line.id)!.locked=!line.locked})}>{line.locked?'🔒':'♧'}</button>}</div></div><label className="sr-only" htmlFor={`lyric-${line.id}`}>第{i+1}句歌词</label><textarea id={`lyric-${line.id}`} value={line.text} rows={1} maxLength={p.mode==='free'?100:40} disabled={p.mode==='free'||line.locked||s.lyricLocked(line.sectionId)} onChange={e=>s.editLyric(line.id,e.target.value)}/>{p.mode==='free'?<button aria-label={`编辑第${i+1}句旋律`} onClick={()=>openEditor(line.id)}>✎ 编辑旋律</button>:<><button disabled={!!busy||line.locked||s.lyricLocked(line.sectionId)||line.notes.some(n=>n.locked)} onClick={()=>s.rewriteMelody(line.id)}>↻ 只改这句旋律</button></>}</article>)}</div>
 
     {editor&&p.mode==='free'&&<div id="phrase-editor"><button className="minibtn editor-close" onClick={()=>setEditor(undefined)}>收起旋律编辑</button><PianoRoll project={p} selectedLineId={editor} onChange={s.change} onPreview={id=>void s.play({lyricId:id})} busy={!!busy}/></div>}
-    {voiceOpen&&<details className="singing-details" open={voiceOpen} onToggle={e=>setVoiceOpen(e.currentTarget.open)}><summary>逐句演唱与重唱</summary>{voiceOpen&&<QixuanPanel project={p} onChange={next=>s.recordChange(next,'制作逐句演唱')} onPreview={id=>void s.play({lyricId:id})}/>}</details>}
+    {voiceOpen&&<details className="singing-details" open={voiceOpen} onToggle={e=>setVoiceOpen(e.currentTarget.open)}><summary>逐句演唱与重唱</summary>{voiceOpen&&<QixuanPanel project={p} onChange={next=>s.recordChange(next,'制作逐句演唱')} onPreview={id=>void s.play({lyricId:id})} busy={!!busy}/>}</details>}
+    <MixControls project={p} onChange={s.change} onPreview={stem=>void s.play({stem})} onStop={s.stop} busy={!!busy} playing={playing}/>
    </section>
    <section className="endcap"><div><strong>好啦，给这首歌加个 MV！ 🎬</strong><p>歌词字幕逐句出现 · 音乐与画面同步</p></div><button className="btn" id="openPV" onClick={openPV}>✦ 打开我的 PV →</button></section>
 

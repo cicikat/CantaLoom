@@ -156,6 +156,8 @@ test('A2 page rejects a succeeded job with an invalid project without replacing 
 
 test('A2 page applies the newer creation even when an older request returns later',async({page})=>{
  await page.goto('/');
+ // The first click must happen after the asynchronous environment check, not open its settings.
+ await expect(page.getByRole('button',{name:'制作新作品',exact:true})).not.toHaveAttribute('title');
  await page.evaluate(async()=>{
   // @ts-expect-error browser client
   const {api}=await import('/src/api/client.ts');const original=api.startProduction;let count=0;
@@ -285,4 +287,87 @@ test('LOOP retains prototype layout on desktop and phone and opens the selected 
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'temp/songyu-loop-restored-mobile.png',fullPage:true});
  const p=await openPiano(page);await page.getByRole('button',{name:'编辑第2句旋律',exact:true}).click();await expect(page.getByRole('region',{name:'单句钢琴卷帘'}).locator('.phrase-toolbar>b')).toHaveText(p.lyrics[1].text);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test('C expression controls preserve notes and siblings, re-sing one line, recover history and honor locks',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ const before=await openPiano(page),row=page.locator('.qixuan-line').first(),panel=row.locator('.expression-panel');
+ await panel.locator(':scope > summary').click();
+ await panel.getByLabel('演唱风格',{exact:true}).selectOption('soft');
+ await panel.getByLabel('调教方式',{exact:true}).selectOption('manual');
+ await panel.getByRole('button',{name:'应用这句调教',exact:true}).click();
+ await expect(row).toContainText('需要重新演唱');
+ let next=await mockStored(page);expect(next.lyrics[0].performance.preset).toBe('soft');expect(next.lyrics[0].notes).toEqual(before.lyrics[0].notes);expect(next.lyrics.slice(1)).toEqual(before.lyrics.slice(1));expect(next.tracks).toEqual(before.tracks);expect(next.vocalAssets).toEqual(before.vocalAssets);
+ // Observe the actual mock Client calls: expression changes never call compose/melody.
+ await page.evaluate(async()=>{
+  // @ts-expect-error Vite browser module
+  const {api}=await import('/src/api/client.ts');(window as any).tuningCalls=[];
+  for(const method of ['sing','melody','compose','instruments']){const original=api[method];api[method]=async(input:any)=>{(window as any).tuningCalls.push({method,id:input.lyricId});return original(input)}}
+ });
+ await row.getByRole('button',{name:'绮萱演唱',exact:true}).click();await expect(row).toContainText('MOCK 测试音已就绪');
+ next=await mockStored(page);expect(next.vocalAssets[before.lyrics[1].id]).toEqual(before.vocalAssets[before.lyrics[1].id]);
+ expect(await page.evaluate(()=>(window as any).tuningCalls)).toEqual([{method:'sing',id:before.lyrics[0].id}]);
+ await panel.getByText('高级调教',{exact:true}).click();await panel.getByLabel('音高过渡（毫秒）',{exact:true}).first().fill('75');await panel.getByRole('button',{name:'应用这句调教',exact:true}).click();
+ await expect.poll(async()=>(await mockStored(page)).lyrics[0].performance.transitionMs).toBe(75);
+ await panel.getByText('逐音符人工覆盖',{exact:true}).click();const notes=panel.locator('details').filter({has:page.locator('summary').filter({hasText:'逐音符人工覆盖'})});
+ await notes.getByLabel('演唱力度',{exact:true}).fill('12');await notes.getByRole('button',{name:'保存音符表达',exact:true}).click();
+ await panel.getByRole('button',{name:'锁定音符表达',exact:true}).click();await expect(notes.getByLabel('演唱力度',{exact:true})).toBeDisabled();
+ await panel.getByRole('button',{name:'自动调教这一句',exact:true}).click();
+ next=await mockStored(page);expect(next.lyrics[0].performance.mode).toBe('auto');expect(next.lyrics[0].performance.overrides.find((o:any)=>o.index===0)).toMatchObject({origin:'manual',dynamics:12,locked:true});expect(next.performanceHistory[before.lyrics[0].id]).toHaveLength(3);
+ await panel.getByRole('button',{name:'锁定表达',exact:true}).click();const locked=await mockStored(page);await expect(panel.getByRole('button',{name:'自动调教这一句',exact:true})).toBeDisabled();await expect(panel.getByRole('button',{name:/恢复上一版调教/})).toBeDisabled();
+ await panel.getByRole('button',{name:'解锁表达',exact:true}).click();await panel.getByRole('button',{name:/恢复上一版调教/}).click();
+ expect((await mockStored(page)).lyrics[0].performance.mode).toBe('manual');expect((await mockStored(page)).lyrics[0].notes).toEqual(locked.lyrics[0].notes);
+ await panel.screenshot({path:'temp/songyu-expression-desktop.png'});await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await panel.screenshot({path:'temp/songyu-expression-mobile.png'});
+ const saved=await mockStored(page);await page.reload();expect(await mockStored(page)).toEqual(saved);expect(errors).toEqual([]);
+});
+
+test('C tuning rejects invalid controls and a failed re-sing preserves the previous assets',async({page})=>{
+ const before=await openPiano(page),row=page.locator('.qixuan-line').first(),panel=row.locator('.expression-panel');await panel.locator(':scope > summary').click();await panel.getByText('高级调教',{exact:true}).click();
+ const field=panel.getByLabel('音高过渡（毫秒）',{exact:true}).first();await field.fill('999');await panel.getByRole('button',{name:'应用这句调教',exact:true}).click();expect(await mockStored(page)).toEqual(before);
+ await field.fill('90');await panel.getByRole('button',{name:'应用这句调教',exact:true}).click();const edited=await mockStored(page);
+ await page.evaluate(async()=>{
+  // @ts-expect-error Vite browser module
+  const {api}=await import('/src/api/client.ts');api.sing=async()=>{throw Error('MOCK 重唱失败，旧资产保留')};
+ });
+ await row.getByRole('button',{name:'绮萱演唱',exact:true}).click();await expect(row).toContainText('MOCK 重唱失败');expect(await mockStored(page)).toEqual(edited);expect(edited.vocalAssets).toEqual(before.vocalAssets);
+});
+
+test('C mix controls forward all preview stems and persist real PCM changes through WAV/PV export',async({page})=>{
+ test.setTimeout(90000);
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await openPiano(page);
+ const mix=page.locator('.mix-panel');await mix.locator(':scope > summary').click();
+ await expect(mix.getByLabel('伴奏音量',{exact:true})).toBeDisabled();await expect(mix).toContainText('当前浏览器伴奏暂不支持音量调整');
+ await mix.getByLabel('人声音量',{exact:true}).fill('0');await mix.getByLabel('人声混响',{exact:true}).fill('0.12');
+ await page.evaluate(async()=>{
+  // @ts-expect-error Vite browser module
+  const {AudioEngine}=await import('/src/audio.ts');const original=AudioEngine.prototype.play;(window as any).previewStems=[];
+  AudioEngine.prototype.play=async function(p:any,offset:number,options:any){(window as any).previewStems.push(options.stem);return original.call(this,p,offset,options)};
+ });
+ for(const stem of ['vocal-dry','vocal-processed','instrumental','mix']){
+  await mix.getByLabel('试听内容',{exact:true}).selectOption(stem);await mix.getByRole('button',{name:'试听所选分轨',exact:true}).click();await expect(mix.getByRole('button',{name:'停止分轨试听',exact:true})).toBeEnabled();await mix.getByRole('button',{name:'停止分轨试听',exact:true}).click();
+ }
+ expect(await page.evaluate(()=>(window as any).previewStems)).toEqual(['vocal-dry','vocal-processed','instrumental','mix']);
+ const pcm=await page.evaluate(async()=>{
+  // @ts-expect-error Vite browser module
+  const {renderAudio}=await import('/src/audio.ts');const p=JSON.parse(localStorage.getItem('songyu-mock-project-v1')!);
+  const power=(buffer:AudioBuffer)=>{const samples=buffer.getChannelData(0);return samples.reduce((sum,v)=>sum+v*v,0)/samples.length};
+  const dry=power((await renderAudio(p,{stem:'vocal-dry'})).buffer),processed=power((await renderAudio(p,{stem:'vocal-processed'})).buffer);
+  p.mixSettings.vocalGain=1;p.mixSettings.reverb=0;const plain=(await renderAudio(p,{stem:'vocal-processed'})).buffer.getChannelData(0);
+  p.mixSettings.reverb=.12;const wet=(await renderAudio(p,{stem:'vocal-processed'})).buffer.getChannelData(0);
+  let difference=0;for(let i=0;i<plain.length;i++)difference+=Math.abs(wet[i]-plain[i]);
+  return {dry,processed,difference};
+ });expect(pcm.dry).toBeGreaterThan(0);expect(pcm.processed).toBe(0);expect(pcm.difference).toBeGreaterThan(0);
+ // Existing source selector enables the already supported external-instrument gain path.
+ await projectSettings(page);await page.locator('.engine-panel summary').click();await page.getByLabel('乐器音源',{exact:true}).selectOption('fluidsynth');await projectSettings(page);await page.getByLabel('作品设置',{exact:true}).click();
+ await expect(mix.getByLabel('伴奏音量',{exact:true})).toBeEnabled();await mix.getByLabel('伴奏音量',{exact:true}).fill('0');
+ // Both audible buses are now zero; verify the existing exports receive silence, not just settings JSON.
+ await projectSettings(page);await page.getByRole('button',{name:'导出作品',exact:true}).click();
+ const dialog=page.getByRole('dialog',{name:'导出作品',exact:true}),download=page.waitForEvent('download');await dialog.getByRole('button',{name:/混音音频/}).click();const file=await download,stream=(await file.createReadStream())!,chunks:Buffer[]=[];for await(const part of stream)chunks.push(Buffer.from(part));const bytes=Buffer.concat(chunks);expect(bytes.length).toBeGreaterThan(44);expect(bytes.subarray(44).every(v=>v===0)).toBe(true);
+ await page.evaluate(async()=>{
+  // @ts-expect-error Vite browser module
+  const {api}=await import('/src/api/client.ts');const original=api.exportVideo;api.exportVideo=async(input:any)=>{const bytes=Uint8Array.from(atob(input.wav),(c:string)=>c.charCodeAt(0));(window as any).pvSilent=bytes.slice(44).every(v=>v===0);return original(input)};
+ });
+ const pv=page.waitForEvent('download');await dialog.getByRole('button',{name:/歌词视频 PV/}).click();expect((await pv).suggestedFilename()).toContain('.mock-export.json');expect(await page.evaluate(()=>(window as any).pvSilent)).toBe(true);
+ await page.keyboard.press('Escape');const saved=await mockStored(page);await page.reload();expect(await mockStored(page)).toEqual(saved);await page.locator('.mix-panel>summary').click();expect((await mockStored(page)).mixSettings).toMatchObject({vocalGain:0,bandGain:0,reverb:.12});
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'temp/songyu-expression-mix-mobile.png',fullPage:true});expect(errors).toEqual([]);
 });

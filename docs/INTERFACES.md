@@ -2,7 +2,20 @@
 
 面向 `03_patchlab_playful.html` 的 LOOP! 原型接线的翻阅参考（[设计与实现边界](ARCHITECTURE.md#prototype-frontend)）：**后端与音乐核心真实存在、设计上允许 UI 暴露并会真实生效的数据和开关**，以及看似能开但实际不存在的功能。流程与调用方法（代次保护、原子应用、失败语义）见 [ARCHITECTURE](ARCHITECTURE.md)，本文不重复；字段权威定义以 `shared/contracts/` 为准，新增或改义字段先走 [CHANGELOG 提案](../shared/contracts/CHANGELOG.md)。
 
-状态标记：**main**＝已合并（基线 `da54e03`）；**P0 分支**＝`feature/backend-p0-fine-tuning`（工单 15，v0.3.3，待 toge review）。接口存在不代表新页面/Mock 已接通，页面进度见 [Toge 工单](../CC-Tasks/5-toge-free-creation.md)。
+状态标记：**main** 为原能力标记；P0 / v0.3.3 的曲线等能力已进入当前代码，不再表示只能从旧 P0 分支读取。接口存在不代表全部页面/Mock 已接通，当前接线与边界见 [Toge 工单](../CC-Tasks/5-toge-free-creation.md)及[本轮记录](iteration-log.md#expression-mix-controls)。
+
+## 前端速读：哪些数字需要做成控件
+
+| 页面区域 | 需要考虑的内容 | 当前入口 |
+|---|---|---|
+| 创作设置 | 主题 1–500 字；可选歌词 1–8 行、每行 1–100 字；速度 60–160；目标约 20/25/30 秒 | 首屏铅笔 |
+| 音符编辑 | 音高 48–84；长度 0.125–16 拍；位置不能超出当前句或重叠 | 歌词卡片「编辑旋律」 |
+| 每句调教 | 自然/轻柔/强烈、自动/手动；高级参数为过渡 0–160 ms、颤音 0–60、力度 −120–60、辅音 −60–60 ms | 「逐句演唱与重唱」→ 每句「演唱调教」 |
+| 全曲混音 | 人声音量与伴奏音量 0–200%，默认 100%；混响 0–0.25，默认 0.08 | 歌词区底部「混音与分轨试听」 |
+
+这是可用能力的清单，不要求把所有限制做成输入框。energy 由既有单句自动分析带入；overrides 索引由音符选择器带入；take 由重唱操作带入；缓存、引擎版本和文件上限由程序处理。steps/depth、EQ、声像等固定或未实现参数不做滑杆。
+
+本轮只接前端：浏览器 synth 伴奏尚未应用 bandGain，伴奏音量在此模式禁用；切到已有 FluidSynth 路径才启用。元音演示不支持此处的调教、人声音量与混响，相关控件禁用。详情与红茶交接见 [5-C-synth-mix](../CROSS-END-HANDOFF.md#5-c-synth-mix)。
 
 ## 创作输入（`api.compose` / `api.startProduction`）
 
@@ -33,13 +46,13 @@
 | consonantMs | −60–60 | 按 preset/auto | 辅音起音偏移（按 BPM 换算 tick；休止后不提前） |
 | overrides[] | ≤100 条 | 无 | 逐音符覆盖：index 0–99、origin auto/manual、同上四项、pitch、locked |
 
-**Pitch 曲线（P0 分支 / v0.3.3）**：`overrides[].pitch`＝2–64 个按 x 严格递增的点；x＝相对音符起点毫秒（−500–30000，负值先入），y＝十分之一半音整数（±1200），shape＝io/i/o/l（默认 io）。提供时替换该音符自动过渡点，删除即恢复自动；随演唱依赖进入缓存失效。
+**Pitch 曲线（已合入，v0.3.3）**：`overrides[].pitch`＝2–64 个按 x 严格递增的点；x＝相对音符起点毫秒（−500–30000，负值先入），y＝十分之一半音整数（±1200），shape＝io/i/o/l（默认 io）。提供时替换该音符自动过渡点，删除即恢复自动；随演唱依赖进入缓存失效。
 
 工程级辅助：`performanceHistory` 每句 ≤3 版；`restorePerformance(project,lineId)` 恢复上一版；`autoTuneProject(project,lineId?)` 全曲/单句自动调教（跳过锁定）。只改表达只重唱该句，不调 LLM。auto 且 preset≠natural 时渲染修订为 3（否则 2），不同版本缓存不互相命中。
 
 **不暴露**：换气、气声、声线张力、breath/ENE 等参数——引擎未验证支持，不做假开关（审计见工单 15 P1）。
 
-## 旋律与歌词编辑（共享函数，main + P0 分支）
+## 旋律与歌词编辑（共享函数，含已合入 P0）
 
 | 能力 | 入口 | 关键约束 |
 |---|---|---|
@@ -103,4 +116,4 @@
 
 ## Mock 覆盖现状
 
-Mock 未定义 compose / melody / production，调用返回 404，不会偷连真实后端；已有 plan/instrument/singing/export Mock 可用。Mock 歌声必须 `isDemo:true`，真实必须 `false`；真实模式拒绝 mock 标记响应与 Mock 缓存。新流程 Mock 扩展归 toge（[工单 5](../CC-Tasks/5-toge-free-creation.md)），pitch 曲线夹具当前不存在。
+Mock 已覆盖 compose / melody / production 的创建、阶段、失败与单句重试；未知路径仍返回 404，不会偷连真实后端。plan/instrument/singing/export Mock 继续可用。Mock 歌声必须 `isDemo:true`，真实必须 `false`；真实模式拒绝 mock 标记响应与 Mock 缓存。调教、单句重唱、分轨与混音控件已通过 Mock 页面测试；测试音的 PCM 差异不代表真实歌声听感。默认 pitch 曲线夹具及曲线绘制 UI 当前不在本轮范围，既有工程曲线在数值编辑时保留。见[工单 5](../CC-Tasks/5-toge-free-creation.md)。

@@ -267,6 +267,10 @@ Performance 可选 mode=auto/manual、energy、locked、overrides。旧 JSON 无
 
 ### 分轨与混音
 
+2026-11-07 页面接线：每句 `QixuanPanel` 内新增默认折叠的「演唱调教」，支持 preset、Auto/Manual、四个句级数值、按音符稳定 ID 选择的人工覆盖/锁、句级表达锁，以及最多三版调教恢复。`PerformanceControls` 调用现有 `setPhrasePerformance` / `autoTuneProject(project,lineId)` / `restorePerformance`；输入范围来自共享 Schema，未修改音乐核心或公共契约。保存表达后由现有重唱按钮仅生成当前句，不重新调用作曲/旋律接口；失败保留旧资产，依赖过期由现有规则显示。原有 Pitch 曲线在修改四个数值时保留；「清除音符覆盖」会明确清除所选音符整项覆盖。表达锁仍进入既有演唱依赖，切换后可能标记本句需要重唱，本轮没有改依赖算法。
+
+歌词区底部新增默认折叠的「混音与分轨试听」。`MixControls` 只更新并校验 `SongProject.mixSettings`；`usePlayer.play({stem})` 将现有 stem 选项透传给 `AudioEngine.play`，分轨从头播放。改设置通过既有 `change` 停止旧声音，下一次试听与既有 WAV/PV 用例读取同一设置；不新增 fetch、音频缓存或导出接口。人声音量/混响仅对 external 歌声启用；bandGain 仅对 fluidsynth 启用，浏览器 synth 未接增益，禁用并提示。toge 明确选择「只接前端，核心问题交接红茶」，未改 `audio.ts` / `audio-mix.ts`；交接 [5-C-synth-mix](../CROSS-END-HANDOFF.md#5-c-synth-mix)。接线与测试证据见[本轮记录](iteration-log.md#expression-mix-controls)，真实引擎与听感仍待工单 6。
+
 `renderAudio(project,{stem:'vocal-dry'|'vocal-processed'|'instrumental'|'mix'})`，同一渲染入口服务于试听、WAV、PV。
 
 - 单句拼接：外部歌声 WAV 以 startSeconds 精确落位；v0.3.3 起对每个单句 WAV 在引擎 padding 内施加 50 ms 淡入 / 150 ms 淡出（`phraseEdgeFades`，演唱主体不触碰），避免拼接爆点并自然保留混响尾音。这是拼接处理而非效果，对 vocal-dry 与处理后分轨一致生效。
