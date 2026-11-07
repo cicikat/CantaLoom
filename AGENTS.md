@@ -22,7 +22,7 @@
 先读 [团队工作流](docs/TEAM_WORKFLOW.md)和 README 索引的本人/共同工单；当前进度只在 CC-Tasks 对应工单维护 checkbox，旧工单须看状态与日期。没有明确 Owner 时先按当前任务范围工作，不接管另一人的区域。
 
 - **Blacktea（红茶） / Backend / Music Engine**：server、引擎桥接 scripts、音乐核心计算（含 `src/melody.ts`）、音频缓存、FFmpeg、后端测试。浏览器混音与跨层适配按团队工作流共同确认。
-- **toge / Frontend / UX**：App.tsx、components、hooks、\*Panel.tsx、CSS、钢琴卷帘与调教交互、前端 Mock、前端 E2E。红茶不得顺手改这些文件，不以修构建、优化架构或完善功能为由扩大范围。
+- **toge / Frontend / UX**：App.tsx、components、hooks、\*Panel.tsx、CSS、钢琴卷帘与调教交互、前端 Mock、前端 E2E。
 - 前端 Agent 同样不得自行改真实 LLM、作曲算法、声库、推理、服务端缓存和桥接器。
 - **共享边界**：shared、src/model.ts、src/api/client.ts 及跨层业务适配。先在 shared/contracts/CHANGELOG.md 写字段、兼容性、调用点和测试说明，经双方或 toge 明确授权后再改。具体授权必须关联任务/范围；历史工单授权不自动延伸到新任务，也不授权代改另一方 UI。
 - 开始、提交、推送前检查 git status / diff；只暂存本轮拥有的文件。保留其他人的未提交改动与工单，不执行全仓 git add、reset、clean、覆盖还原或强推。
