@@ -86,7 +86,7 @@
 ### 19-artifact-report · 产物与响度接入
 
 - 更新：2026-11-07；来源：[工单 19](CC-Tasks/后端/19-render-quality-and-artifacts.md)；Blacktea → Toge；状态：后端已实现，页面展示待安排。
-- 交付：`feature/backend-music-quality-tickets` 的只读 artifact 下载/分轨 ebur128 接口、MP4 `X-Songyu-Loudness` 报告，详见[架构说明](docs/ARCHITECTURE.md#创作产物与响度报告工单-19)。Mock/UI 不在本轮范围；原有未提交 Mock 采样率修改保留且不纳入后端提交。
+- 交付：`feature/backend-music-quality-tickets` 的只读 artifact 下载/分轨 ebur128 接口、MP4 `X-Songyu-Loudness` 报告，详见[架构说明](docs/ARCHITECTURE.md#创作产物与响度报告工单-19)，交付 [PR #10](https://github.com/cicikat/CantaLoom/pull/10)。UI 不在本轮范围；后续交付仅纳入已存在的 Mock 采样率单行兼容修改。
 - 对方下一步：按需接下载/报告入口；确认 DAW 导入 MIDI 与实际作品听感。后端真实渲染/浏览器混音证据见工单与迭代日志，不代替人耳和设备验收。
 
 
@@ -95,6 +95,6 @@
 ### 20-groove-render · 可选器乐渲染律动
 
 - 更新：2026-11-07；来源：[工单 20](CC-Tasks/后端/20-groove-and-humanization.md)；Blacktea → Toge；状态：音乐核心/API 已实现，页面/Mock 与人工听评待安排。
-- 已交付：自由模式新鼓组、TAP 保护、可选 groove 和保护标记契约；分支 feature/backend-music-quality-tickets。本轮未修改 UI/Client/Mock/SongPlan/工程 Schema；字段与兼容边界见[契约记录](shared/contracts/CHANGELOG.md)及[接入说明](docs/ARCHITECTURE.md#groove-render)。
+- 已交付：自由模式新鼓组、TAP 保护、可选 groove 和保护标记契约；分支 feature/backend-music-quality-tickets，交付 [PR #10](https://github.com/cicikat/CantaLoom/pull/10)。本轮未修改 UI/Client/Mock/SongPlan/工程 Schema；字段与兼容边界见[契约记录](shared/contracts/CHANGELOG.md)及[接入说明](docs/ARCHITECTURE.md#groove-render)。
 - 对方下一步：需要开放 swing/人性化时，先确认保存/Client/Mock/production/浏览器预览与导出的统一参数来源和保护状态；不能只给服务端一次性参数，使浏览器重新渲染时丢失。按项目 ID、轨道 ID、版本构造稳定种子，不使用时间戳。
 - 验收/回执：本机对照音在 temp/task20/，工单与迭代日志有客观验证；人工抽听 backbeat 与段落推进尚未执行。本条不构成代改前端的授权。

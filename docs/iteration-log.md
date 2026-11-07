@@ -10,7 +10,7 @@
 
 工作区原有唯一未提交代码为 src/api/mock.ts 的 sampleRate 24000→48000 单行修改，本轮按用户「确保工作区干净后 push 并合并」的交付范围纳入提交，仅与工单 19 的响应契约保持兼容，不扩展前端功能。此前后端核心全量 98/99（1 项真实 LLM 跳过）、最终定向 30/30、真实 FluidSynth/Chromium WAV/MP4 结果见上两条记录。当前 main 分支保护查询返回 Branch not protected（404），不据此跳过 CI。本轮 Mock 浏览器回归 26/26 通过（1.9 分钟），INTERFACES 本地链接目标检查和 git diff --check 通过。
 
-本轮授权推送 feature/backend-music-quality-tickets 并经 PR 合并 main；远端 PR/检查/合并结果在交付后补录。人工听评、DAW 抽验和可选 groove 页面接线仍未完成，原工单与交接保留。
+本轮授权推送 feature/backend-music-quality-tickets 并经 [PR #10](https://github.com/cicikat/CantaLoom/pull/10) 合并 main；分支已推送，提交时工作区干净。CI 与最终合并记录以该 PR 的 Checks/合并事件为准（GitHub 连接器写入返回 403，改用本机已认证 CLI 创建 PR）。人工听评、DAW 抽验和可选 groove 页面接线仍未完成，原工单与交接保留。
 
 
 <a id="groove-humanization-20"></a>
