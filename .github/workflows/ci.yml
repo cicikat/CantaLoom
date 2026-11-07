@@ -1,8 +1,15 @@
 name: SONGYU checks
 on:
   pull_request:
+  workflow_dispatch:
   push:
-    branches: [main, 'feature/frontend-*', 'feature/backend-*', 'codex/**']
+    branches: [main]
+concurrency:
+  group: songyu-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+env:
+  SONGYU_TEST_TIER: quick
+  SONGYU_REAL_TESTS: '0'
 jobs:
   checks:
     runs-on: windows-latest
@@ -14,16 +21,15 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npx playwright install chromium
       - run: npm run build
       - run: npm test
+      - run: npx playwright install chromium
       - run: npm run test:e2e:mock
       - name: Real HTTP and browser checks without optional local engines
-        run: npm run test:e2e -- --grep-invert "FluidSynth|real Qixuan|FFmpeg"
+        run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: browser-results
           path: |
-            test-results/
-            mock-test-results/
+            temp/test-results/

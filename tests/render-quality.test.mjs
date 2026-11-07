@@ -1,3 +1,4 @@
+import {realAcceptance} from './support/tier.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdir,mkdtemp,readFile,writeFile,rm} from 'node:fs/promises';
@@ -19,6 +20,7 @@ test('artifact downloads preserve bytes and reject non-whitelisted paths',async(
 });
 
 test('real FluidSynth renders non-silent 48k s16 PCM and valid MIDI, then hits cache',async t=>{
+ if(!realAcceptance)return t.skip('需要 SONGYU_TEST_TIER=acceptance；快速回归不调用外部引擎');
  const renderer=new InstrumentRenderer();if(!(await renderer.status()).ready)return t.skip('FluidSynth/SoundFont unavailable');
  const input={bpm:120,kind:'keys',notes:[{beat:0,duration:2,midi:60,velocity:.7}],endBeat:4};
  const result=await renderer.render(input),wav=await readFile(path.join(cacheRoot,result.key+'.wav'));
@@ -28,6 +30,7 @@ test('real FluidSynth renders non-silent 48k s16 PCM and valid MIDI, then hits c
 });
 
 test('real FFmpeg normalization and MP4 report decoded AAC loudness',async t=>{
+ if(!realAcceptance)return t.skip('需要 SONGYU_TEST_TIER=acceptance；快速回归不编码真实 MP4');
  const ffmpeg=process.env.FFMPEG_PATH||'ffmpeg';try{await runProcess(ffmpeg,['-version'],process.cwd())}catch{return t.skip('FFmpeg unavailable')}
  await mkdir('temp',{recursive:true});const root=await mkdtemp(path.resolve('temp/loudness-test-'));let rendered;
  try{

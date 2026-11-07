@@ -1,3 +1,4 @@
+import {realAcceptance} from './support/tier.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
@@ -11,7 +12,7 @@ import {createPerformancePlanner} from '../server/services/performance-planner.m
 import {buildFreeScore} from '../shared/free-score.mjs';
 
 test('real LLM task routing: different models, validated composition and performance, traceable prompts',{
- skip:process.env.SONGYU_LLM_ROUTING_REAL!=='1',timeout:300000,
+ skip:!realAcceptance||process.env.SONGYU_LLM_ROUTING_REAL!=='1',timeout:300000,
 },async()=>{
  const env={...process.env};await createConfigStore({directory:path.join(externalRoot,'runtime/config'),env});
  const route=(task,model)=>({...resolveRoute(env,task),...(model?{model}:{})});
