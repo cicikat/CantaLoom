@@ -7,8 +7,8 @@ import {productionInput,productionProject} from './production-result';
 
 type Phase='idle'|'running'|'failed'|'ready'|'cancelled';
 export interface ProductionView {phase:Phase;job?:ProductionJob;message:string}
-export function useProduction(onApply:(project:SongProject)=>void,onStart:()=>void){
- const [intent,setIntent]=useState(''),[lyrics,setLyrics]=useState(''),[bpm,setBpm]=useState(''),[targetSeconds,setTargetSeconds]=useState(25);
+export function useProduction(onApply:(project:SongProject)=>void,onStart:()=>void,initialIntent=''){
+ const [intent,setIntent]=useState(initialIntent),[lyrics,setLyrics]=useState(''),[bpm,setBpm]=useState(''),[targetSeconds,setTargetSeconds]=useState(25);
  const [view,setView]=useState<ProductionView>({phase:'idle',message:'写下主题，或带上你自己的歌词。'});
  const work=useRef({token:0,active:false,controller:new AbortController(),phase:'idle' as Phase});
  const callbacks=useRef({onApply,onStart});callbacks.current={onApply,onStart};

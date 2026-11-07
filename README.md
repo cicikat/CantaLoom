@@ -8,9 +8,11 @@
 
 Windows 日常使用：双击项目根目录 **「打开声屿.bat」**。本机桌面已创建 **「声屿」** 快捷方式，指向同一个入口。首次打开会检查依赖、构建最新应用、启动服务并自动打开工作台；已运行时会核对当前版本并直接打开，避免重复启动。准备窗口保留日志，按 Ctrl+C 可停止自己启动的服务。
 
-进入后，若自动制作尚未配置，直接点 **「先玩音乐积木」** 即可使用本地创作与试听。自动制作的缺项放在「查看待准备项」，通过「打开本机设置」配置后可「重新检查」。配置检查不调用模型，也不把已配置当成真实生成验收。
+进入后点击 **「一键开工」**：制作环境就绪时开始制作，尚未准备好时打开现有设置面板并显示缺项。面板里可用「本地搭建积木」进行本地创作，或通过「打开本机设置」配置后「重新检查」。配置检查不调用模型，也不把已配置当成真实生成验收。
 
-**当前首页已按 `03_patchlab_playful.html` 的 LOOP! 原型重新接线**：保留首屏、四个主题按钮、积木区、TAP、歌词便利贴和 PV 弹层，替换原先四页工作台入口。主题旁的「自己的歌词与制作设置」可输入 1–8 行歌词；自由作品点击歌词卡片下的「编辑旋律」展开钢琴卷帘，下方可逐句重唱。详见[原型接线](docs/ARCHITECTURE.md#prototype-frontend)。
+**当前首页已按 `03_patchlab_playful.html` 的 LOOP! 原型重新接线**：保留首屏、四个主题按钮、积木区、TAP、歌词便利贴和 PV 预览，替换原先四页工作台入口。整页按三个视觉章节连续滚动：首屏入场动画 → `Music Blocks` 过渡与音乐工作台 → MV 放映页（PV 预览就在第三章，见[工单 23](CC-Tasks/23-three-chapter-page.md)）。点击输入框左侧的铅笔可打开「创作设置」，输入 1–8 行歌词；自由作品点击歌词卡片下的「编辑旋律」展开钢琴卷帘，下方可逐句重唱。详见[原型接线](docs/ARCHITECTURE.md#prototype-frontend)。
+
+默认页面已收回原稿版式：不再常驻显示制作说明、作品信息栏、引擎区或底部悬浮播放器。播放进度在积木底栏；右上角「保存 / 导出」（手机为「⋯」）打开作品设置。详见[本轮收简记录](docs/iteration-log.md#loop-layout-restoration)。
 
 双击入口仍复用原启动器，构建后打开上述 LOOP! 首页。HTML 文件保留原始设计与演示脚本，并提示进入正式首页；实际工程、请求、试听和保存由 React 接线。浏览器存档格式及旧工程保持兼容，未清空已有作品。接线与本轮验证见[工单 5](CC-Tasks/5-toge-free-creation.md)、[迭代记录](docs/iteration-log.md#loop-prototype-wiring)。
 
@@ -25,12 +27,12 @@ LOOP! 首页已完成页面接线、Mock 流程及本地创作验证；历史真
 | LOOP! 单页创作 | 已接工程音轨、格子、排序、TAP、歌词卡片、局部编辑、播放与导出 | [本轮接线验证](docs/iteration-log.md#loop-prototype-wiring)；真实制作与 MP4 编码未重跑 |
 | 真实中文演唱与 LLM | 历史记录已有真实调用、绮萱 CPU / DirectML、缓存与成片实测 | [绮萱历史记录](docs/iteration-log.md#qixuan)；不证明新电脑已装好引擎或当前 Key 可用 |
 | 自由作曲与动态旋律 | compose / melody 接口、共享客户端及工程应用逻辑已提供 | [自由创作接入](docs/ARCHITECTURE.md#composition)；首页最小入口及单句旋律编辑已本地接入 |
-| 自动制作、调教与混音 | 制作任务、Auto/Manual、历史、分轨渲染已有实现；有真实后端制作与浏览器加载工程导出记录 | [自动制作接入](docs/ARCHITECTURE.md#production)、[验收](docs/iteration-log.md#v032) |
+| 自动制作、调教与混音 | 制作任务、调教/混音核心已有实现；LOOP! 已接每句预设、Auto/Manual、四项细调、音符覆盖/表达锁/三版恢复与四种分轨试听 | [当前页面接入](docs/ARCHITECTURE.md#performance)、[Mock/PCM 证据](docs/iteration-log.md#expression-mix-controls)；浏览器伴奏音量禁用并交红茶，真实引擎/听感仍待验收 |
 | 新流程 Mock 与页面 | **A1 / A2 已完成**：首页主题/可选歌词 → 制作状态 → 完整结果应用 → 试听已接通；支持取消、失败保留与缺失句重试。旧入口保留，未知 Mock 接口返回 404 | [A1 验证](docs/iteration-log.md#a1-free-creation-mock)、[A2 验证](docs/iteration-log.md#a2-free-creation-page)；双方待办见下方[协作工单](#协作工单) |
-| 钢琴卷帘与局部旋律 | **已接线并通过 Mock**：在歌词卡片下按句编辑音高/位置/长度、锁定及指定句重作曲；改动句重唱，保留其他句与伴奏 | [编辑入口](docs/ARCHITECTURE.md#piano-roll)、[本轮验证](docs/iteration-log.md#c-piano-roll)；调教和混音控件仍待办 |
+| 钢琴卷帘与局部旋律 | **已接线并通过 Mock**：在歌词卡片下按句编辑音高/位置/长度、锁定及指定句重作曲；改动句重唱，保留其他句与伴奏 | [编辑入口](docs/ARCHITECTURE.md#piano-roll)、[钢琴卷帘验证](docs/iteration-log.md#c-piano-roll) |
 | 新网页完整流程及听感 | **待双方验收**：现场新输入 → 制作 → 试听/导出，以及人工听感 | Mock 页面测试、后端历史实测与非静音指标不能代替这项验收 |
 
-最小页面已可在 Mock 中从新输入制作并试听；真实最小闭环仍需结合工单 4 / 6 验收，钢琴卷帘与局部旋律已可用，调教和混音控件继续跟踪在工单 5 C。详细 checkbox 只维护在对应 CC-Tasks 工单中。
+最小页面已可在 Mock 中从新输入制作并试听；钢琴卷帘、局部旋律、调教与现有有效混音控件均已接线。每句调教在「逐句演唱与重唱」中展开，混音在歌词区底部展开；默认不占首屏。浏览器伴奏音量核心问题见[交接 5-C-synth-mix](CROSS-END-HANDOFF.md#5-c-synth-mix)，真实最小闭环仍需工单 4 / 6 验收。详细 checkbox 只维护在对应 CC-Tasks 工单中。
 
 ## 开始开发
 
@@ -96,7 +98,8 @@ npm start
 | Blacktea（红茶） | [20 · 鼓组律动与演奏人性化](CC-Tasks/后端/20-groove-and-humanization.md)：自由鼓组 backbeat/fill 与动态已接核心，可选 swing/确定性人性化已在 MIDI/API 实施；页面选项与人工听评待验 |
 | Blacktea（红茶） | [21 · 和声、声部连接与拍号速度](CC-Tasks/后端/21-harmony-voice-leading-form.md)：契约提案待评审授权，依赖 15 P2-A 确认，待排期 |
 | Blacktea（红茶） | [22 · 制作后端治理](CC-Tasks/后端/22-backend-production-ops.md)：缓存配额、任务持久化、渲染并发池；领取工单 12 子任务，待排期 |
-| Toge（toge） | [5 · 自由创作 Mock、页面与局部编辑](CC-Tasks/5-toge-free-creation.md)：LOOP! 原型接线与 Mock 验证已完成；调教和混音控件待实施 |
+| Toge（toge） | [5 · 自由创作 Mock、页面与局部编辑](CC-Tasks/5-toge-free-creation.md)：LOOP!、调教及现有混音路径已接线并通过 Mock；视觉核对及真实共同验收待完成 |
+| Toge（toge） | [23 · 首页三个视觉章节与竖屏版式](CC-Tasks/23-three-chapter-page.md)：入场动效、Music Blocks 过渡、MV 放映页与竖屏调整已实现并通过 Mock；待 toge 实际滚动核对 |
 | 双方共同验收 | [6 · 原型接线后的真实闭环与听感](CC-Tasks/6-joint-acceptance.md)：依赖 4/5 就绪，分别记录 Mock、真实引擎、页面和人工听感 |
 | 跨端交接规则与入口 | [18 · 跨端交接文档](CC-Tasks/已完成/18-cross-end-handoff.md)：登记、按需读取与完成后清理 |
 | 前一轮工单整理 | [7 · 项目工作流整理](CC-Tasks/已完成/7-documentation-workflow.md)：已完成的范围与验证入口 |

@@ -1,5 +1,40 @@
 # SONGYU 迭代日志
 
+<a id="pr11-integration"></a>
+
+## 2026-11-07 · 前端 PR #11 合并回归
+
+- 工单：[5 · 前端接线](../CC-Tasks/5-toge-free-creation.md)、[23 · 三个视觉章节](../CC-Tasks/23-three-chapter-page.md)；说明：[原型接线](ARCHITECTURE.md#prototype-frontend)、[参数边界](INTERFACES.md)；交付：[PR #11](https://github.com/cicikat/CantaLoom/pull/11)。用户确认保留页面设计及双方文档，授权解决冲突、验证并合并。
+- 整合 main `a0cc4db` 与前端 `ad0ef35`：README 保留后端 19–22 和前端 5/23；交接保留 5-C-synth-mix 与 main 最新状态；接口保留两侧能力与 Mock 限制；迭代日志保留全部历史。启动器临时路径在 main 已修复，直接沿用，无需重复改代码。
+- 本机验证：build 通过（既有 Zod 注释与大包提示保留）；npm test（SONGYU_REAL_TESTS=0）101 项，97 通过、4 跳过、0 失败；Mock 页面全套 29/29；真实模式本地页面 studio/plan/launch 排除 FFmpeg exports 后 10/10。页面输出在 temp/pr11-mock/ 与 temp/pr11-real-pages/，CHOKIDAR_USEPOLLING=true；本地文档链接目标和 git diff --check 通过。
+- 边界：本轮未做真实 LLM/绮萱制作、真实 MP4、手机实机/Safari 或人工听感验收；工单 6 与既有跨端待办继续保留。用户已确认页面设计，Toge 实机动效核对仍按原工单跟踪。远端 CI 与最终合并结果见 PR Checks 和合并事件。
+
+<a id="three-chapter-page"></a>
+
+## 2026-11-07 · 首页三个视觉章节、入场动效与竖屏版式
+
+- 工单：[23 · 首页三个视觉章节与竖屏版式](../CC-Tasks/23-three-chapter-page.md)；说明：[原型接线边界](ARCHITECTURE.md#prototype-frontend)。toge 明确要求把单页重构为三个可连续滚动的视觉章节并顺带调整竖屏与紧凑区域。分支 `feature/frontend-three-chapters` 从 `feature/frontend-free-creation-mock`（14c965a，LOOP! 前端尚未进 main）开出。仅改前端页面、样式、页面测试与文档；未改后端、音乐算法、共享契约、Client、`src/visual.ts` 或导出链路。
+- 第一章：首屏至少占满一屏，内容垂直居中、标题与插图加大。`HeroTitle` 给读屏一份完整标题，动画字母对读屏隐藏；`src/chapters.css` 以 `--beat: .14s` 让左右元素交替入场（眼眉贴纸 → 右上贴纸 → 「敲一下。」敲章式落下 → 插图摆入 → 逐字 → 圆点/星芒穿插 → 下划线 → 说明 → 输入 → 主题按钮），「变成一首歌！」每个字由旋转的黄色十字星星弹出、向右溅出三片碎片后回稳，约 2.2 秒后输入框就位。
+- 第二章：`ChapterBridge` 是首屏后的 280svh 滚动区，向上叠住首屏最后一屏，内部画面粘在视口；滚动进度写入 `--p`，五个彩色大圆依次向上升起盖住首屏，最后一圈淡紫色铺满后显示 `Music Blocks`（白描字 + 六块彩色积木字母 + 八格步进灯），停留约一屏滚动距离，再接同色的工作台。过渡层 `aria-hidden`、不接收点击；`.page` 改用 `overflow: clip` 以保证粘性定位。工作台（积木、TAP、歌姬、歌词、混音）改在淡紫点阵背景上，加大章节留白，卡片在支持滚动时间线的浏览器里随滚动升起。
+- 第三章：原 PV 弹层改为页面内深色章节 `#pv`（区域名「歌词 PV」）：走马灯、胶片框画面、播放按钮与时间、独立「PV 进度」条、字幕样式/换色/导出 MP4 与说明；导航「PV ✦」滚动到该章，导出状态改由全局提示条显示。原结尾横幅并入本章标题，弹层与横幅的旧样式已删除；导出作品弹层不变。
+- 竖屏与紧凑区域：手机导航不再逐字折行（隐藏 logo 小字、按钮不换行）；≤900px 首屏单列且插图区限宽，贴纸跟插图成组；≤560px 歌词卡单列；MV 页在平板/手机纵向排列；歌姬卡小标题与 TAP 卡统一。最后一圈在高窄屏露出底边弧线的问题已按屏高放大半径修正。系统「减少动态效果」时关闭全部入场与滚动编排，过渡章为静态纯色标题块。
+- 视觉检查（Mock，Playwright 截图，未入库）：桌面 1440×900 逐帧冻结检查入场节拍与逐字星星/碎片，滚动 8 个位置检查圆圈上升、纯色停留与工作台衔接；平板 768×1024、手机 390×844 检查三章与横向无溢出；减少动态效果模式检查静态版。浏览器控制台无错误。尚未经 toge 肉眼/真机核对动效节奏与停留距离。
+- 测试：`npm run build` 通过（保留原有大包提示）。页面测试改动：PV 用例改为检查页面章节、同一时钟与 PV 进度条，不再测 PV 弹层的 Escape/焦点返回（导出弹层仍测）；版式用例由「首屏高度/积木起点与原稿相差 ≤2px」改为三章顺序、首屏占满一屏、过渡在滚动中铺满并出标题，歌词卡高度仍不超过原稿 +8px；`studio.spec.ts` 删去关闭 PV 一步。
+- 测试稳定性：首轮全套有 3 项 A2 失败，原因都是测试在异步环境检查完成前点击「一键开工」，页面按 e237ddf 的设计打开了设置面板。对照实验：同一代码 A2 组重复 3 次，关闭动画 3/33 失败、开启动画 9/33 失败——竞态早已存在，入场动画加重了页面加载、扩大了时间窗口。已把文件里已有的「等按钮 title 消失再点」写法提为 `startMaking` 并用于 8 处点击，修后开启动画 A2 组 **33/33**。另：Windows 下 Vite 监听测试下载临时文件会 EBUSY 崩溃，测试命令沿用 `CHOKIDAR_USEPOLLING=true`。
+- 最终结果：Mock 全套 **29/29**（输出 `temp/three-chapter-mock-final/`）；真实模式本地页面 `studio.spec.ts plan.spec.ts launch.spec.ts --grep-invert 'FFmpeg exports'` **10/10**（`temp/three-chapter-real/`）。未运行单元测试（未改其覆盖的模块）、真实 LLM/声库/FluidSynth/FFmpeg 导出、手机实机或 Safari；工单 6 不受影响、仍未验收。仅本地提交，未推送。
+
+<a id="expression-mix-controls"></a>
+
+## 2026-11-07 · 每句演唱调教与现有混音控件接线
+
+- 工单：[5 C](../CC-Tasks/5-toge-free-creation.md)；说明：[调教与混音接入](ARCHITECTURE.md#performance)、[前端参数速读](INTERFACES.md#前端速读哪些数字需要做成控件)。toge 在参数说明后要求实施，并明确选择「只接前端，核心问题交接红茶」。沿用 LOOP! 原版首屏、卡片与字体/颜色，只增加按需展开的控件；未修改后端、音乐算法、公共契约、Client、统一混音或导出算法。
+- 实现：`PerformanceControls` 接自然/轻柔/强烈、Auto/Manual、句级四项参数、逐音符人工覆盖/锁定、句级表达锁、最多三版恢复；复用 `setPhrasePerformance` / `autoTuneProject` / `restorePerformance`。数值边界直接读取共享 Schema。保留既有 Pitch 曲线，显式清除音符覆盖时才清除所选整项。表达修改仅失效目标句，通过原 QixuanPanel 重新演唱；不调 LLM/旋律接口，不清空兄弟句与器乐资产，重唱失败保留旧资产。元音演示不冒充支持真实调教，相关控件禁用。
+- 混音：`MixControls` 写入既有 mixSettings，`usePlayer` 透传现有 stem 并从头试听；干人声、处理人声、伴奏、全混音均接通，改参数停止旧声音。人声音量/混响仅在 external 启用；伴奏音量仅在 fluidsynth 启用。浏览器 synth 尚未应用 bandGain，禁用并解释，已登记 [5-C-synth-mix](../CROSS-END-HANDOFF.md#5-c-synth-mix) 交红茶；未擅改 audio.ts。表达锁元数据仍进入既有演唱依赖，切换后可能提示重唱，按既有保守校验处理。
+- 构建与定向测试：`npm run build` 通过（保留依赖注释及大包提示）；`npx tsx --test tests/performance-edit.test.ts tests/melody.test.ts tests/p0-tuning.test.ts tests/mock-free.test.ts tests/phrase-edit.test.ts` **31/31** 通过。覆盖非法/非有限数值原子拒绝、Pitch/兄弟句/音符保留、锁定与自动保护、三版历史及既有局部编辑/来源隔离。
+- Mock 页面：新增三项调教/混音用例通过；全套 **29 项已逐项通过**：首次全套 28 通过，旧 A2 迟到响应测试因抢在环境就绪前点击而失败，补就绪等待后该项定向复测通过，未把首次全套写成全绿。全套输出 `temp/expression-mix-regression/`，复测 `temp/expression-mix-a2-recheck/`。断言单句重唱调用范围、失败保留、锁定/历史/重载，四种 stem 实际进入播放器；渲染实测人声音量归零使 processed 静音、dry 非静音，混响 0→0.12 改变 PCM；FluidSynth Mock 双路归零后，下载 WAV 的 PCM 与送往 PV 的 WAV 均静音，不只检查 JSON 值。
+- 环境与版式：首轮页面测试遇 Windows Vite watch 下载 `.crdownload` 的 EBUSY，测试命令仅增加 `CHOKIDAR_USEPOLLING=true` 后完成，未改 Vite 配置或杀其他服务。新增下拉框补明确的可访问名称。既有首屏/卡片几何回归通过；390px 无横向溢出，已检查截图 `temp/songyu-expression-desktop.png`、`temp/songyu-expression-mobile.png`，混音截图 `temp/songyu-expression-mix-mobile.png`。
+- 真实模式本地页面：`npm run test:e2e -- studio.spec.ts plan.spec.ts launch.spec.ts --grep-invert 'FFmpeg exports' --output temp/expression-mix-real-mode` **10/10** 通过；包含本地合成 PCM、保存/锁定/字幕/播放、缺项说明及接口夹具，未运行真实 LLM/声库/FluidSynth/FFmpeg 编码或手机/Safari。本轮 PV 是 Mock JSON 回执，测试音不代表实际歌声或人工听感；工单 6 保持未验收。本轮仅本地提交，不推送。
+
 <a id="quality-interface-delivery"></a>
 
 ## 2026-11-07 · 工单 19/20 接口标注与协作交付
@@ -76,6 +111,23 @@ Windows 本机真实 FluidSynth、现有 SoundFont、FFmpeg（本机配置）和
 - Git 与保全：本次文档任务从核对后的 origin/main 55d5810 建 feature/backend-cross-end-handoff；已有后端提交保留在本地 feature/backend-p1-phoneme（9718420）。17 个既有未提交文件保存在本地 stash 65cc8c0dc1ad9dd80eddf85a9add6bb4deb3a11b；另将原始字节、清单与补丁保存在 Git 忽略的 backup/cross-end-handoff-2026-11-07/，17/17 SHA-256 与封存前一致。stash/backup 仅在本机，不随 PR 上传。
 - 恢复入口：确认工作区干净后切回 feature/backend-p1-phoneme，再运行 git stash apply 65cc8c0dc1ad9dd80eddf85a9add6bb4deb3a11b；apply 保留 stash，便于核对。原始字节备份可用于核对 Git 行尾规范化差异。不要在文档分支直接应用长歌草稿，不自动删除 stash 或备份。
 - 验证：仅检查本轮 Markdown 的本地链接/锚点、文档一致性、Git diff 与文档提交范围；未运行构建、前端 E2E、LLM 或真实引擎，也未重宣称此前音频验收。本次按用户要求提交文档 PR，前一轮后端成果继续留在原分支，P2-A/P3 的跨端实施与整单验收仍待对方确认。
+
+<a id="start-button-readiness"></a>
+
+## 2026-11-07 · 一键开工可点击查看制作缺项
+
+- 工单：[5 · 前端接线](../CC-Tasks/5-toge-free-creation.md)，入口：[README](../README.md#launch)，准备逻辑：[架构](ARCHITECTURE.md#launch)。toge 反馈「一键开工」无法点击；当前 3001 公共 API 报告 LLM 未配置、伴奏音源未就绪、绮萱不完整及 FFmpeg 未就绪。前端原先对任意缺项禁用按钮，而说明又放在隐藏面板里，导致缺乏可操作入口；API 状态不等同于全盘确认资源文件不存在。
+- 修复仅在 PatchlabCreation：缺项时点击主按钮打开已有创作设置、聚焦入口并显示实际缺项；不提交制作、不自动切换 Mock 或旧模板。忙碌、任务运行及空主题仍禁用；资源就绪仍走原 useProduction。未改后端、配置或资源、未发起真实模型调用或增加常驻说明。
+- 验证：`npm run build` 通过；launch 页面 **4/4**，输出 `temp/songyu-start-button-real`；Mock 五句制作→试听→恢复 **1/1**，输出 `temp/songyu-start-button-mock`。新增/更新断言覆盖缺项按钮可点击、面板可见、零提交，配置夹具就绪后正常提交且失败保留工程。本轮还直接在正在运行的 3001 构建页用隔离浏览器上下文点击主按钮，实际四项缺失信息可见、制作请求 0、页面异常 0，截图 `temp/songyu-start-button-actual.png`；没有使用测试能力响应替代这次实际检查。真实资源安装/配置和完整生成仍需后端工单 4 / 共同工单 6；仅本地提交，未推送。
+
+<a id="loop-layout-restoration"></a>
+
+## 2026-11-07 · 撤回接线时擅自增加的默认页面内容
+
+- 工单：[5 · 原型接线](../CC-Tasks/5-toge-free-creation.md)，依据：toge 反馈接线改动了原交互并增加说明，使原本版式臃肿。入口：[README](../README.md#launch)，接入边界：[架构](ARCHITECTURE.md#prototype-frontend)。前一条接线虽然功能通过，但没有守住原稿的默认排版；本轮直接按原 HTML 对照收简，视觉仍待 toge 实际确认。
+- 实际修改：去掉默认 Mock 横幅、制作便签/准备/来源说明、作品信息栏、额外段落栏、常驻配方/引擎/演唱折叠区，以及全宽底部悬浮播放器。输入框左侧原铅笔位置打开歌词/制作设置，初始主题沿用当前工程；右上角保存/导出菜单（手机 ⋯）承载保存、导出、引擎与方案。段落选择放在积木标题内，进度放在原积木底栏；单轨试听使用音轨图标。歌词卡片恢复正文加一个主按钮，单句试听/锁定收至角落；卷帘、重唱仍按需展开，实际制作状态仅在任务后出现。未改原始 HTML、后端、公开契约、音乐算法或导出实现，未清除工程或重启已有服务。
+- 验证：`npm run build` 和 `node --import tsx --test tests/production-page.test.ts` **2/2** 通过；`CHOKIDAR_USEPOLLING=true` 下完整 Mock 页面 **26/26**，输出 `temp/songyu-loop-slim-mock`；launch / plan / studio（排除 FFmpeg）真实模式本地页面 **10/10**，最终输出 `temp/songyu-loop-slim-final-real`。两个播放断言首次在原 5 秒等待内未通过；定向诊断中浏览器音频恢复约 20ms、离线准备约 1.2–1.8 秒，未复现卡住，移除诊断并将断言改为按实际播放状态等待（上限 20 秒），最后完整 10 项通过；没有改音频算法，不能把一次失败归为已确认的性能根因。测试继续覆盖本地 PCM / WAV、Mock 制作和回执、失败保留、锁定、排序、导入、卷帘与局部重唱。
+- 原稿对照：页面测试在同一 1440px 视口读取原 HTML（仅在测试 DOM 移去入口提示），首屏高度、积木起点差异 ≤2px，歌词卡片高度不超过原稿 +8px。390px 无横向溢出；原稿与收简后的截图分别为 `temp/songyu-loop-original-layout.png`、`temp/songyu-loop-restored-desktop.png`、`temp/songyu-loop-restored-mobile.png`，已检查。实际工程保留六类音轨，较原稿五条演示轨多出真实和弦轨，没有用隐藏工程数据来压缩页面。真实 LLM、声库与 MP4 编码未运行，人工视觉/听感不提前验收；本轮仅本地提交，未推送。
 
 <a id="loop-prototype-wiring"></a>
 

@@ -41,12 +41,24 @@
 
 | 原型区域 | 当前实际接线 |
 |---|---|
-| 灵感输入与一键开工 | PatchlabCreation → useProduction → 统一 Client；主题 1–500 字，可折叠输入 1–8 行歌词、速度与时长；真实阶段、取消等待、失败保留、缺失句重试、完整校验后一次应用；四个主题按钮填写意图，不伪造新模式的曲风字段 |
-| 音乐积木与 TAP | 由 SongProject 当前段落实际音轨生成，六类音轨不固定为原型五条演示轨；16 格为四拍概览；锁定、静音、单轨试听、独立重做、手改格子、拖动及 ↑↓ 顺序均写回工程。自由作品保留格子编辑与整轨重做限制，使用逐句卷帘 |
+| 灵感输入与一键开工 | PatchlabCreation → useProduction → 统一 Client；主题 1–500 字，输入框左侧铅笔按需打开歌词、速度与时长设置；真实阶段、取消等待、失败保留、缺失句重试、完整校验后一次应用；四个主题按钮填写意图，不伪造新模式的曲风字段 |
+| 音乐积木与 TAP | 由 SongProject 当前段落实际音轨生成，六类音轨不固定为原型五条演示轨；段落选择在 LOOP BOARD 标题内，16 格为四拍概览；锁定、静音、单轨试听、独立重做、手改格子、拖动及 ↑↓ 顺序均写回工程。自由作品保留格子编辑与整轨重做限制，使用逐句卷帘 |
 | 本地规则与方案 | 「本地搭建积木」无需模型；「创作配方」显示有效计划与保护决策，可使用既有 api.plan 更新旧模式积木方案。自由作品不套用旧模板 |
 | 歌词卡片与歌姬 | 按实际歌词数量展示，旧模式可编辑文本；自由模式保留原词，卡片下的「编辑旋律」展开同页 PianoRoll 并选中对应句。复用音符/句锁、局部重作与代次保护；折叠区复用 QixuanPanel 逐句演唱与重唱 |
-| 播放与 PV | 同一个 usePlayer / AudioEngine 时钟，Landscape / drawPV 读取实际工程和 time；WAV / PV / 工程仍走原导出链路，字幕样式和换色实际持久化。弹层用原生 dialog，支持 Escape、焦点返回与模态键盘操作 |
-| 音色与状态文案 | 元音演示和外部歌声分开显示；Mock 明确标记；静态 AGENT IS READY 改为配置或本地可用状态。音源、MIDI、USTX、文件交换仍可在底部引擎折叠区访问 |
+| 播放与 PV | 同一个 usePlayer / AudioEngine 时钟，Landscape / drawPV 读取实际工程和 time；WAV / PV / 工程仍走原导出链路，字幕样式和换色实际持久化；播放进度留在积木底栏，首页无悬浮播放器。PV 预览是页面第三章 `#pv`（区域名「歌词 PV」），导航「PV ✦」滚动到该章；章内的「PV 进度」条与积木底栏共用同一时钟。导出作品仍是原生 dialog 弹层，支持 Escape 与焦点返回 |
+| 音色与状态文案 | 元音演示和外部歌声分开显示；Mock 明确标记；静态 AGENT IS READY 改为配置或本地可用状态。保存/导出、有效计划、音源、MIDI、USTX 和文件交换可在右上角作品设置访问 |
+
+2026-11-07，toge 反馈接线新增的注释与控件使页面臃肿。本轮撤回新增默认区域；首页仅保留原稿布局，制作便签仅在实际任务后出现，制作准备与来源说明收进创作设置，作品信息/配方/引擎放入作品设置。歌词卡片回到正文加一个主按钮，单句试听/锁定为卡片角落控件，额外逐句演唱区按需打开。原始 HTML 及后端/共享契约未改。桌面首屏高度和积木起点与原稿差异 ≤2px，手机截图已检查且无横向溢出；结果与范围见[版式收简](iteration-log.md#loop-layout-restoration)。
+
+同日 toge 要求把单页重构为三个视觉章节（[工单 23](../CC-Tasks/23-three-chapter-page.md)），因此首屏高度与积木起点不再对齐原稿，原稿的卡片、贴纸、积木和歌词便利贴保留：
+
+| 章节 | 结构与实现 |
+|---|---|
+| 1 · 首屏 `#compose` | 至少占满一屏。`HeroTitle` 给标题一份完整读屏文字，动画字母对读屏隐藏；`src/chapters.css` 用 `--beat` 节拍让左右元素交替入场，「变成一首歌！」逐字由旋转星星弹出并向右溅碎片 |
+| 2 · Music Blocks + 工作台 `#board` / `#lyrics` | `ChapterBridge` 是首屏之后的一段高滚动区（向上叠住首屏最后一屏），内部画面固定在视口；滚动进度写入 CSS 变量 `--p`，五个圆据此依次上升，铺满后显示 `Music Blocks` 并停留，之后接淡紫色工作台。过渡层 `aria-hidden`、不接收点击 |
+| 3 · MV 放映页 `#pv` | 深色章节，含字幕走马灯、胶片框画面、播放条、字幕样式/换色/导出与说明；画面仍是 `Landscape` / `drawPV`，未改画面与导出代码 |
+
+系统开启「减少动态效果」时，入场动画、过渡的圆和滚动联动全部关闭，过渡章变为普通纯色标题块。`.page` 使用 `overflow: clip`（替代 hidden）以保证过渡层的粘性定位生效且不产生横向滚动。
 
 正式首页不再运行原型的随机格子、随机换词、独立振荡器或字幕定时器。原 HTML 文件保留原始演示，并提供正式入口说明，不能用 file:// 单文件代替 Node / Vite 应用。未改后端、公开契约、模型、混音或导出算法；UI 继续经既有 hooks、Client 和导出用例接入。原型重接后的构建、29 项相关单元测试、26 项 Mock 页面测试及 10 项真实模式页面/接口夹具已通过，详见[本轮记录](iteration-log.md#loop-prototype-wiring)。真实模型、绮萱、MP4 编码与人工听感仍按[工单 6](../CC-Tasks/6-joint-acceptance.md)验收。
 
@@ -56,7 +68,7 @@
 
 「打开声屿.bat」是面向使用者的入口，本机桌面「声屿」指向它。scripts/reuse-studio.mjs 先检查当前端口的 health、页面标识、与本地 dist 相同的资产路径和 JS 内容哈希；匹配则直接打开正在运行的当前版本，--check / --no-open 不开浏览器，也不停止已有进程。未匹配或服务未运行时，原样传递参数给现有 start.bat；没有第二套构建/服务启动逻辑，也不处理、停止或抢占其他程序。既有启动器负责环境/端口检查、按 lockfile 补依赖、构建、启动同源服务、确认页面与资产后打开浏览器。`--check` 不打开浏览器并在检查后退出，`--no-open` 保持服务但不打开浏览器。双击入口的启动逻辑未变，App 已切换为 LOOP! 接线；原 HTML 提示已改为实际首页入口说明，见[原型边界](#prototype-frontend)。
 
-useProductionReadiness 通过既有 health / engines / qixuan Client 只读检查本机配置与资源；在进入页面、回到窗口及点击「重新检查」时刷新，使用代次保护丢弃过期检查结果。它接管原 useStudio 的 health 刷新，不新增 API 或改服务端设置。当前 production 服务要求 LLM、伴奏音源、歌声服务和 FFmpeg；缺项/未连接时前端禁用自动制作提交，给出本机设置入口及可立即进入的本地积木。缺项直接列出，不要求使用者分辨开发模式或输入命令。
+useProductionReadiness 通过既有 health / engines / qixuan Client 只读检查本机配置与资源；在进入页面、回到窗口及点击「重新检查」时刷新，使用代次保护丢弃过期检查结果。它接管原 useStudio 的 health 刷新，不新增 API 或改服务端设置。当前 production 服务要求 LLM、伴奏音源、歌声服务和 FFmpeg；缺项/未连接时「一键开工」仍可点击，打开已有创作设置并聚焦其入口，列出缺项、本机设置与本地积木选项；不提交 production 请求。只有正在操作、任务运行中或主题为空时禁用按钮；不为缺项新增常驻说明栏。
 
 正式构建使用同源 `/admin`，开发联调沿用原有后端 loopback 管理地址；管理限制不变。前置检查不调用 LLM、渲染器或下载资源；llmStatus 继续来自真实 health，资源就绪不记为实际上游调用成功。Mock 仍为显式测试数据，真实模式没有自动回落 Mock。已有后台受理的任务、当前工程与存档不因准备状态刷新被改写。
 
@@ -267,6 +279,10 @@ Performance 可选 mode=auto/manual、energy、locked、overrides。旧 JSON 无
 使用真实支持的 USTX Pitch x=毫秒、y=十分之一半音、phoneme offset=按BPM换算的tick；大跳不强制连滑、长音延迟进入小颤音、休止后不提前辅音。v0.4.0 起暴露的表达参数逐一经真实 WAV 对照验证（tests/qixuan-p1-real.test.mjs），未支持的效果不进入契约。
 
 ### 分轨与混音
+
+2026-11-07 页面接线：每句 `QixuanPanel` 内新增默认折叠的「演唱调教」，支持 preset、Auto/Manual、四个句级数值、按音符稳定 ID 选择的人工覆盖/锁、句级表达锁，以及最多三版调教恢复。`PerformanceControls` 调用现有 `setPhrasePerformance` / `autoTuneProject(project,lineId)` / `restorePerformance`；输入范围来自共享 Schema，未修改音乐核心或公共契约。保存表达后由现有重唱按钮仅生成当前句，不重新调用作曲/旋律接口；失败保留旧资产，依赖过期由现有规则显示。原有 Pitch 曲线在修改四个数值时保留；「清除音符覆盖」会明确清除所选音符整项覆盖。表达锁仍进入既有演唱依赖，切换后可能标记本句需要重唱，本轮没有改依赖算法。
+
+歌词区底部新增默认折叠的「混音与分轨试听」。`MixControls` 只更新并校验 `SongProject.mixSettings`；`usePlayer.play({stem})` 将现有 stem 选项透传给 `AudioEngine.play`，分轨从头播放。改设置通过既有 `change` 停止旧声音，下一次试听与既有 WAV/PV 用例读取同一设置；不新增 fetch、音频缓存或导出接口。人声音量/混响仅对 external 歌声启用；bandGain 仅对 fluidsynth 启用，浏览器 synth 未接增益，禁用并提示。toge 明确选择「只接前端，核心问题交接红茶」，未改 `audio.ts` / `audio-mix.ts`；交接 [5-C-synth-mix](../CROSS-END-HANDOFF.md#5-c-synth-mix)。接线与测试证据见[本轮记录](iteration-log.md#expression-mix-controls)，真实引擎与听感仍待工单 6。
 
 `renderAudio(project,{stem:'vocal-dry'|'vocal-processed'|'instrumental'|'mix'})`，同一渲染入口服务于试听、WAV、PV。
 

@@ -16,6 +16,7 @@
 
 | ID | 来源 | 发起方 → 接收方 | 状态 |
 |---|---|---|---|
+| [5-C-synth-mix](#5-c-synth-mix) | 工单 5 C | Toge → Blacktea | 前端已接；浏览器伴奏增益核心待接手 |
 | [20-groove-render](#20-groove-render) | 工单 20 | Blacktea → Toge | 核心/API 已实现；页面与人工听评待安排 |
 | [15-P1-review](#15-p1-review) | 工单 15 P1 | Blacktea → Toge | 后端已推送；等待接口接入 review |
 | [15-P2A-contracts](#15-p2a-contracts) | 工单 15 P2-A | Blacktea → Toge | 等待本任务共享范围确认 |
@@ -25,6 +26,16 @@
 | [21-harmony-contracts](#21-harmony-contracts) | 工单 21 | Blacktea → Toge | 等待和声/拍号契约提案评审 |
 
 以下后端分支与提交已推送，main 的交付范围以对应 PR 合并结果为准；待确认的 P2-A/P3 仍不构成实施授权。当前 main 的前端 Mock/局部编辑进度以[工单 5](CC-Tasks/5-toge-free-creation.md)为准。
+
+<a id="5-c-synth-mix"></a>
+
+### 5-C-synth-mix · 浏览器伴奏增益与前端接线边界
+
+- 更新：2026-11-07；来源：[工单 5 C](CC-Tasks/5-toge-free-creation.md#c局部编辑与调教)；Toge → Blacktea；状态：等待音乐核心接手。toge 明确选择「只接前端，核心问题交接红茶」，本条不授权前端修改混音核心。
+- 已交付：`feature/frontend-free-creation-mock` 本轮调教/混音前端提交（主题 `feat: connect phrase expression and supported mix controls`）。默认折叠的句级/音符级调教、锁定/历史、现有单句重唱、四种 stem 试听与 mixSettings 持久化；证据见[迭代日志](docs/iteration-log.md#expression-mix-controls)。没有修改公开 Schema / Client / `src/audio.ts` / `src/audio-mix.ts`。
+- 已定位：`src/audio.ts` 的 addWav/processed 分支给 FluidSynth 应用 bandGain，但浏览器 synth 直接 schedule 到 master，未应用 bandGain；元音演示亦未接 vocalBus。默认 Mock 自由制作的伴奏是 synth，直接开放伴奏滑杆会无效。前端当前仅在 fluidsynth 启用伴奏音量；人声音量/混响仅在 external 启用；有明确禁用说明，不自动切引擎。
+- 对方下一步：在共同混音边界内确认并修复 synth 的伴奏增益路径，保持静音/独奏、现有 stem、WAV/PV、旧工程 enabled 默认和未处理干人声语义；提供实际 PCM/导出回归后回执，前端再解除相应禁用。顺带核对表达锁元数据进入 singingDependency 导致锁切换保守失效的预期；本轮按既有依赖处理，不伪造音频有效性。
+- 验收与回执：前端已验证 external 人声增益归零、混响 PCM 变化、FluidSynth Mock 两路归零后 WAV 与 PV 输入静音；这些是测试音，不是实际 FluidSynth/绮萱引擎验收。真实资源、制作闭环和人工听感继续[工单 6](CC-Tasks/6-joint-acceptance.md)。完成后证据写回工单/迭代日志，再移除本条。
 
 <a id="15-p1-review"></a>
 

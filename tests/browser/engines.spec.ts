@@ -1,4 +1,6 @@
 import {test,expect} from '@playwright/test';
+import {projectSettings} from './settings';
+
 test('FluidSynth WAV enters the same track/full-song mix, survives locks and save, and changes after regeneration',async({page})=>{
  test.setTimeout(360000);await page.goto('/');const result=await page.evaluate(async()=>{
  // @ts-expect-error Vite browser module
@@ -12,7 +14,7 @@ test('FluidSynth WAV enters the same track/full-song mix, survives locks and sav
  localStorage.setItem('songyu-project-v1',JSON.stringify(p));return {rms:Math.sqrt(energy/x.length),diff,duration:mix.buffer.duration,expected:p.sections.reduce((s:number,x:any)=>s+x.beats,0)*60/p.bpm,locked:JSON.stringify(drum)===JSON.stringify(next.tracks.find((t:any)=>t.id===drum.id)),wav:btoa(binary)};
  });expect(result.rms).toBeGreaterThan(.0001);expect(result.diff).toBeGreaterThan(1);expect(result.locked).toBeTruthy();expect(Math.abs(result.duration-result.expected)).toBeLessThan(.001);
  const fs=await import('node:fs/promises');await fs.mkdir('exports',{recursive:true});await fs.writeFile('exports/fluidsynth-full-mix.wav',Buffer.from(result.wav,'base64'));
- await page.reload();await page.locator('.engine-panel summary').click();await expect(page.getByLabel('乐器音源',{exact:true})).toHaveValue('fluidsynth');await page.screenshot({path:'test-results/local-engines.png',fullPage:true});
+ await page.reload();await projectSettings(page);await page.locator('.engine-panel summary').click();await expect(page.getByLabel('乐器音源',{exact:true})).toHaveValue('fluidsynth');await page.screenshot({path:'test-results/local-engines.png',fullPage:true});
  await page.getByRole('navigation').getByRole('button',{name:'PV ✦',exact:true}).click();const dl=page.waitForEvent('download',{timeout:180000});await page.getByRole('button',{name:'导出 MP4',exact:true}).click();await (await dl).saveAs('exports/fluidsynth-pv.mp4');
 });
 test('external vocal WAV fixture is reused by timeline mix; editing one line invalidates only that line',async({page})=>{

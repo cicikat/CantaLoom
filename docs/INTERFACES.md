@@ -4,6 +4,19 @@
 
 状态标记：**main**＝已合并（含工单 15 P1 / v0.4.0，基线 `003f4c5`）；下文历史 P0/P1 标记均已进入该 main。**新增（2026-11-07，工单 19/20）**＝本轮交付，新增端点与字段在对应节标出，实际合并状态见[迭代日志](iteration-log.md#quality-interface-delivery)。接口存在不代表新页面/Mock 已接通，页面进度见 [Toge 工单](../CC-Tasks/5-toge-free-creation.md)。
 
+## 前端速读：哪些数字需要做成控件
+
+| 页面区域 | 需要考虑的内容 | 当前入口 |
+|---|---|---|
+| 创作设置 | 主题 1–500 字；可选歌词 1–8 行、每行 1–100 字；速度 60–160；目标约 20/25/30 秒 | 首屏铅笔 |
+| 音符编辑 | 音高 48–84；长度 0.125–16 拍；位置不能超出当前句或重叠 | 歌词卡片「编辑旋律」 |
+| 每句调教 | 自然/轻柔/强烈、自动/手动；高级参数为过渡 0–160 ms、颤音 0–60、力度 −120–60、辅音 −60–60 ms | 「逐句演唱与重唱」→ 每句「演唱调教」 |
+| 全曲混音 | 人声音量与伴奏音量 0–200%，默认 100%；混响 0–0.25，默认 0.08 | 歌词区底部「混音与分轨试听」 |
+
+这是可用能力的清单，不要求把所有限制做成输入框。energy 由既有单句自动分析带入；overrides 索引由音符选择器带入；take 由重唱操作带入；缓存、引擎版本和文件上限由程序处理。steps/depth、EQ、声像等固定或未实现参数不做滑杆。
+
+本轮只接前端：浏览器 synth 伴奏尚未应用 bandGain，伴奏音量在此模式禁用；切到已有 FluidSynth 路径才启用。元音演示不支持此处的调教、人声音量与混响，相关控件禁用。详情与红茶交接见 [5-C-synth-mix](../CROSS-END-HANDOFF.md#5-c-synth-mix)。
+
 ## 创作输入（`api.compose` / `api.startProduction`）
 
 | 字段 | 取值 | 默认 | 说明 |
@@ -33,7 +46,7 @@
 | consonantMs | −60–60 | 按 preset/auto | 辅音起音偏移（按 BPM 换算 tick；休止后不提前） |
 | overrides[] | ≤100 条 | 无 | 逐音符覆盖：index 0–99、origin auto/manual、同上四项、pitch、v0.4.0 颤音六参、phonemes、locked |
 
-**Pitch 曲线（P0 分支 / v0.3.3）**：`overrides[].pitch`＝2–64 个按 x 严格递增的点；x＝相对音符起点毫秒（−500–30000，负值先入），y＝十分之一半音整数（±1200），shape＝io/i/o/l（默认 io）。提供时替换该音符自动过渡点，删除即恢复自动；随演唱依赖进入缓存失效。
+**Pitch 曲线（已合入，v0.3.3）**：`overrides[].pitch`＝2–64 个按 x 严格递增的点；x＝相对音符起点毫秒（−500–30000，负值先入），y＝十分之一半音整数（±1200），shape＝io/i/o/l（默认 io）。提供时替换该音符自动过渡点，删除即恢复自动；随演唱依赖进入缓存失效。
 
 **v0.4.0 逐音符颤音（P1）**：`overrides[]` 新增 vibratoLength（0–100，音符长度百分比）、vibratoPeriod（5–500 ms）、vibratoIn / vibratoOut（0–100，淡入淡出，合计 ≤100）、vibratoDrift（±100）、vibratoVolLink（±100，音量联动）；缺省保持既有自动形态。滑音仍由 transitionMs 与 pitch 曲线控制。
 
@@ -45,7 +58,7 @@
 
 **不支持（如实报告，绝不做假开关）**：ene（energy，声库无 embed）、tenc（声线张力，无 embed）、换气声（无呼吸采样合成）、voiceColor（声库无子音色）、phonemeEnvelope（DiffSinger 逐音素音量包络/ATK/DEC 旗标对该渲染器无效）。以上字段不在契约中；状态接口 `capabilities.unsupported` 明确列出。
 
-## 旋律与歌词编辑（共享函数，main + P0 分支）
+## 旋律与歌词编辑（共享函数，含已合入 P0）
 
 | 能力 | 入口 | 关键约束 |
 |---|---|---|
@@ -149,4 +162,6 @@ MID 对应器乐渲染轨道，USTX 对应真实演唱缓存源工程，WAV 对�
 
 ## Mock 覆盖现状
 
-Mock 已定义 compose / melody / production 的固定夹具与阶段/失败/重试，未知接口返回 404，不会偷连真实后端；已有 plan/instrument/singing/export Mock 可用。新增 artifacts / loudness 端点及 groove 的真实事件效果尚无专用 Mock，不应把 Mock 参数透传当作真实 MIDI 人性化。Mock 歌声必须 `isDemo:true`，真实必须 `false`；真实模式拒绝 mock 标记响应与 Mock 缓存。新流程 Mock 扩展归 toge（[工单 5](../CC-Tasks/5-toge-free-creation.md)），pitch 曲线夹具当前不存在。
+Mock 已覆盖 compose / melody / production 的创建、阶段、失败与单句重试；未知路径仍返回 404，不会偷连真实后端。plan/instrument/singing/export Mock 继续可用。Mock 歌声必须 `isDemo:true`，真实必须 `false`；真实模式拒绝 mock 标记响应与 Mock 缓存。调教、单句重唱、分轨与混音控件已通过 Mock 页面测试；测试音的 PCM 差异不代表真实歌声听感。默认 pitch 曲线夹具及曲线绘制 UI 当前不在本轮范围，既有工程曲线在数值编辑时保留。见[工单 5](../CC-Tasks/5-toge-free-creation.md)。
+
+新增 artifacts / loudness 端点及 groove 的真实事件效果尚无专用 Mock，不应把 Mock 参数透传当作真实 MIDI 人性化。
