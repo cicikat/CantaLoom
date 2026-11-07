@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {actProgress,cascade,easeBack,PHRASE_HOLD_MS,PHRASE_SWAP_MS,phraseFrame,span} from '../src/components/chapter-motion';
+import {actProgress,cascade,easeBack,MV_EXIT_MS,mvExitFrame,PHRASE_HOLD_MS,PHRASE_SWAP_MS,phraseFrame,span} from '../src/components/chapter-motion';
 
 // Ticket 29: pin the scroll geometry and the entry-triggered phrase playback.
 const V=800,REVEAL=760,INTRO=V*1.8,TRACK=V+INTRO+REVEAL;
@@ -42,4 +42,19 @@ test('letters cascade in order and finish together with the swap',()=>{
  assert.equal(cascade(0,0,.12,.04,.44,total),0);assert.equal(cascade(1,14,.12,.04,.44,total),1);
  assert.ok(cascade(.4,0,.12,.04,.44,total)>cascade(.4,5,.12,.04,.44,total));
  assert.equal(span(.5,0,1),.5);assert.equal(easeBack(0),0);assert.equal(easeBack(1),1);assert.ok(easeBack(.7)>1,'lands with an overshoot');
+});
+
+test('MV exit closes the sentence, fills the screen, then uncovers MV on its own clock',()=>{
+ const joined=mvExitFrame(0,1,MV_EXIT_MS*.18);
+ assert.equal(joined.join,1);assert.equal(joined.expand,0);assert.equal(joined.reveal,0);assert.equal(joined.running,true);
+ const filled=mvExitFrame(0,1,MV_EXIT_MS*.56);
+ assert.equal(filled.join,1);assert.equal(filled.expand,1);assert.equal(filled.reveal,0,'MV is moved underneath only after the block covers the screen');
+ assert.deepEqual(mvExitFrame(0,1,MV_EXIT_MS),{progress:1,join:1,expand:1,reveal:1,running:false});
+});
+
+test('MV exit can reverse mid-flight and stops at both ends',()=>{
+ const reverse=mvExitFrame(.8,0,MV_EXIT_MS*.1);
+ assert.ok(Math.abs(reverse.progress-.7)<1e-10);assert.equal(reverse.join,1);assert.equal(reverse.expand,1);assert.ok(reverse.reveal>0&&reverse.reveal<1);
+ assert.deepEqual(mvExitFrame(.8,0,MV_EXIT_MS),{progress:0,join:0,expand:0,reveal:0,running:false});
+ assert.equal(mvExitFrame(1,1,10000).running,false);
 });

@@ -447,6 +447,51 @@ test('Lets plays and completes its phrase animation after entry without further 
  expect(errors).toEqual([]);
 });
 
+test('one downward gesture plays the complete Lets to MV reveal and one upward gesture returns to Lets',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.goto('/');
+ const act=page.locator('.act-mv'),stage=act.locator('.act-stage'),pin=page.locator('.mv-pin'),curtain=stage.locator('.say-curtain');
+ const pv=page.getByRole('region',{name:'歌词 PV',exact:true});
+ for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
+  await page.setViewportSize(viewport);
+  const top=await act.evaluate(el=>el.getBoundingClientRect().top+scrollY),enter=top+viewport.height*1.8*.5;
+  await page.evaluate(y=>scrollTo(0,y),top);await expect(act).not.toHaveClass(/is-swapped/);
+  await page.evaluate(y=>scrollTo(0,y),enter);await expect(act).toHaveClass(/is-swapped/,{timeout:6000});
+  // One real wheel input, then no more scrolling until the actual MV is uncovered and usable.
+  await page.mouse.wheel(0,100);
+  await expect(act).toHaveClass(/is-exiting/);
+  await expect(stage).toHaveClass(/is-filled/);
+  await expect(pin).toHaveClass(/is-open/,{timeout:6000});
+  await expect(act).not.toHaveClass(/is-exiting/);
+  await expect(pv).toBeInViewport({ratio:.5});
+  expect(await curtain.evaluate(el=>new DOMMatrixReadOnly(getComputedStyle(el).transform).m42)).toBeGreaterThan(viewport.height);
+  expect(await page.evaluate(()=>!!document.elementFromPoint(innerWidth/2,innerHeight/2)?.closest('.act'))).toBe(false);
+  await pv.getByLabel('字幕样式',{exact:true}).selectOption('poster');
+  await expect(pv.getByLabel('字幕样式',{exact:true})).toHaveValue('poster');
+  // Scroll within MV normally; the finished transition must not pull the page back to its landing point.
+  const {landed,maxScroll}=await page.evaluate(()=>({landed:scrollY,maxScroll:document.documentElement.scrollHeight-innerHeight}));
+  await page.mouse.wheel(0,120);
+  await expect.poll(()=>page.evaluate(()=>scrollY)).toBeGreaterThanOrEqual(Math.min(landed+60,maxScroll)-1);
+  await page.evaluate(y=>scrollTo(0,y),landed);
+  await page.mouse.wheel(0,-100);
+  await expect(act).toHaveClass(/is-exiting/);
+  await expect.poll(()=>curtain.evaluate(el=>new DOMMatrixReadOnly(getComputedStyle(el).transform).m42),{timeout:6000}).toBe(0);
+  await expect(act).not.toHaveClass(/is-exiting/);await expect(pin).not.toHaveClass(/is-open/);
+  await expect(stage.locator('.say-hint')).toHaveCSS('opacity','1');
+  expect(Math.abs(await page.evaluate(()=>scrollY)-(enter+100))).toBeLessThanOrEqual(2);
+  // Reversing before the colour block fills the screen also returns to a complete, stable title.
+  await page.mouse.wheel(0,100);await expect(act).toHaveClass(/is-exiting/);
+  await expect.poll(()=>stage.locator('.say-block').evaluate(el=>el.getBoundingClientRect().height)).toBeGreaterThan(viewport.height*.4);
+  await page.mouse.wheel(0,-100);
+  await expect(stage.locator('.say-hint')).toHaveCSS('opacity','1',{timeout:6000});
+  await expect(act).not.toHaveClass(/is-exiting/);await expect(pin).not.toHaveClass(/is-open/);
+  // A fresh downward gesture replays the exit without needing continuous wheel input.
+  await page.mouse.wheel(0,100);await expect(pin).toHaveClass(/is-open/,{timeout:6000});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ }
+ expect(errors).toEqual([]);
+});
+
 test('C expression controls preserve notes and siblings, re-sing one line, recover history and honor locks',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  const before=await openPiano(page),row=page.locator('.qixuan-line').first(),panel=row.locator('.expression-panel');

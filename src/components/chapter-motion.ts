@@ -1,5 +1,5 @@
 // Pure timing helpers for the scroll-driven chapter transitions (ChapterActs).
-// Scroll drives the circles and curtains; entering Let's starts a self-running phrase animation.
+// Scroll drives the circles; entering Let's and scrolling on to MV start self-running animations.
 
 export const clamp=(v:number,lo=0,hi=1)=>Math.min(hi,Math.max(lo,v));
 /** 0 before `from`, 1 after `to`, linear in between. */
@@ -33,6 +33,13 @@ export function phraseFrame(intro:number,now:number,startedAt:number|null,finish
  if(finish)start=Math.min(start,now-PHRASE_HOLD_MS-PHRASE_SWAP_MS);
  const progress=span(now-start,PHRASE_HOLD_MS,PHRASE_HOLD_MS+PHRASE_SWAP_MS);
  return {startedAt:start,progress,running:progress<1};
+}
+
+export const MV_EXIT_MS=1800;
+/** One downward gesture plays the whole close/fill/reveal sequence; an upward gesture reverses it. */
+export function mvExitFrame(previous:number,target:0|1,elapsed:number){
+ const progress=clamp(previous+(target?1:-1)*Math.max(0,elapsed)/MV_EXIT_MS);
+ return {progress,join:easeInOut(span(progress,0,.18)),expand:easeInOut(span(progress,.18,.56)),reveal:easeInOut(span(progress,.56,1)),running:progress!==target};
 }
 
 /** Local 0–1 progress of letter `i` inside a staggered cascade that is `m` (0–1) of the way through. */

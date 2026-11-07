@@ -1,11 +1,11 @@
 import {memo,useEffect,useRef,type CSSProperties,type RefObject} from 'react';
-import {actProgress,cascade,easeInOut,easeOut,lerp,phraseFrame,span} from './chapter-motion';
+import {actProgress,cascade,easeInOut,easeOut,lerp,mvExitFrame,phraseFrame,span} from './chapter-motion';
 
 // Two scroll "acts" sit between the three content chapters:
 //   hero → BenchAct ("Music Blocks") → workbench → MvAct ("Let's …") → MV theatre.
 // Each act is a tall track whose 100vh stage is pinned with position:sticky. The page right after it is wrapped in
 // `.act-pin`, which pins that page underneath the stage during the act's last stretch, so the curtain can be pulled
-// down to reveal it in place. Scroll decides each phase; title pops and the letter swap finish on their own clocks,
+// down to reveal it in place. Scroll triggers each phase; titles, the letter swap and the MV exit finish on their own clocks,
 // so stopping the scroll never leaves a title half assembled. Scrolling back resets the opener. Only transforms, opacity and the
 // one text block's size change per frame; nothing in the content chapters is covered once its curtain is gone.
 
@@ -133,7 +133,7 @@ function Phrase({text}:{text:string}){
 
 export const MvAct=memo(function MvAct(){
  const track=useRef<HTMLDivElement>(null);
- useScrollAct(track,(el,stage)=>{
+ useScrollAct(track,(el,stage,pin)=>{
   const curtain=stage.querySelector<HTMLElement>('.say-curtain')!,block=stage.querySelector<HTMLElement>('.say-block')!,text=stage.querySelector<HTMLElement>('.say-text')!;
   const lets=text.querySelector<HTMLElement>('.say-lets')!,[from,to]=Array.from(text.querySelectorAll<HTMLElement>('.say-phrase')),hint=stage.querySelector<HTMLElement>('.say-hint')!;
   const timing={duration:1000,fill:'both'as const};
@@ -143,11 +143,12 @@ export const MvAct=memo(function MvAct(){
   const total=Math.max((outs.length-1)*OUT_GAP+OUT_LEN,IN_AT+(ins.length-1)*IN_GAP+IN_LEN);
   const put=writer(),ring=discs(stage,put);
   const outChars=Array.from(from.querySelectorAll<HTMLElement>('.say-ch')),inChars=Array.from(to.querySelectorAll<HTMLElement>('.say-ch'));
-  let W=0,H=0,f=100,stacked=false,letsW=0,wB=0,lineH=0,edgeA:number[]=[],edgeB:number[]=[];
+  let W=0,H=0,revealLength=0,f=100,stacked=false,letsW=0,wB=0,lineH=0,edgeA:number[]=[],edgeB:number[]=[];
   let startedAt:number|null=null,shown=-1;
+  let lastScroll=scrollY,exitRequested=false,exitStart:number|null=null,exitProgress=0,exitTarget:0|1=0,exitClock:number|null=null;
   return {
    measure(){
-    W=stage.clientWidth;H=stage.offsetHeight;
+    W=stage.clientWidth;H=stage.offsetHeight;revealLength=pinReveal(pin);
     text.style.fontSize='100px';
     // Everything is measured once at 100px and scaled, so text size never feeds back into the measurement.
     const l=lets.offsetWidth,b=to.offsetWidth,h=to.offsetHeight;
@@ -162,10 +163,30 @@ export const MvAct=memo(function MvAct(){
    },
    draw(act,now){
     const live=!!act,{story:P,reveal:r,intro:q}=act??{story:.5,reveal:0,intro:1};
-    ring.draw(q,r);
+    const currentScroll=scrollY,down=currentScroll>lastScroll+.5,up=currentScroll<lastScroll-.5;
+    const pageTop=el.getBoundingClientRect().top+currentScroll,revealTop=pin.getBoundingClientRect().top+currentScroll;
+    lastScroll=currentScroll;
     const playback=phraseFrame(q,now,startedAt,!live||P>=.66||r>0);
     startedAt=playback.startedAt;
     const m=playback.progress;
+    if(!live||q<=.34){
+     exitRequested=false;exitStart=null;exitProgress=0;exitTarget=0;exitClock=null;
+    }else if(r>=1&&(exitTarget===1||exitProgress===0||down)){
+     // Navigation/focus can skip directly to MV. It must not leave a timer or an invisible curtain behind.
+     exitRequested=false;exitStart??=1.8;exitProgress=1;exitTarget=1;exitClock=null;
+    }else{
+     if(up){exitRequested=false;exitTarget=0}
+     else if(down&&(m>=1||P>.02))exitRequested=true;
+     if(exitRequested&&m>=1){
+      // Keep the original title position for reversing; store viewport units so resizing stays aligned.
+      if(exitProgress===0)exitStart=(currentScroll-pageTop)/H;
+      exitTarget=1;exitRequested=false;
+     }
+    }
+    const previousExit=exitProgress,exit=mvExitFrame(exitProgress,exitTarget,exitClock===null?0:now-exitClock);
+    exitProgress=exit.progress;exitClock=exit.running?now:null;
+    ring.draw(q,exit.reveal);
+    el.classList.toggle('is-exiting',exit.running);
     if(m!==shown){
      outs.forEach((a,i)=>{a.currentTime=cascade(m,i,0,OUT_GAP,OUT_LEN,total)*1000});
      ins.forEach((a,j)=>{a.currentTime=cascade(m,j,IN_AT,IN_GAP,IN_LEN,total)*1000});
@@ -185,7 +206,7 @@ export const MvAct=memo(function MvAct(){
     const padX=PAD_X*f,padY=PAD_Y*f,bw=Math.max(reach,f*.6)+2*padX,bh=lineH+2*padY,cy=H*.47;
     // After the swap the block takes two beats: it swallows "Let's" (the words close up into one sentence),
     // then grows over the whole screen and is pulled down off the MV like Act 1's curtain.
-    const join=easeInOut(span(P,.66,.72)),ex=easeInOut(span(P,.72,.92));
+    const join=exit.join,ex=exit.expand;
     let lx:number,ly:number,px:number,by:number,wrap:[number,number,number,number];
     if(stacked){
      const gap=f*.16;lx=(W-letsW)/2;ly=cy-gap/2-lineH;px=(W-bw)/2+padX;by=cy+gap/2;
@@ -203,11 +224,19 @@ export const MvAct=memo(function MvAct(){
     put(block,'border-radius',`${lerp(.2*f,0,ex).toFixed(1)}px`);
     put(block,'background-color',`rgb(${MINT.map((v,i)=>Math.round(lerp(v,VIOLET[i],c))).join(',')})`);
     stage.classList.toggle('is-filled',ex>=1);
-    put(text,'transform',`translate3d(0,${(easeInOut(r)*H*.12).toFixed(1)}px,0) scale(${(1+.08*ex).toFixed(4)})`);
-    put(curtain,'transform',move(0,easeInOut(r)*(H+120)));
-    const h=live?span(m,.8,1)*(1-span(P,.62,.68)):0;
+    put(text,'transform',`translate3d(0,${(exit.reveal*H*.12).toFixed(1)}px,0) scale(${(1+.08*ex).toFixed(4)})`);
+    put(curtain,'transform',move(0,exit.reveal*(H+120)));
+    const h=live?span(m,.8,1)*(1-span(exit.progress,0,.18)):0;
     put(hint,'opacity',h.toFixed(3));put(hint,'transform',move(0,(1-h)*12));
-    return live&&playback.running;
+    if(live&&exitStart!==null){
+     // Once the colour block is opaque and full-screen, move the actual MV underneath it, then consume the
+     // reveal spacer while it opens. This lands on usable MV content instead of leaving an empty scroll track.
+     const destination=exit.expand>=1?revealTop+revealLength*exit.reveal:pageTop+exitStart*H;
+     if(exit.running||exit.progress!==previousExit)scrollTo({top:Math.ceil(destination),behavior:'instant'});
+     lastScroll=scrollY;
+     pin.classList.toggle('is-open',exit.reveal>=1);
+    }
+    return live&&(playback.running||exit.running);
    },
    dispose(){[...outs,...ins].forEach(a=>a.cancel())},
   };
