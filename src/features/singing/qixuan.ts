@@ -17,3 +17,14 @@ export async function generateLine(source:SongProject,id:string,voice:AvailableQ
  if(lineLocked(source,id))throw Error('此句或人声音轨已锁定');
  return generateQixuan(source,source.lyrics.find(l=>l.id===id)!,voice,(source.vocalAssets?.[id]?.take||0)+(force?1:0));
 }
+// Restore one saved take as the current asset. The take is only restorable while it still matches the line's current lyrics, notes, performance and runner; the displaced current take rotates into history.
+export function restoreVocalAsset(now:SongProject,id:string,index:number){
+ const line=now.lyrics.find(l=>l.id===id),history=now.vocalHistory?.[id],asset=history?.[index];
+ if(!line||!asset)throw Error('没有可恢复的历史演唱');
+ if(lineLocked(now,id))throw Error('此句或人声音轨已锁定');
+ if(asset.dependency!==singingDependency(now,line,assetVoice(asset)))throw Error('该历史版本与当前歌词、音符或调教不匹配，不能恢复；请重新演唱');
+ if(asset.providerId==='openutau-diffsinger'&&asset.renderParameters?.runner!==(now.singingRunner||'CPU'))throw Error('该历史版本使用不同的推理设备，不能恢复；请重新演唱');
+ const next=structuredClone(now),current=next.vocalAssets?.[id],rest=next.vocalHistory![id].filter((_,i)=>i!==index);
+ next.vocalHistory={...next.vocalHistory,[id]:(current?[current,...rest]:rest).slice(0,3)};
+ next.vocalAssets={...next.vocalAssets,[id]:asset};next.vocalMode='external';return next;
+}

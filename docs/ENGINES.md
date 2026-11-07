@@ -31,6 +31,9 @@
 
 ## 本机后台与配置
 
+右上角日月图标在糖果 Bento 日间（默认）与黑底夜间之间切换。主题切换保持布局一致；偏好单独存于本机浏览器 `cantaloom-admin-theme`，不会写入服务配置或工程。旧版极光/贴纸、未知主题与异常存储回退糖果日间。`node scripts/verify-admin-themes.mjs` 验证默认、切换、刷新保留、旧值/异常回退、黑底与深色表面层次、布局尺寸、未保存输入以及 320/390px 抽屉。
+
+
 入口：启动后端后直接打开 `http://127.0.0.1:3001/admin`（端口随后端 PORT 变化）。Vite 的 5173 不代理管理页面或管理 API，对这些路径返回 403；不要通过前端代理访问后台。沿用 Express，不需要额外服务或数据库。
 
 - **连接与密钥**：填写 OpenAI 兼容聊天接口 Base URL、模型与 API Key。后端追加 `/chat/completions`；HTTPS，或本机 HTTP；拒绝带用户名、密码、查询参数的地址。API Key 为密码框，留空保留，勾选清除才删除。没有“显示已有明文”接口。
@@ -40,7 +43,9 @@
 - **生成状态台**：本进程最近 100 个请求，包含 LLM、FluidSynth、DiffSinger、WAV 导入、PV；自动制作任务作为额外来源接入。显示运行、成功、失败、连接中断、HTTP 结果和耗时。不记录歌词请求体、密钥或上游原始错误。无伪造百分比；连接中断不代表外部进程已取消。
 - **资源管理台**：扫描引擎、音源、声库、缓存、导出目录，显示文件数、大小、修改时间与缓存 WAV 试听。忽略 `.git`、`.venv`、符号链接；每组扫描上限 10000 文件、显示上限 100 文件。统计不包含虚拟环境占用。不会删除缓存、模型或工程。
 - **声库注册**：表单维护 `external/voicebanks/voices.json`，包括 ID、版本、名称、variance/acoustic 实验目录名。注册只针对已授权且已安装的原生 DiffSinger checkpoints；ONNX 声库不能直接交给 Python infer.py。更新注册不下载文件、不代表权重已验收。
-- **能力与待办**：在页面中展示当前功能、真实验证缺口和后续后台需求，避免将尚未实现的功能做成可点击的假按钮。
+- **导航**：左侧总览与制作链路栏目，右侧显示当前内容；窄屏通过左上角菜单呼出抽屉，支持遮罩、关闭按钮、Esc 与选中栏目后收起；资源与任务单独查看，声库注册位于 WAV 栏目。
+- **链路测试**：`/admin#test` 固定歌词「这是歌词」，固定 96 BPM 或随机 80–120 BPM、目标 20 秒。依次实际调用 `/api/compose`，用既有 `buildFreeScore` 生成本地音符，渲染 FluidSynth 伴奏与绮萱 CPU 人声，复用工作台 `renderAudio` / `wavBlob` 混音，再用既有 `drawPV` 和 `/api/export` 生成歌词 MP4。逐阶段显示状态、耗时和失败原因；生成后在测试页直接试听、播放和下载；混音/PV 栏目也可查看。MP4（H.264/AAC）保留用于下载；后台经同源、CSRF 保护的 `/api/admin/preview` 将其转为 VP9/Opus WebM 用于内置浏览器预览，避免只有声音的解码兼容问题。不会写入工作台 localStorage 或修改后台配置；切栏目继续，关闭/刷新页面会丢失浏览器测试状态。
+- **维护测试入口**：`scripts/admin-pipeline.ts` 是浏览器诊断源，`node scripts/build-admin.mjs` 使用现有 Vite 工具链的 esbuild 生成已提交的 `server/public/admin-pipeline.js`；更改其导入的音乐/混音模块后应重新生成。真实诊断执行 `node scripts/verify-admin-pipeline.mjs`，需先启动本地 3001 后端；`ADMIN_VERIFY_OUTPUT` 指定输出目录，默认外部根目录的 `runtime/exports/admin-pipeline-日期`。可用 `--layout-only` 仅检查页面与失败夹具。脚本先验证导航、390px 抽屉布局（隐藏滚动条、保留滚动）与明确的失败夹具，再执行真实链路并保存 WAV/MP4/截图。
 
 ### 本机安全与生命周期
 
@@ -97,7 +102,9 @@ dotnet build scripts/openutau-bridge/SongyuBridge.csproj -p:OpenUtauDirectory="$
 
 「重新演唱」增加 take，实际重新调用推理；历史保留最多三版，可单独试听。锁定句或锁定人声音轨不覆盖。生成期间编辑歌词、改变设备或锁定时，结果会留在磁盘，但不覆盖已变化的工程。
 
-缓存包含歌词、音符与时值、绝对起止点、BPM、声库 ID / 版本、官方 Core 与桥接器指纹、CPU / DirectML、steps=20、depth=0.6、take。仅改第二句不影响第一句。引擎指纹不符会要求重唱；本机固定声库版本，不支持在同一版本目录偷偷替换权重。
+缓存包含歌词、音符与时值、绝对起止点、BPM、声库 ID / 版本、官方 Core 与桥接器指纹、CPU / DirectML、steps=20、depth=0.6、take；v0.3.3 起 Performance 中的自定义 Pitch 曲线随表达依赖自然纳入。仅改第二句不影响第一句。引擎指纹不符会要求重唱；本机固定声库版本，不支持在同一版本目录偷偷替换权重。
+
+渲染先写 `key.pending.wav`，完成时长 / 音量 / 削波校验后原子改名为正式缓存与元数据；推理失败或超时只留下 pending 残留并被下一次渲染清理，不污染既有缓存，旧 take 文件保留。真实引擎回归 `tests/qixuan-real.test.mjs`（渲染、缓存命中与失效、PCM 差异、无 pending 残留）在本机有引擎时随 `npm test` 自动运行，可用 `SONGYU_REAL_TESTS=0` 关闭。
 
 渲染 WAV 保留前后各 0.2 秒余量，startSeconds 对应其真实时间轴起点，单句试听也包含辅音预发声。浏览器统一重采样到 24000 Hz；试听 / WAV / PV 共用 `renderAudio`。MP4 与预览展示「AI 合成内容 / 歌声合成：绮萱 / 合成技术：DiffSinger」，背景为 SONGYU 自有程序化画面。
 
@@ -126,3 +133,5 @@ dotnet build scripts/openutau-bridge/SongyuBridge.csproj -p:OpenUtauDirectory="$
 通过本机管理诊断 API 核对 qixuan、FluidSynth、FFmpeg、GPU 等状态；不通过电脑操控 OpenUtau GUI。文件存在、接口可达、PCM 非静音都不能代替正式页面创作与人工听评。
 
 配置及浏览器测试的历史覆盖见[后台记录](iteration-log.md#admin-engine)，绮萱 CPU/DirectML 与资源安装证据见[绮萱记录](iteration-log.md#qixuan)。当前联调准备见 [工单 4](../CC-Tasks/4-blacktea-integration.md)，共同验收见 [工单 6](../CC-Tasks/6-joint-acceptance.md)，未排期后台方向见 [工单 12](../CC-Tasks/12-admin-backlog.md)。
+
+后台媒体回归：`node scripts/verify-admin-media.mjs` 重放既有真实 WAV/MP4，只验证页面呈现与真实 FFmpeg 预览转码，不代表新模型生成；`ADMIN_MEDIA_INPUT` 指定含 pipeline.wav / pipeline.mp4 的目录。检查测试页播放器与下载、已解码视频帧及画面像素、窄屏滚动条隐藏。

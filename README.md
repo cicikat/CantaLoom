@@ -10,7 +10,7 @@ Windows 日常使用：双击项目根目录 **「打开声屿.bat」**。本机
 
 进入后，若自动制作尚未配置，直接点 **「先玩音乐积木」** 即可使用本地创作与试听。自动制作的缺项放在「查看待准备项」，通过「打开本机设置」配置后可「重新检查」。配置检查不调用模型，也不把已配置当成真实生成验收。
 
-`03_patchlab_playful.html` 保留为有明确提示的设计参考。工作台中的自由作品在「虚拟歌姬」页编辑钢琴卷帘。启动入口与验收见 [工单 13](CC-Tasks/已完成/13-easy-launch.md)、[启动记录](docs/iteration-log.md#easy-launch)。
+`03_patchlab_playful.html` 保留为有明确提示的设计参考。工作台中的自由作品在「虚拟歌姬」页编辑钢琴卷帘。启动入口与验收见 [工单 16](CC-Tasks/已完成/16-easy-launch.md)、[启动记录](docs/iteration-log.md#easy-launch)。
 
 ## 当前进度（2026-11-07 启动入口更新）
 
@@ -86,13 +86,16 @@ npm start
 | 谁 / 任务 | 应做清单与依赖 |
 |---|---|
 | Blacktea（红茶） | [4 · 接口交接与真实联调准备](CC-Tasks/4-blacktea-integration.md)：字段/示例、可移植实测工具、授权资源与联调环境 |
+| Blacktea（红茶） | [15 · 后端音乐制作升级](CC-Tasks/后端/15-p0.md)：P0 精细调声与单句重唱已完成并通过真实引擎验收，接口交接见工单；P1–P3 待排期 |
 | Toge（toge） | [5 · 自由创作 Mock、页面与局部编辑](CC-Tasks/5-toge-free-creation.md)：A1 / A2 及 C 钢琴卷帘/局部旋律已完成，调教和混音控件待实施 |
 | 双方共同验收 | [6 · 正式新页面真实闭环与听感](CC-Tasks/6-joint-acceptance.md)：依赖 4/5 就绪，分别记录 Mock、真实引擎、页面和人工听感 |
 | 前一轮工单整理 | [7 · 项目工作流整理](CC-Tasks/已完成/7-documentation-workflow.md)：已完成的范围与验证入口 |
 | 本轮文档合并 | [8 · 文档主题合并与历史归位](CC-Tasks/已完成/8-docs-consolidation.md) |
-| 日常使用入口 | [13 · 单一双击入口与准备状态](CC-Tasks/已完成/13-easy-launch.md)，已完成；实际资源配置仍依赖红茶工单 4 |
+| 日常使用入口 | [16 · 单一双击入口与准备状态](CC-Tasks/已完成/16-easy-launch.md)，已完成；实际资源配置仍依赖红茶工单 4 |
+| 后台主题 | [14 · 日夜切换与文案精简](CC-Tasks/已完成/14-admin-themes.md) |
+| 后台双栏与链路测试 | [13 · 后台制作链路](CC-Tasks/已完成/13-admin-pipeline.md) |
 | 后台后续方向 | [12 · 后台与资源管理](CC-Tasks/12-admin-backlog.md)，待排期 |
-| 历史方案 | [1 · 动态旋律](CC-Tasks/1-dynamic-melody-and-performance.md)、[9 · 初始工作台](CC-Tasks/9-initial-workbench.md)、[10 · P2.1 后续建议](CC-Tasks/10-guided-composition.md)、[11 · 解耦迁移](CC-Tasks/11-frontend-backend-decoupling.md)；旧 2/3 未随仓库保存，不复用编号 |
+| 历史方案 | [1 · 动态旋律](CC-Tasks/1-dynamic-melody-and-performance.md)、[9 · 初始工作台](CC-Tasks/9-initial-workbench.md)、[10 · P2.1 后续建议](CC-Tasks/10-guided-composition.md)、[11 · 解耦迁移](CC-Tasks/11-frontend-backend-decoupling.md)；恢复的原文：[2 · 自由创作](CC-Tasks/2-free-composition-original.md)、[3 · 自动调教](CC-Tasks/3-auto-performance-original.md)，当前进度以工单 4/5/6 为准 |
 
 ## 文档与验证入口
 
@@ -101,6 +104,7 @@ npm start
 | Agent 长期规则 | [AGENTS.md](AGENTS.md) |
 | 分工、联调、Git 与验证规则 | [TEAM_WORKFLOW.md](docs/TEAM_WORKFLOW.md) |
 | 系统目录、工程数据、API 与页面接入 | [ARCHITECTURE.md](docs/ARCHITECTURE.md)；字段提案在[契约变更记录](shared/contracts/CHANGELOG.md) |
+| 原型接线的可调数据与开关清单 | [INTERFACES.md](docs/INTERFACES.md)：真实存在且可调的数据、不存在的开关、Mock 缺口 |
 | 引擎、后台配置、资源与许可 | [ENGINES.md](docs/ENGINES.md) |
 | 当前任务与各自清单 | 上方[协作工单](#协作工单) |
 | 完成记录、历史过程与验收证据 | [iteration-log.md](docs/iteration-log.md)，日期倒序 |

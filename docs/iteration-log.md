@@ -4,17 +4,26 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+<a id="frontend-main-integration"></a>
+
+## 2026-11-07 · 前端工单 5 / 16 与最新 main 整合
+
+- 工单：[5 · 自由创作页面与局部编辑](../CC-Tasks/5-toge-free-creation.md)、[16 · 日常启动入口](../CC-Tasks/已完成/16-easy-launch.md)；接口：[A1 / P0 兼容记录](../shared/contracts/CHANGELOG.md)。按 toge「推送」要求，合入远端 main 的后台与 P0 调教提交；README、架构与本日志保留双方新增内容，旋律声明同时保留 mock 标记与 Pitch 曲线导出，与已自动合并的运行时对应。未代改后端实现或扩展接口语义。
+- 远端后台已占用工单 13，前端启动工单改为检查过当前文件与 Git 历史均未使用的 16，同步 README / 架构 / 日志引用；后台工单 13 保留。
+- 合并后验证：npm run build 通过；相关边界与 P0 / 启动器单元测试 47/47；完整 Mock 页面 23/23；启动与准备状态页面 4/4。浏览器产物在仓库外 temp/songyu-push-merge-mock 与 temp/songyu-push-merge-launch；能力响应为明确夹具，没有运行真实模型、声库、MP4 或人工听感验收，工单 6 保持未验收。
+- 保留原有 AGENTS.md 未提交改动，不纳入合并提交。按当前项目规则提交合并后更新远端 main；不部署、不重启已有服务。
+
 <a id="easy-launch"></a>
 
 ## 2026-11-07 · 单一双击入口与制作前准备
 
-- 工单：[13 · 方便使用的启动入口](../CC-Tasks/已完成/13-easy-launch.md)；日常使用：[README](../README.md#launch)；接线：[启动架构](ARCHITECTURE.md#launch)。toge 指出交付不应要求分辨原型和开发命令，本轮补使用入口，未修改后端、配置、共享契约或音乐算法。
+- 工单：[16 · 方便使用的启动入口](../CC-Tasks/已完成/16-easy-launch.md)；日常使用：[README](../README.md#launch)；接线：[启动架构](ARCHITECTURE.md#launch)。toge 指出交付不应要求分辨原型和开发命令，本轮补使用入口，未修改后端、配置、共享契约或音乐算法。
 - 根目录「打开声屿.bat」仅转交既有 start.bat，保留参数/退出码，使用原依赖检查、构建、启动和自动打开页面链路。本机桌面创建「声屿.lnk」，目标与工作目录核对正确，未覆盖已有快捷方式。旧 LOOP HTML 原型完整保留，增加设计参考提示与实际入口说明。
 - 同轮收尾发现默认 3001 已有实际声屿服务运行；未关闭该进程，补充薄预检 helper，仅在 health、页面标识、资产路径与 JS 内容哈希匹配当前 dist 后复用并打开。不存在/不匹配则交回原 start.bat，check/no-open 不开浏览器。新增启动器测试 1/1 与语法检查通过，中文入口 --check 实际输出 reused current app；不再让重复打开进入端口占用错误。
 - 制作页只读检查 health / engines / qixuan 的现有状态，缺项/失联时禁用自动制作提交，显示「打开本机设置」「重新检查」和直接可用的「先玩音乐积木」，缺项详情默认折叠。检查不调用模型、安装资源或写入配置，不伪造 verified，不自动回落 Mock；原有本地创作/试听和存档保留。
 - 验证：构建通过；中文入口 `--check` 在默认真实服务链路通过，检查后正常退出。实际正式构建以临时同源 Node 服务和隔离 Chromium 完成本地灵感生成、播放状态/进度、缺项提交保护，页面错误 0，没有请求实际推理；只关闭本次验证创建的服务。`npm run test:e2e -- tests/browser/launch.spec.ts --output=D:/vibe-coding_/temp/songyu-launch-test-results` 4/4 通过（能力响应为明确测试夹具）；`npm run test:e2e:mock -- --output=D:/vibe-coding_/temp/songyu-launch-mock-regression --grep="frontend alone|A2 page makes|C targeted"` 3/3 通过，覆盖旧页、A2 与 C 代表性流程。启动器未改动，无需另造后端启动测试。
 - 当前机器实际检查 LLM / 伴奏音源 / 中文演唱声库 / FFmpeg 均未就绪；本地规则创作和浏览器合成试听已实测可用。新启动入口不代表真实 AI 制作可用，资源与正式听感仍交接 [工单 4](../CC-Tasks/4-blacktea-integration.md) / [工单 6](../CC-Tasks/6-joint-acceptance.md)。临时截图/测试输出不作为长期交付资产；正式可重复验证在上述测试文件与入口中。
-- 文档文件链接与 `git diff --check` 通过；工单 13 已完成并归档，代码/文档仅范围内本地提交，再从已提交源码执行中文入口检查。桌面快捷方式为本机交付，不纳入 Git。保留另一处已存在的 AGENTS.md 工作区改动，未混入提交；未推送、PR、合并或部署。
+- 文档文件链接与 `git diff --check` 通过；工单 16 已完成并归档，代码/文档仅范围内本地提交，再从已提交源码执行中文入口检查。桌面快捷方式为本机交付，不纳入 Git。保留另一处已存在的 AGENTS.md 工作区改动，未混入提交；未推送、PR、合并或部署。
 
 <a id="c-piano-roll"></a>
 
@@ -56,6 +65,83 @@
 - 对照实际代码确认：新三类响应未声明 Mock 标记，`buildFreeScore` 当前直接记录 LLM 来源。提出沿用 `mock:true`、工程记录为本地测试来源、真实模式检查嵌套标记的限定方案；列明共享字段、来源适配及测试范围，待 toge 确认后实施。
 - 本轮仅准备提案并更新任务状态，不勾选 A1 完成；未改 Mock、Schema、Client、工程或引擎运行时代码，未运行构建、模型或音频测试。文档相对链接、来源描述与 `git diff --check` 已核对。
 - `git fetch origin` 遇 TLS EOF，未能确认远端实时更新；工作区原为干净状态，本地 HEAD 与已缓存 origin/main 一致，本次功能分支从该基线创建。未推送、创建 PR 或部署。
+
+## 2026-11-07 · 接口与可调数据清单文档
+
+- 工单：支撑 [4 · 接口交接](../CC-Tasks/4-blacktea-integration.md)、[15 · P0 交接](../CC-Tasks/后端/15-p0.md)与 [5 · Toge 接入](../CC-Tasks/5-toge-free-creation.md)。新增 [INTERFACES.md](INTERFACES.md)：按原型接线视角汇总后端/音乐核心真实存在且设计上可调的数据（创作输入、Performance 与 v0.3.3 Pitch 曲线、旋律/歌词编辑函数、绮萱 runner/take、器乐 program/soundfont、mixSettings 与 stem、制作任务状态、导出署名），并列出不存在或不应暴露的开关与 Mock 缺口；README 与 ARCHITECTURE 同步索引。
+- 纯文档任务：逐字段核对 shared/contracts、shared/performance.mjs、src/audio-mix.ts、src/model.ts、src/api/client.ts 与 CHANGELOG v0.3.3 的取值一致性；未修改任何 Schema 或源码，未运行构建/引擎测试。
+
+## 2026-11-07 · P0 修复：setLyricText 锁定边界与测试产物路径
+
+- 工单：[15 · 后端音乐制作升级 P0](../CC-Tasks/后端/15-p0.md)；同分支 `feature/backend-p0-fine-tuning` 最小修复，不扩展功能。
+- 修复 `setLyricText` 锁定边界：保留旋律路径会改写锁定音符唱字时明确拒绝；重新作曲路径在句内含任何锁定音符时明确拒绝，不再静默清除；两条路径失败均不修改工程。语义同步到 [ARCHITECTURE](ARCHITECTURE.md#composition) 与 [INTERFACES](INTERFACES.md)。
+- 新增回归测试 `tests/p0-tuning.test.ts`「lyric editing never modifies or clears locked notes」：锁定音符（改写拒绝/唱字不变放行且逐字段保留）、整句锁定与人声音轨锁定（两条路径均拒绝）、失败工程逐字节不变、正常未锁定改词两条路径可用。
+- `tests/browser/p0-resing.spec.ts` 产物路径改为 `externalRoot`（`SONGYU_EXTERNAL_ROOT` 可配置，与 scripts/verify-engines.ts 同款约定），移除机器专属绝对路径，真实测试逻辑不变。
+- 验证：`npx tsc -b` 与 `npm run build` 通过；`npm test` 58/58（含新回归与真实引擎回归 `tests/qixuan-real.test.mjs` 1/1，约 44 秒，未跳过）；`tests/browser/p0-resing.spec.ts` 1/1 通过（缓存命中 7.7 秒），产物写入默认可配置路径。无失败、无跳过项；未改 Toge UI/Mock、其他阶段或音频算法。
+
+## 2026-11-07 · P0 精细调声与单句重唱（真实引擎验收）
+
+- 工单：[15 · 后端音乐制作升级 P0](../CC-Tasks/后端/15-p0.md)；契约变更：[CHANGELOG v0.3.3](../shared/contracts/CHANGELOG.md)；接入方法：[单句编辑](ARCHITECTURE.md#composition)与[演唱调教](ARCHITECTURE.md#performance)。Owner：Blacktea，分支 `feature/backend-p0-fine-tuning`，仅本地提交。
+- 依赖审查结论：演唱依赖＝本句歌词/音符/BPM/起止/Performance（resolvePerformance）/声库与引擎版本/runner，逐句独立；器乐按轨道独立缓存；服务端缓存键另含 take 与渲染修订，既有设计已是逐句精准失效。本轮让自定义 Pitch 随 Performance 依赖自然纳入。
+- 新增可保存 Pitch 曲线：`Performance.overrides[].pitch`（x=毫秒、y=十分之一半音整数、shape=io/i/o/l，2–64 个严格递增点），仅替换该音符自动过渡点进入 USTX；旧工程、旧请求与旧缓存不受影响，无新 HTTP 端点。
+- 新增 `setLyricText`（保留旋律需唱字数一致并重挂音节；否则清空音符与旧索引 overrides，走 targetIds 重新作曲）、`editPhraseNotes`（等数量/同 ID/同顺序/同音节的音高、起点、长度编辑，锁定音符逐字段保护）、`restoreVocalAsset`（依赖与 runner 匹配才可恢复，被替换版本轮换入历史；词音已改的旧版本明确拒绝）。
+- 服务端绮萱渲染改为 pending 文件 + 校验后原子改名，失败不留半成品、不污染既有缓存；浏览器 `renderAudio` 对单句 WAV 施加 padding 内 50/150 ms 微淡入淡出（拼接处理，演唱主体不触碰），干声与处理分轨一致。
+- 验证：`npm run build` 通过；`npm test` 57/57（含新 `tests/p0-tuning.test.ts` 6 项，及真实引擎回归 `tests/qixuan-real.test.mjs`：真实推理、缓存命中/失效、新旧 WAV PCM 差异、无 pending 残留，约 45 秒）；`npm run test:e2e:mock` 2/2；`start.bat --check`（PORT=3102）通过。
+- 真实浏览器验收 `tests/browser/p0-resing.spec.ts` 通过（本机绮萱 CPU runner，1.1 分钟）：第二句改词（保留旋律）+ 首音升 2 半音 + 自定义 Pitch 后仅重唱第二句；第一句演唱资产与器乐 FluidSynth 缓存键不变，旧版本恢复成功、过期恢复被拒、旧 WAV 仍可试听。全曲 24.0 s 时长不变（无时间偏移），第一句区域逐样本一致，第二句 RMS 0.069 / 差异 6694（真实新音频），干声峰值 0.299、零削波样本，处理后混音峰值 0.704，接缝 edgeIn 0.049 / edgeOut 0（无爆点）。产物：外部根目录 `runtime/exports/p0-resing/`（p0-resung-mix.wav、p0-acceptance.json）。
+- 边界与交接：未改 Toge 页面 / Hook / Mock；跨层触碰 `src/audio.ts`、`src/audio-mix.ts`、`src/features/singing/qixuan.ts`（工单 15 范围），PR 需 toge review。Pitch 曲线 UI、P1 音素编辑与 Mock 扩展未接入；真实验收在本机 CPU runner 完成，DirectML 未重跑；未做人工听感评审，客观指标不代替听感验收。
+
+## 2026-11-07 · 夜间表面层次与低饱和色彩
+
+- 工单：[14 · 后台视觉](../CC-Tasks/已完成/14-admin-themes.md)；按用户最新反馈改善黑白夜间层次。保留 #000 页面底，侧栏 / 面板 / 控件分层，添加克制的紫色主色，三张状态卡使用暗粉、暗绿、暗蓝底与深色顶线；日间与布局不变。
+- 主题验证通过日夜切换、持久化/回退、黑底与三层表面差异、相同布局及320/390px抽屉；已检查夜间截图。git diff --check 通过。
+
+## 2026-11-07 · 对齐标题排版与状态卡顶线
+
+- 工单：[14 · 后台视觉](../CC-Tasks/已完成/14-admin-themes.md)。按用户截图调整紫色大写眉题、标题字重/字距与字号，加入星形装饰及参考副标题；为三张彩色状态卡添加粉、绿、蓝的深色顶线，纯黑模式使用灰色线。
+- `node scripts/verify-admin-themes.mjs` 通过日夜切换、持久化、布局一致、320/390px 检查，已核对日间截图。未改引擎或业务流程。
+
+## 2026-11-07 · 主题简化为糖果日间与纯黑夜间
+
+- 工单：[14 · 主题切换](../CC-Tasks/已完成/14-admin-themes.md)；说明：[后台](ENGINES.md#admin)。按用户新要求删除极光/贴纸主题及选择框，改为右上角月亮/太阳图标按钮，有标题、可访问名称和按下状态。
+- 糖果为默认日间；夜间背景、侧栏、面板为 #000，其他控件使用中性灰阶，无彩色渐变。保存图标切换结果，旧 aurora/pop 偏好回退日间。布局与精简文案保持。
+- `node scripts/verify-admin-themes.mjs` 通过：默认/图标切换/刷新保存/旧值与禁用存储回退、纯黑背景断言、日夜几何尺寸一致、未保存字段保留、320/390px 抽屉。已核对截图，git diff --check 通过；仅后台样式和交互改动，无引擎运行。截图：外部根目录 `runtime/exports/admin-themes-20261107/black.png`。
+
+## 2026-11-07 · 后台三套主题与文案精简
+
+- 工单：[14 · 主题与文案](../CC-Tasks/已完成/14-admin-themes.md)；使用：[后台](ENGINES.md#admin)。Owner：Blacktea。参考用户本地管理面板原型的配色，原型原文保留不改。
+- 右上角添加糖果 Bento / 虹彩极光 / 多巴胺贴纸，第一版默认，localStorage 只保存主题标识；异常或未知标识回退第一版。仅使用原型的颜色与渐变，不搬入其布局、卡片尺寸或边框厚度。
+- 删除重复解释、技术旁白和防御性提示，保留必要状态与操作结果；LLM 检查成功文案改为「LLM 连接正常」，后台浏览器测试同步该文案断言。
+- `node scripts/verify-admin-themes.mjs` 通过：三套配色、刷新保留、未知/禁用存储回退、切换不覆盖未保存字段、桌面几何尺寸一致、320/390px 无横向溢出且抽屉正常。三套桌面与窄屏截图位于外部根目录 `runtime/exports/admin-themes-20261107/`，已视觉核对。
+- `node scripts/verify-admin-pipeline.mjs --layout-only` 通过导航、抽屉、失败重试和计划/音符夹具检查；`npm run test:e2e -- tests/browser/admin.spec.ts` 1/1 通过；git diff --check 通过。没有改引擎、音频或公开契约，本轮没有重复运行模型生成。
+- 本地提交；无远端推送。原型文件仍由用户保留在工作区。
+
+## 2026-11-07 · 后台浏览器测试随导航更新
+
+- 工单：[13 · 后台管理](../CC-Tasks/已完成/13-admin-pipeline.md)。用户明确授权仅更新后台管理测试。将 tests/browser/admin.spec.ts 的旧标题、单页配置/资源操作更新为当前侧栏导航，补窄屏抽屉的打开与选中后收起检查；不修改其他前端 E2E 或正式 UI。`npm run test:e2e -- tests/browser/admin.spec.ts` 1/1 通过。
+
+## 2026-11-07 · 本地历史工单纳入版本管理
+
+- 用户明确要求全部提交并推送合并。将工作区原有未追踪的 2.md / 3.md 原文保留，按现行命名收录为 [2 · 自由创作原方案](../CC-Tasks/2-free-composition-original.md)、[3 · 自动调教原方案](../CC-Tasks/3-auto-performance-original.md)，补充历史状态与当前工单入口；未改原方案内容，未宣称整体完成。
+- 更新 [README](../README.md#协作工单) 索引；旧日期下“当时未入库”的记录保留。纯文档检查链接与 git diff --check。
+
+## 2026-11-07 · 后台测试页直接播放与内置浏览器 PV 兼容
+
+- 工单：[13 · 后台制作链路追加修正](../CC-Tasks/已完成/13-admin-pipeline.md)；说明：[引擎与后台](ENGINES.md#admin)。Owner：Blacktea，延续本地后端分支。
+- 窄屏抽屉隐藏滚动条，保留滚动；链路测试页直接显示混音试听、PV 播放器与 WAV / MP4 下载，省去切换栏目提示。原混音、PV 栏目也保留结果。
+- 原 MP4 经 ffprobe 确认含 H.264 High / yuv420p 1280×720 视频及 AAC 音频。增加仅限本机同源、CSRF 保护的管理预览接口，FFmpeg 转为 960×540 VP9 / Opus WebM 用于浏览器预览，下载仍是原 MP4。限制输入体积、单并发、35 秒与 file/pipe 协议，临时目录 finally 清理；未修改原 WAV / MP4 导出编码链路或公开契约。
+- `npm test` 50/50；页面导航 / 窄屏 / 失败夹具通过。`node scripts/verify-admin-media.mjs` 使用既有真实产物作明确重放夹具，通过真实 FFmpeg 转码；播放器解码 32 帧、295 种画面像素颜色、960×540，测试页播放器与下载控件可见，scrollbar-width:none 且 overflow:auto。
+- 在用户当前内置浏览器实际重新执行完整链路：96 BPM、20.00 秒，LLM 43.6 秒、器乐/人声 54.2 秒、混音 1.2 秒、PV 含兼容预览 3.0 秒；峰值 0.289、RMS 0.0516。实际播放已看到帆船与「这是歌词」字幕，截图在外部根目录 `runtime/exports/admin-pipeline-20261107/media-regression/in-app-pv.png`。不是只验证视频时长或声音。
+- 未新增正式创作页面、Mock或共享字段；未做人工音乐质量验收或真实手机测试。仅本地提交，不推送。
+
+## 2026-11-07 · 后台双栏、窄屏抽屉与真实链路测试
+
+- 工单：[13 · 后台制作链路](../CC-Tasks/已完成/13-admin-pipeline.md)；使用与构建：[引擎与后台](ENGINES.md#admin)。Owner：Blacktea。仅修改后端管理静态页面、资源路由、诊断脚本和后端测试；未改正式创作 UI、Mock、共享字段或引擎算法。
+- 参考 Emerald-presence 侧栏 / 内容双栏，按总览、灵感、LLM、音符、WAV、混音、PV、测试、任务、资源分组。收起重复说明；窄屏默认隐藏侧栏，左上角菜单呼出，支持关闭按钮、遮罩、Esc、焦点循环、选中后收起。
+- 固定歌词「这是歌词」，96 BPM 或随机 80–120 BPM，目标 20 秒；调用既有真实 compose、FluidSynth、绮萱 CPU，浏览器复用 buildFreeScore / renderAudio / drawPV，导出同一混音的 WAV 和字幕 MP4。显示阶段耗时、SongPlan、轨道音符数、分轨 WAV 与混音 / PV 播放下载。生成浏览器 bundle 使用 `node scripts/build-admin.mjs`，产物随仓库提交。
+- Windows 本机真实测试通过：96 BPM，20.00 秒；LLM 83.3 秒，器乐 / 人声 61.0 秒，混音 1.0 秒，PV 1.7 秒；混音峰值 0.303、RMS 0.0519；WAV 1,920,044 字节、MP4 604,578 字节，浏览器实际播放与下载通过。17 条器乐轨，部分缓存命中；非首次无缓存性能基准。产物与截图：外部根目录 `runtime/exports/admin-pipeline-20261107/`；report.json 保存参数和阶段耗时。
+- 首轮真实生成成功后发现原 CSP 不允许 Blob 媒体，已仅对 media-src 增加 blob:，复测播放通过；script-src、Host / Origin / CSRF 与 DPAPI 保持原约束。新增后端测试覆盖资源白名单及 CSP。
+- `npm run build` 通过（保留既有 Zod 注释和 bundle 大小警告）；单元 / 接口 49/49 通过；`node scripts/verify-admin-pipeline.mjs --layout-only` 通过导航、390px 抽屉与三种关闭方式、明确失败夹具、重试解锁、SongPlan / 音符显示；完整诊断真实运行通过。
+- 边界：未做人工歌声听评、真实手机 / Safari；这不是正式新创作页面验收。Toge 的 `tests/browser/admin.spec.ts` 仍使用旧标题与单页可见性选择器，需按新导航更新；本轮未代改前端 E2E，使用独立后端诊断脚本验证。无推送。
 
 <a id="module-documentation-policy"></a>
 

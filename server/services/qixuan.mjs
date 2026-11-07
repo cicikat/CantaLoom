@@ -1,6 +1,6 @@
 import {notePerformance,performanceCurves} from '../../shared/performance.mjs';
 import {inspectWav} from './wav-quality.mjs';
-import {readFile,writeFile,mkdir,access,stat} from 'node:fs/promises';
+import {readFile,writeFile,mkdir,access,rename,rm} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import path from 'node:path';
 import {stringify} from 'yaml';
@@ -17,7 +17,14 @@ let tail=Promise.resolve();const pending=new Map();
 export async function renderQixuan(raw){const input=qixuanInput.parse(raw),voice=await qixuanStatus();if(!voice.available)throw Error(voice.message);if(input.engineVersion!==voice.engineVersion)throw Error('歌声引擎已更新，请刷新后重新生成');const project=qixuanProject(input);
  const {lyricId,...dependencies}=input;const key=digest(JSON.stringify({dependencies,voiceVersion:voice.version,parameters:voice.parameters,revision:input.performance?.mode==='auto'&&input.performance.preset!=='natural'?5:input.performance?4:2}));if(pending.has(key))return pending.get(key);
  const execute=async()=>{await mkdir(cacheRoot,{recursive:true});const file=path.join(cacheRoot,key+'.wav'),meta=path.join(cacheRoot,key+'.json');try{await access(file);const result=JSON.parse(await readFile(meta,'utf8'));return {...result,cached:true}}catch{}
-  const ustx=path.join(cacheRoot,key+'.ustx');await writeFile(ustx,stringify(project));const dotnet=path.join(externalRoot,'runtime/dotnet/dotnet.exe');await runProcess(dotnet,['exec','--runtimeconfig',path.join(ou,'OpenUtau.runtimeconfig.json'),'--depsfile',path.join(ou,'OpenUtau.deps.json'),path.join(ou,'SongyuBridge.dll'),ustx,file,path.join(externalRoot,'voicebanks/Qixuan-v2.7.0'),input.runner,String((input.end-input.start)*60/input.bpm)],ou,600000);
-  const measured=JSON.parse(await readFile(file+'.json','utf8')),quality=inspectWav(await readFile(file));if(measured.rms<.00001||quality.clippedRatio>.005||Math.abs(measured.durationSeconds-((input.end-input.start)*60/input.bpm+.4))>.02)throw Error('真实歌声音频长度、削波或音量校验失败');const result={...measured,quality,audioUrl:`/api/audio/${key}.wav`,key,voiceId:voice.id,voiceVersion:voice.version,providerId:voice.providerId,engineVersion:voice.engineVersion,renderParameters:{runner:input.runner,...voice.parameters},take:input.take,isDemo:false,cached:false,sourceProject:ustx,createdAt:new Date().toISOString()};await writeFile(meta,JSON.stringify(result,null,2));return result;
+  const ustx=path.join(cacheRoot,key+'.ustx');await writeFile(ustx,stringify(project));const dotnet=path.join(externalRoot,'runtime/dotnet/dotnet.exe');
+  // Render to a pending file first: a failed or timed-out inference never leaves a partial WAV at the published cache path, and the previous cached take stays intact.
+  const pending=path.join(cacheRoot,key+'.pending.wav');
+  try{
+   await runProcess(dotnet,['exec','--runtimeconfig',path.join(ou,'OpenUtau.runtimeconfig.json'),'--depsfile',path.join(ou,'OpenUtau.deps.json'),path.join(ou,'SongyuBridge.dll'),ustx,pending,path.join(externalRoot,'voicebanks/Qixuan-v2.7.0'),input.runner,String((input.end-input.start)*60/input.bpm)],ou,600000);
+   const measured=JSON.parse(await readFile(pending+'.json','utf8')),quality=inspectWav(await readFile(pending));if(measured.rms<.00001||quality.clippedRatio>.005||Math.abs(measured.durationSeconds-((input.end-input.start)*60/input.bpm+.4))>.02)throw Error('真实歌声音频长度、削波或音量校验失败');
+   await rename(pending,file);await rename(pending+'.json',file+'.json');
+   const result={...measured,quality,audioUrl:`/api/audio/${key}.wav`,key,voiceId:voice.id,voiceVersion:voice.version,providerId:voice.providerId,engineVersion:voice.engineVersion,renderParameters:{runner:input.runner,...voice.parameters},take:input.take,isDemo:false,cached:false,sourceProject:ustx,createdAt:new Date().toISOString()};await writeFile(meta,JSON.stringify(result,null,2));return result;
+  }finally{await rm(pending,{force:true});await rm(pending+'.json',{force:true})}
  };const work=tail.catch(()=>{}).then(execute);tail=work.catch(()=>{});pending.set(key,work);try{return await work}finally{pending.delete(key)}
 }
