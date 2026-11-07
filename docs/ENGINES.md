@@ -162,3 +162,5 @@ dotnet build scripts/openutau-bridge/SongyuBridge.csproj -p:OpenUtauDirectory="$
 双击根目录 `start-admin.bat` 构建并启动本地服务，自动打开 `/admin`。支持 `--no-open`；关闭窗口前使用 Ctrl+C。端口占用时不会关闭已有进程。
 
 在连接与密钥页为歌词规划、旋律作曲、演唱表现分别启用路由，填写服务商、OpenAI 兼容 Base URL、模型 ID 与 API Key，然后保存。接口追加 `/chat/completions`。独立密钥以 Windows DPAPI 保存，留空保留；未设置独立密钥的新路由使用默认密钥。关闭覆盖恢复默认连接。连接检查目前只测试歌词规划路由，不代表三个任务都已通过真实调用。
+
+管理启动器遇到同一项目的现有服务时，核对管理状态中的项目根目录后直接打开现有后台，不重复启动。其他进程占用仍报错。复用不会加载新后端代码，更新后须在原服务窗口 Ctrl+C 并重新启动。`--check` 始终验证独立启动，不复用服务。
