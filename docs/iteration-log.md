@@ -14,6 +14,14 @@
 - 恢复入口：确认工作区干净后切回 feature/backend-p1-phoneme，再运行 git stash apply 65cc8c0dc1ad9dd80eddf85a9add6bb4deb3a11b；apply 保留 stash，便于核对。原始字节备份可用于核对 Git 行尾规范化差异。不要在文档分支直接应用长歌草稿，不自动删除 stash 或备份。
 - 验证：仅检查本轮 Markdown 的本地链接/锚点、文档一致性、Git diff 与文档提交范围；未运行构建、前端 E2E、LLM 或真实引擎，也未重宣称此前音频验收。本次按用户要求提交文档 PR，前一轮后端成果继续留在原分支，P2-A/P3 的跨端实施与整单验收仍待对方确认。
 
+<a id="start-button-readiness"></a>
+
+## 2026-11-07 · 一键开工可点击查看制作缺项
+
+- 工单：[5 · 前端接线](../CC-Tasks/5-toge-free-creation.md)，入口：[README](../README.md#launch)，准备逻辑：[架构](ARCHITECTURE.md#launch)。toge 反馈「一键开工」无法点击；当前 3001 公共 API 报告 LLM 未配置、伴奏音源未就绪、绮萱不完整及 FFmpeg 未就绪。前端原先对任意缺项禁用按钮，而说明又放在隐藏面板里，导致缺乏可操作入口；API 状态不等同于全盘确认资源文件不存在。
+- 修复仅在 PatchlabCreation：缺项时点击主按钮打开已有创作设置、聚焦入口并显示实际缺项；不提交制作、不自动切换 Mock 或旧模板。忙碌、任务运行及空主题仍禁用；资源就绪仍走原 useProduction。未改后端、配置或资源、未发起真实模型调用或增加常驻说明。
+- 验证：`npm run build` 通过；launch 页面 **4/4**，输出 `temp/songyu-start-button-real`；Mock 五句制作→试听→恢复 **1/1**，输出 `temp/songyu-start-button-mock`。新增/更新断言覆盖缺项按钮可点击、面板可见、零提交，配置夹具就绪后正常提交且失败保留工程。本轮还直接在正在运行的 3001 构建页用隔离浏览器上下文点击主按钮，实际四项缺失信息可见、制作请求 0、页面异常 0，截图 `temp/songyu-start-button-actual.png`；没有使用测试能力响应替代这次实际检查。真实资源安装/配置和完整生成仍需后端工单 4 / 共同工单 6；仅本地提交，未推送。
+
 <a id="loop-layout-restoration"></a>
 
 ## 2026-11-07 · 撤回接线时擅自增加的默认页面内容
