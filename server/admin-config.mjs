@@ -6,7 +6,7 @@ import {z} from 'zod';
 import {routesSchema} from './services/llm-router.mjs';
 export const configFields=['LLM_BASE_URL','LLM_MODEL','LLM_ROUTES','FFMPEG_PATH','FLUIDSYNTH_PATH','SONGYU_SOUNDFONT','DIFFSINGER_PYTHON','DIFFSINGER_DICTIONARY','OPENUTAU_PATH'];
 const value=z.string().max(2048).refine(v=>!/[\r\n\0]/.test(v));
-export const settingsSchema=z.object(Object.fromEntries(configFields.map(k=>[k,value.optional()]))).extend({LLM_ROUTES:z.string().max(30000).optional(),LLM_API_KEY:value.optional(),routeKeys:z.record(z.enum(['lyrics_planning','melody_composition','performance_planning']),value).optional(),clearKey:z.boolean().optional()}).strict().superRefine((v,ctx)=>{
+export const settingsSchema=z.object(Object.fromEntries(configFields.map(k=>[k,value.optional()]))).extend({LLM_ROUTES:z.string().max(30000).optional(),LLM_API_KEY:value.optional(),routeKeys:z.partialRecord(z.enum(['lyrics_planning','melody_composition','performance_planning']),value).optional(),clearKey:z.boolean().optional()}).strict().superRefine((v,ctx)=>{
  if(v.LLM_BASE_URL){try{const u=new URL(v.LLM_BASE_URL);if(!['https:','http:'].includes(u.protocol)||u.username||u.password||u.search||u.hash)throw Error();if(u.protocol==='http:'&&!['localhost','127.0.0.1','[::1]'].includes(u.hostname))throw Error()}catch{ctx.addIssue({code:'custom',path:['LLM_BASE_URL'],message:'URL 必须为 HTTPS（本机可用 HTTP），不能含密码、查询参数或片段'})}}
  if(v.clearKey&&v.LLM_API_KEY)ctx.addIssue({code:'custom',path:['clearKey'],message:'不能同时清除和设置密钥'});
  if(v.LLM_ROUTES){try{routesSchema.parse(JSON.parse(v.LLM_ROUTES))}catch{ctx.addIssue({code:'custom',path:['LLM_ROUTES'],message:'任务路由格式无效'})}}

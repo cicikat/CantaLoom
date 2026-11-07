@@ -12,7 +12,7 @@ const time=t=>t?new Date(t).toLocaleString('zh-CN',{hour12:false}):'—';const b
 const routeInputs={};
 const routeBox=el('fieldset');routeBox.append(el('legend','模型路由'),el('p','独立设置 OpenAI 兼容接口；关闭覆盖使用默认连接。密钥留空保留。'));
 for(const [task,title] of Object.entries({lyrics_planning:'歌词规划',melody_composition:'旋律作曲',performance_planning:'演唱表现'})){const box=el('div',undefined,'form-grid'),fields={};box.append(el('h3',title));for(const [key,label] of Object.entries({enabled:'启用独立路由',provider:'服务商',baseUrl:'Base URL',model:'模型 ID',apiKey:'API Key'})){const l=el('label',label),i=el('input');i.type=key==='enabled'?'checkbox':key==='apiKey'?'password':'text';i.autocomplete='off';l.append(i);box.append(l);fields[key]=i}routeInputs[task]=fields;routeBox.append(box)}
-form.insertBefore(routeBox,form.querySelector('[type=submit]'));
+form.insertBefore(routeBox,form.querySelector('.actions'));
 $('#resources').prepend(form);
 const routeSummary=el('div');$('#resources').prepend(el('h2','模型连接与任务路由'),routeSummary);
 $('#config').prepend(el('p','模型连接与任务路由已移至资源管理台。'));const routeLink=el('a','打开资源管理台 →');routeLink.href='#resources';$('#config').prepend(routeLink);
