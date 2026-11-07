@@ -1,5 +1,20 @@
 # SONGYU 迭代日志
 
+<a id="render-quality-19"></a>
+
+## 2026-11-07 · 工单 19 渲染与产物后端交付
+
+关联：[工单 19](../CC-Tasks/后端/19-render-quality-and-artifacts.md)、[接入说明](ARCHITECTURE.md#创作产物与响度报告工单-19)、[契约](../shared/contracts/CHANGELOG.md)、[交接 19-artifact-report](../CROSS-END-HANDOFF.md#19-artifact-report)。
+
+本轮接续工作区已有 48kHz/产物端点修改，完成 PCM s16/revision=2、MIDI/USTX/WAV 原字节下载与非法路径拒绝、只读分轨 ebur128 测量、MP4 loudnorm 和最终 AAC 测量报告；保留 MP4 二进制响应，新增 X-Songyu-Loudness 头。逐轨下载零依赖，决定暂不提供 zip。s24 缺少跨浏览器证据，按工单保留 s16。未代改 UI/Client/Mock。
+
+Windows 本机真实 FluidSynth、现有 SoundFont、FFmpeg（本机配置）和 Chromium：新增 3 项回归全部通过，无跳过；build 通过（保留 Zod 注释及 bundle 体积提示）；npm test 共 95 项，94 通过、0 失败、1 跳过（真实 LLM 路由未启用）。包含既有人声真实引擎回归，但不表示本轮重新验收模型/页面创作。git diff --check 通过。
+
+合成正弦夹具 -41.7 → -14.0 LUFS，最终 AAC TP -10.2 dBTP。`node scripts/verify-render-quality.mjs` 另以真实 FluidSynth 源文件经 Chromium 原有 renderAudio/wavBlob 全曲混音、WAV 和 MP4 导出通过；RMS 0.031404，浏览器混音仍 24kHz。最终 MP4 输入 -26.4 LUFS / -13.0 dBTP，输出 -13.6 LUFS / -1.3 dBTP，距 -14 / -1.5 目标分别 +0.4 LU / +0.2 dB，未宣称严格达标。媒体与报告位于 `temp/task19/`，测试日志在 `temp/task19-tests.log`，均不提交。此轮没有从正式 UI 现场输入新主题制作，也没有人工听评、DAW 打开或手机/Safari 实测。
+
+实施 checkbox 已更新，因 DAW 人工抽验/共同听感未完成，工单保留原位待验收。下载/报告页面接入登记交接 19-artifact-report。现有前端 Mock 采样率改动保留在工作区，不纳入本轮提交。分支沿用 feature/backend-music-quality-tickets；仅本地提交，不推送。
+
+
 唯一完成记录入口。新条目放在最上方，按日期倒序；同日新记录在前。每条写明工单与相关文档地址、实际实现、验证结果和未验收边界；状态 checkbox 只维护在对应工单。
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。

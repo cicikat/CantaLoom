@@ -1,5 +1,14 @@
 # 公共契约变更
 
+## 工单 19 · 只读产物与响度（2026-11-07）
+
+- Owner Blacktea；按工单 19 明确范围实施，不修改 Client/UI/Mock。
+- GET `/api/artifacts/:file`：64 位小写十六进制 key + mid/ustx/wav；逐轨下载，无 zip 依赖。GET `/api/artifacts/:file/loudness` 仅接受 WAV，返回 ebur128 的 integratedLufs / truePeakDbtp；静音值为 null。缺失 404，测量不可用 503。
+- `/api/export` 保持 MP4 二进制响应，新增 `X-Songyu-Loudness` JSON 头（input/output/target）；output 为编码后 AAC 的实测值，允许编码误差，不伪称达标。
+- InstrumentResult.sampleRate 从 24000 升级 48000；声明同步，缓存 revision=2；旧工程不重写。现有 Mock 的采样率调整由其 Owner 保留，后端不代改。
+- 测试：下载字节/路径隔离、真实渲染 WAV、FFmpeg 响度与 MP4；页面接入和人工听感另验。
+
+
 ## 2026-11-07 · A1 与 P0 合并兼容
 
 - 本轮按 toge「推送」授权整合已完成的工单 5 与 main；仅解决相邻声明冲突，同时保留 A1 的可选 mock 标记与 P0 的 PitchPoint / pitchCurveSchema 声明。没有新增字段、修改约束或扩展调用语义；既有两项授权和说明保留。

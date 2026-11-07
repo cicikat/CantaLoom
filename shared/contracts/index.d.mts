@@ -7,7 +7,7 @@ export interface Health extends MockTag {ffmpeg:boolean;llm:boolean;llmStatus:'l
 export interface RenderNote extends MidiNote {syllable?:string}
 export interface InstrumentInput {bpm:number;kind:'drums'|'bass'|'guitar'|'keys'|'melody';notes:RenderNote[];program?:number;soundfont?:string;endBeat:number}
 export interface AudioResult extends MockTag {audioUrl:string;key:string}
-export interface InstrumentResult extends AudioResult {providerId:'fluidsynth';soundfont:string;sampleRate:24000;startSeconds:0;cached:boolean}
+export interface InstrumentResult extends AudioResult {providerId:'fluidsynth';soundfont:string;sampleRate:48000;startSeconds:0;cached:boolean}
 export type Runner='CPU'|'DirectML';
 export interface VoiceParameters {steps:number;depth:number}
 export interface QixuanCapabilities {curves:{brec:boolean;voic:boolean;genc:boolean;velc:boolean;pexp:boolean;shfc:boolean;ene:boolean;tenc:boolean};phonemeOverride:{offset:boolean;replace:boolean};unsupported:string[]}
@@ -23,6 +23,7 @@ export const errorSchema:z.ZodType<{error:string}>;
 export const healthSchema:z.ZodType<Health>;
 export const instrumentInput:z.ZodType<InstrumentInput>;
 export const audioFileSchema:z.ZodType<string>;
+export const artifactFileSchema:z.ZodType<string>;
 export const audioResultSchema:z.ZodType<AudioResult>;
 export const instrumentResultSchema:z.ZodType<InstrumentResult>;
 export const qixuanStatusSchema:z.ZodType<QixuanStatus>;
@@ -33,3 +34,6 @@ export const dictionarySchema:z.ZodType<Record<string,string>>;
 export const importInput:z.ZodType<ImportInput>;
 export const exportInput:z.ZodType<ExportInput>;
 export const taskSchema:z.ZodType<GenerationTask>;
+
+export interface LoudnessReport {integratedLufs:number|null;truePeakDbtp:number|null}
+export const loudnessReportSchema:z.ZodType<LoudnessReport>;

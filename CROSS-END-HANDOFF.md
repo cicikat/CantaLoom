@@ -78,3 +78,12 @@
 - 证据：本轮真实音频与页面并行回归时，Mock 的 LOOP tap 检查期望 BPM >90，实际 76；未改动的 main 7bee0eb 同一检查也失败（89）。低负载串行重跑该用例 1/1 通过。无 API 播放检查首跑在 5 秒内未见暂停按钮，main 基线及本分支串行重跑均通过。
 - 对方下一步：核对浏览器测试对真实墙钟点击间隔和异步离线混音的依赖；区分机器负载影响与产品行为，评估可重复的节奏输入/播放器就绪等待策略，不靠放宽断言掩盖节奏错误。涉及 tests/browser/mock.spec.ts 与 tests/browser/plan.spec.ts，本轮后端交付未改这些文件。
 - 验收与回执：在工单 5 记录测试环境、复现和稳定性验证，完整功能断言仍需保留；完成后按维护规则清除此条及索引。原始日志保存在本机 temp/backend-p1-p2b-mock.log、temp/backend-p1-p2b-http.log、temp/baseline-loop-tap.log 及对应 retry 日志。
+
+
+<a id="19-artifact-report"></a>
+
+### 19-artifact-report · 产物与响度接入
+
+- 更新：2026-11-07；来源：[工单 19](CC-Tasks/后端/19-render-quality-and-artifacts.md)；Blacktea → Toge；状态：后端已实现，页面展示待安排。
+- 交付：`feature/backend-music-quality-tickets` 的只读 artifact 下载/分轨 ebur128 接口、MP4 `X-Songyu-Loudness` 报告，详见[架构说明](docs/ARCHITECTURE.md#创作产物与响度报告工单-19)。Mock/UI 不在本轮范围；原有未提交 Mock 采样率修改保留且不纳入后端提交。
+- 对方下一步：按需接下载/报告入口；确认 DAW 导入 MIDI 与实际作品听感。后端真实渲染/浏览器混音证据见工单与迭代日志，不代替人耳和设备验收。

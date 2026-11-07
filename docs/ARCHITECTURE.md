@@ -318,3 +318,14 @@ A1 授权见[契约记录](../shared/contracts/CHANGELOG.md)，当前证据见[A
 `server/services/llm-router.d.mts` 提供 TaskRoute / TaskTrace / AdminLlmResponse 类型。`GET /api/admin/llm` 受原本机 Host/Origin 访问限制，返回有效路由及最近 100 次任务调用的脱敏记录：task/provider/model/promptVersion/attempts/promptTokens/completionTokens/milliseconds/state。Prompt 版本由任务、模板版本与最终系统 Prompt 的 SHA-256 摘要组成。记录只在当前进程内保留；没有共享工程追溯字段，不承诺工程导出保存这些记录。调用失败的费用保持未知；成功时只有配置输入/输出单价才计算 USD 估算，不视为供应商账单。失败前未返回 usage 的计费同样无法估算。
 
 取消及过期：本轮没有新增取消状态；HTTP 断开不保证停止已受理的上游任务。进程重启清空路由历史，制作任务仍遵循原有内存任务的 404 语义。Kimi 的长歌共享契约、分段恢复以及 P3 MixGraph/统一音频适配等待 Toge 确认，本轮后端路由提交不包含这些改动。实际测试和未完成交接见 [迭代日志](iteration-log.md)与[工单 15](../CC-Tasks/后端/15-p0.md)。
+
+
+### 创作产物与响度报告（工单 19）
+
+器乐新渲染为 48kHz / PCM s16，revision=2 使旧缓存自然失效；浏览器统一混音仍为现有 24kHz，因此本次不承诺最终 WAV 全链路 48kHz。位深保持 s16，未以缺少跨浏览器实测的 s24 替换稳定入口。
+
+已知资产 key 可通过 `GET /api/artifacts/{key}.mid`、`.ustx`、`.wav` 下载缓存原字节。MIDI 是对应器乐渲染轨道的工程，并非整曲聚合 MIDI；USTX 对应演唱缓存源工程。不存在返回 404，只接受 64 位小写十六进制 key 和后缀白名单。逐轨下载零新增依赖；zip 暂不提供。
+
+`GET /api/artifacts/{key}.wav/loudness` 只读调用 FFmpeg ebur128 返回 `{integratedLufs,truePeakDbtp}`，静音无穷值使用 null，测量不可用返回 503；不改变音频。调用方可按人声/器乐 key 分别查询，无需改变 production 任务契约。
+
+MP4 导出使用 loudnorm（I=-14 LUFS、TP=-1.5 dBTP、LRA=11），48kHz AAC 192k。响应保持 MP4 下载，`X-Songyu-Loudness` JSON 头给出 input、output 和 target；output 是解码最终 AAC 的 ebur128 实测值，目标 TP 是上限，不要求安静素材贴近上限。页面尚未展示报告，不改变浏览器混音算法。真实资源 smoke 命令为 `node scripts/verify-render-quality.mjs`，需要可用 FluidSynth、SoundFont、FFmpeg 与 Playwright Chromium；输出仅在 `temp/task19/`。
