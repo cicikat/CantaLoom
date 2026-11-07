@@ -1,13 +1,3 @@
-<a id="chapter-transition-motion"></a>
-
-## 2026-11-08 章节过渡动效：积木抽开与 Let's 文字页
-
-关联：[工单 28](../CC-Tasks/28-chapter-transition-motion.md)、[工单 23](../CC-Tasks/23-three-chapter-page.md)、[原型接线边界](ARCHITECTURE.md#prototype-frontend)。toge 要求 Music Blocks 页进入工作台时有积木被抽开、露出下面工作台的感觉，工作台换更合适的底色，并在工作台与 MV 之间加 `Let's go together` → `Let's make a music video` 文字过渡页（滚筒换字、模糊溶解、放大落下小弹跳，色块随文字平滑变宽并配对比色）。分支 `feature/frontend-interface-sync`。
-
-实现：`ChapterBridge` 的纯色底换成七条带把手的积木板，过渡区向下叠住工作台第一屏；工作台在墙下滚到顶时积木板先反向轻拽、再按打乱顺序左右交替被抽走，`Music` 向左、积木字母向右拉出。抽开后要往回滚到工作台顶部低于屏幕 3/4 才合上，焦点进入工作台时也会打开，正在抽走的积木板不拦截点击。工作台底色改为暖米色切割垫方格（`--bench*`），上下各延伸一段同色桌面避免露白。新增 `MvBridge`：工作台卡片上移约 1/3 屏后积木板随滚动推回；之后黄块墨字 `go together` 逐字滚入，2 秒或继续下滑后逐字翻成深色块亮黄字 `make a music video`（字色跟随色块，溶解中的旧字母也可见），块宽由 ResizeObserver 量出后平滑过渡；最后深色块从中心放大铺满屏，接上同色 MV 章节。滚动进度提取为 `useStickyProgress`。「减少动态效果」时两段都是静态色块标题。未改后端、音乐算法、共享契约、Client、`src/visual.ts` 或导出链路，无跨端交接。
-
-验证：`npm run build` 通过（仅既有 Zod 注释与大包提示）。用 Playwright 按时间点逐帧截图核对桌面 1440×900 与手机 390×844：积木板抽开/推回、两句换字、色块变宽变色、放大进入 MV、减少动态效果静态版，390px 无横向滚动。整套 Mock 页面首轮 33/35：棋盘拖拽与 TAP 两项被积木板挡住；据此加入回滚余量、抽开时不拦截点击，并把 TAP 用例改为先经导航进入工作台再敲（真实路径，不放宽 BPM 下限）。同一机器上原版 HEAD 的 TAP 用例在轮询监听负载下亦 1/3 次以 88 BPM 失败；去掉积木板常驻 `will-change` 后新版该用例 4/4 通过；最终代码再次 build 通过，整套 Mock 页面复跑 **35/35** 通过（`CHOKIDAR_USEPOLLING=true`）。对照用临时 worktree 已移除。未做真机手机/Safari 或 toge 肉眼节奏核对，继续工单 28 最后一项。本轮本地提交，不推送。
-
 <a id="lyrics-current-project-sync"></a>
 
 ## 2026-11-07 首屏改词同步便利贴与 MV

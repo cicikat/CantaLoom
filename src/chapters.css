@@ -1,7 +1,7 @@
 /* Three visual chapters on one scrolling page:
    1 hero with a rhythmic entrance · 2 "Music Blocks" bridge + workbench · 3 MV theatre. */
 
-:root{--bounce:cubic-bezier(.34,1.56,.64,1);--yank:cubic-bezier(.5,-.2,.75,.12);--violet-2:#b29af3;--bench:#f4eddc;--bench-line:#e8dec7;--bench-major:#ddd0b2;--mv-bg:#1d1b26;--mv-panel:#28253a;--mv-line:#4a4562;--mv-text:#c9c3dc}
+:root{--bounce:cubic-bezier(.34,1.56,.64,1);--mv-bg:#1d1b26;--mv-panel:#28253a;--mv-line:#4a4562;--mv-text:#c9c3dc}
 .nav-links button{white-space:nowrap}
 
 /* ---------- Chapter 1 · hero ---------- */
@@ -64,35 +64,15 @@
 @keyframes burst-spin{0%{opacity:0;scale:.2;rotate:-200deg}100%{opacity:1;scale:1;rotate:0deg}}
 @keyframes boat-bob{0%,100%{translate:0 0;rotate:0deg}50%{translate:0 -6px;rotate:-3deg}}
 
-/* ---------- Block planks (shared by both bridges) ---------- */
-/* Seven slabs stacked into a wall; each knows its pull order (--o) and the side it slides toward (--dir). */
-.planks{position:absolute;inset:0}
-.plank{position:absolute;left:-1px;right:-1px;top:calc(var(--i)*100%/7);height:calc(100%/7 + 1px);background:var(--violet);box-shadow:inset 0 2px 0 rgba(32,33,35,.16),inset 0 6px 0 rgba(255,255,255,.16);pointer-events:auto}
-.plank:nth-child(even){background:var(--violet-2)}
-/* A drawer handle on the side the plank is pulled toward. */
-.plank::after{content:"";position:absolute;top:50%;left:calc(50% + var(--dir)*(50% - clamp(18px,2.2vw,34px)));width:clamp(9px,.9vw,13px);height:42%;translate:-50% -50%;border:2.5px solid var(--ink);border-radius:99px;background:var(--off);box-shadow:2px 2px 0 var(--ink)}
-
 /* ---------- Chapter 2 · bridge ---------- */
-/* The tall block overlaps the last screen of the hero (rings rise over it) and the first screen of the workbench,
-   which scrolls in underneath the plank wall and is revealed when the planks are pulled out. */
-.chapter-bridge{position:relative;z-index:30;height:300vh;height:300svh;margin-top:-100vh;margin-top:-100svh;margin-bottom:-105vh;margin-bottom:-105svh;pointer-events:none}
+/* The tall block overlaps the last screen of the hero so the rings rise over it while scrolling. */
+.chapter-bridge{position:relative;z-index:30;height:280vh;height:280svh;margin-top:-100vh;margin-top:-100svh;pointer-events:none}
 .bridge-stage{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden}
+.chapter-bridge.is-filled .bridge-stage{background:var(--violet)}
 .chapter-bridge.is-filled .bridge-ring{visibility:hidden}
 /* Radius ≥ 0.6 × screen height keeps the far edge of the last ring off-screen on tall phones. */
 .bridge-ring{--s:calc(var(--i)*.06);--e:clamp(0,(var(--p,0) - var(--s))/.24,1);--R:calc(max(100vw,85dvh)*.75);position:absolute;left:50%;top:100%;width:calc(var(--R)*2);height:calc(var(--R)*2);margin-left:calc(var(--R)*-1);border:3px solid var(--ink);border-radius:50%;background:var(--c);transform-origin:50% 0;transform:translateY(calc(var(--e)*(-100dvh - 15%))) scale(calc(.55 + .45*var(--e)));pointer-events:auto;will-change:transform}
-.bridge-planks{visibility:hidden}
-.is-filled .bridge-planks{visibility:visible}
-.bridge-planks .plank{transition:translate .5s var(--bounce) calc(var(--o)*35ms),rotate .5s var(--bounce) calc(var(--o)*35ms)}
-.bridge-planks .plank::after{opacity:0;scale:.4;transition:opacity .2s,scale .3s var(--bounce)}
-.is-titled .bridge-planks .plank::after{opacity:1;scale:1;transition:opacity .2s calc(.35s + var(--o)*40ms),scale .4s var(--bounce) calc(.35s + var(--o)*40ms)}
-/* Pull: a small tug the other way, then each plank is yanked off its side, one after another. */
-/* Planks on their way out no longer catch clicks: a tap during the pull already reaches the workbench. */
-.is-open .bridge-planks .plank{pointer-events:none;translate:calc(var(--dir)*112%) 0;rotate:calc(var(--dir)*2.5deg);transition:translate .72s var(--yank) calc(.1s + var(--o)*65ms),rotate .72s var(--yank) calc(.1s + var(--o)*65ms)}
-.bridge-title{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px;text-align:center}
-.bridge-music,.bridge-blocks{transition:translate .5s var(--bounce)}
-.is-open .bridge-music{translate:-130vw 0;transition:translate .7s var(--yank)}
-.is-open .bridge-blocks{translate:130vw 0;transition:translate .7s var(--yank) .06s}
-.is-titled.is-open .bridge-kicker,.is-titled.is-open .bridge-steps,.is-titled.is-open .bridge-hint{opacity:0;translate:0 -16px;transition:opacity .2s,translate .3s}
+.bridge-title{--x:clamp(0,(var(--p,0) - .84)/.16,1);position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px;text-align:center;translate:0 calc(var(--x)*-10vh);scale:calc(1 - var(--x)*.08)}
 .bridge-kicker{margin:0;font-size:12px;font-weight:900;letter-spacing:2px;color:var(--off);background:var(--ink);padding:8px 14px;border-radius:6px}
 .bridge-word{margin:0;display:flex;flex-direction:column;align-items:center;gap:.1em;font-size:clamp(68px,11.5vw,176px);font-weight:1000;font-style:italic;line-height:.95;letter-spacing:-.04em}
 .bridge-music{display:flex;color:var(--off);-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:.045em .045em 0 var(--ink)}
@@ -110,63 +90,15 @@
 @keyframes step-light{0%{background:var(--yellow);translate:0 -3px}12.5%,100%{background:var(--off);translate:0 0}}
 
 /* ---------- Chapter 2 · workbench ---------- */
-/* A warm craft-table surface with a cutting-mat grid (major line every four cells, like the 16-step grid). */
-.chapter-blocks{background-color:var(--bench);background-image:linear-gradient(var(--bench-major) 1.5px,transparent 1.5px),linear-gradient(90deg,var(--bench-major) 1.5px,transparent 1.5px),linear-gradient(var(--bench-line) 1px,transparent 1px),linear-gradient(90deg,var(--bench-line) 1px,transparent 1px);background-size:112px 112px,112px 112px,28px 28px,28px 28px;background-position:center top;padding-bottom:calc(88px + 120vh);padding-bottom:calc(88px + 120svh);position:relative}
-/* A strip of the same table above the workbench, seen if the reader nudges back up after the planks were pulled. */
-.chapter-blocks::before{content:"";position:absolute;left:0;right:0;bottom:100%;height:80vh;background:inherit;background-position:center bottom;pointer-events:none}
+.chapter-blocks{background-color:var(--violet);background-image:radial-gradient(#a28ae6 1.3px,transparent 1.5px);background-size:24px 24px;padding-bottom:88px;border-bottom:2px solid var(--stroke)}
 .chapter-blocks .sections{padding:72px clamp(16px,3.6vw,56px) 0}
-.chapter-blocks .stepheader small{color:#5f574a}
+.chapter-blocks .stepheader small{color:#352c4d}
 .chapter-blocks .layout{gap:28px;margin-top:26px}
 .chapter-blocks .studio-side{gap:20px}
 .chapter-blocks .lyrics-section{margin-top:40px;padding-bottom:0}
 .chapter-blocks .lyricrows{gap:16px;margin-top:22px}
 .chapter-blocks .singing-details{background:var(--off);box-shadow:4px 4px 0 var(--stroke)}
 .chapter-blocks .mix-panel{box-shadow:4px 4px 0 var(--stroke)}
-
-/* ---------- Chapter 2 → 3 · "Let’s make a music video" ---------- */
-/* Overlaps the last screen of the workbench plus one empty screen of table (its bottom padding), so the table keeps
-   showing below the cards while the planks slide back over it with the scroll (--q); then the phrase rolls over,
-   then the dark text block grows (--f, --fs) until it fills the screen in the MV colour. */
-.mv-bridge{position:relative;z-index:30;height:360vh;height:360svh;margin-top:-220vh;margin-top:-220svh;pointer-events:none}
-.say-stage{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(24px,5vh,44px);padding:24px}
-.say-planks .plank{--e:clamp(0,(var(--q,0) - .135 - var(--o)*.022)/.17,1);--k:calc(var(--e)*(2 - var(--e)));translate:calc((1 - var(--k))*var(--dir)*104%) 0;rotate:calc((1 - var(--k))*var(--dir)*3deg)}
-.say-line{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:.22em;margin:0;font-size:clamp(40px,5.6vw,100px);font-weight:1000;font-style:italic;line-height:1;letter-spacing:-.035em;white-space:nowrap;opacity:0;scale:.5;transition:opacity .2s,scale .35s ease-in}
-.is-say .say-line{opacity:1;scale:1;transition:opacity .2s,scale .6s var(--bounce)}
-.say-lets{color:var(--off);-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:.045em .045em 0 var(--ink);padding-right:.06em}
-/* The coloured block: its width follows the current phrase (--w, measured), its colours flip with the phrase. */
-/* Text colour belongs to the block (ink on yellow, yellow on near-black), so letters still dissolving stay readable. */
-.say-block{position:relative;z-index:1;display:inline-block;box-sizing:content-box;width:var(--w,5em);height:1.3em;padding:.08em .38em .1em;border:3px solid var(--ink);border-radius:.28em;background:var(--yellow);color:var(--ink);box-shadow:.07em .07em 0 var(--ink);text-align:left;transition:width .8s cubic-bezier(.34,1.22,.5,1),background-color .5s,color .5s,border-color .5s,box-shadow .5s}
-.say-block.tone-2{background:var(--mv-bg);color:var(--yellow);border-color:var(--off);box-shadow:.07em .07em 0 var(--orange)}
-.say-now,.say-was{display:inline-block;line-height:1.3}
-.say-was{position:absolute;left:.38em;top:.08em}
-.say-phrase{display:inline-block}
-.say-ch{display:inline-block;transform-origin:50% 55% -.42em;backface-visibility:hidden}
-.say-gap{display:inline-block;width:.26em}
-/* The fill: same colour as the block, scaled from the block's centre until it covers the screen. */
-.say-block::before{content:"";position:absolute;z-index:-1;inset:-3px;border-radius:calc((.28em + 3px)*(1 - var(--f,0)));background:var(--mv-bg);opacity:0;scale:calc(1 + (var(--fs,8) - 1)*var(--f,0)*var(--f,0));pointer-events:none}
-.is-filling .say-block::before{opacity:1}
-.is-filling .say-now,.is-filling .say-was{opacity:calc(1 - var(--f)*4)}
-.is-filling .say-lets{opacity:calc(1 - var(--f)*2.5)}
-.say-hint{position:relative;z-index:1;margin:0;font-size:13px;font-weight:800;color:#2c2540;opacity:0;translate:0 14px;transition:opacity .25s,translate .3s}
-.is-swapped .say-hint{opacity:1;translate:0 0;transition:opacity .3s 1.3s,translate .5s var(--bounce) 1.3s}
-@media (prefers-reduced-motion:no-preference){
- .is-in .say-ch{animation:say-roll-in .95s ease-out calc(.08s + var(--i)*55ms) both}
- .is-out .say-ch{animation:say-roll-out .5s cubic-bezier(.5,0,.8,.4) calc(var(--i)*40ms) both}
-}
-/* In: rolls up like a drum from below (blurred while spinning), grows, drops, and lands with a small bounce. */
-@keyframes say-roll-in{
- 0%{opacity:0;filter:blur(8px);transform:perspective(3.2em) translateY(.35em) rotateX(-300deg) scale(.9,.9)}
- 36%{opacity:1;filter:blur(2.5px);transform:perspective(3.2em) translateY(-.04em) rotateX(-28deg) scale(1.2,1.2)}
- 54%{filter:blur(0);transform:perspective(3.2em) translateY(-.13em) rotateX(6deg) scale(1.34,1.34)}
- 72%{transform:perspective(3.2em) translateY(.05em) rotateX(0deg) scale(1.07,.88)}
- 86%{transform:perspective(3.2em) translateY(-.04em) rotateX(0deg) scale(.98,1.05)}
- 100%{opacity:1;filter:blur(0);transform:perspective(3.2em) translateY(0) rotateX(0deg) scale(1,1)}
-}
-/* Out: keeps rolling the same way, blurring and dissolving. */
-@keyframes say-roll-out{
- 0%{opacity:1;filter:blur(0);transform:perspective(3.2em) translateY(0) rotateX(0deg) scale(1,1)}
- 100%{opacity:0;filter:blur(9px);transform:perspective(3.2em) translateY(-.3em) rotateX(160deg) scale(1.12,1.12)}
-}
 
 /* ---------- Chapter 3 · MV theatre ---------- */
 .chapter-mv{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;min-height:100vh;min-height:100svh;background:var(--mv-bg);color:var(--off);padding:0 0 88px}
@@ -239,11 +171,7 @@
  .bridge-word{font-size:clamp(56px,17vw,96px)}
  .bridge-music{-webkit-text-stroke:2px var(--ink)}
  .bridge-blocks span{border-width:2px}
- .say-line{flex-direction:column;gap:.14em;font-size:8.4vw}
- .say-lets{font-size:1.7em;-webkit-text-stroke:2px var(--ink)}
- .say-block{border-width:2px}
- .say-block::before{inset:-2px}
- .chapter-blocks{padding-bottom:calc(56px + 120vh);padding-bottom:calc(56px + 120svh)}
+ .chapter-blocks{padding-bottom:56px}
  .chapter-blocks .sections{padding:52px 14px 0}
  .chapter-blocks .lyrics-section{margin-top:28px}
  .chapter-blocks .layout{gap:16px}
@@ -264,15 +192,11 @@
  .lyric{min-height:0}
 }
 
-/* Reduced motion: no overlay or scroll choreography, just the solid title pages. */
+/* Reduced motion: no overlay or scroll choreography, just the solid title page. */
 @media (prefers-reduced-motion:reduce){
- .chapter-bridge,.mv-bridge{height:auto;margin-top:0;margin-bottom:0;pointer-events:auto}
+ .chapter-bridge{height:auto;margin-top:0;pointer-events:auto}
  .bridge-stage{position:relative;height:auto;min-height:70vh;background:var(--violet)}
- .bridge-ring,.planks{display:none}
+ .bridge-ring{display:none}
  .bridge-title{position:relative;inset:auto;min-height:70vh;translate:none;scale:none}
  .bridge-word span span,.bridge-kicker,.bridge-steps,.bridge-hint{opacity:1;translate:none;scale:none}
- .say-stage{position:relative;height:auto;min-height:60vh;background:var(--violet)}
- .say-line,.say-hint{opacity:1;translate:none;scale:none}
- .chapter-blocks{padding-bottom:88px}
- .chapter-blocks::before{display:none}
 }
