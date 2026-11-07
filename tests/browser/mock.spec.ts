@@ -71,6 +71,11 @@ test('free lyric synchronization keeps its melody editable and rejects mismatche
  await expect(page.getByRole('status').filter({hasText:'字数一致'})).toBeVisible();expect(await mockStored(page)).toEqual(current);
 });
 // Clicking while the asynchronous environment check is still running opens its settings instead of producing.
+// The workbench's first screen sits under the Music Blocks curtain until it is pulled away (ticket 29);
+// enter it through the nav as a reader would before touching the board, TAP or vocal cards.
+async function enterWorkbench(page:import('@playwright/test').Page){
+ await page.getByRole('navigation').getByRole('button',{name:'音乐积木',exact:true}).click();await expect(page.locator('.bench-pin')).toHaveClass(/is-open/);
+}
 async function startMaking(page:import('@playwright/test').Page){const button=page.getByRole('button',{name:'制作新作品',exact:true});await expect(button).not.toHaveAttribute('title');await button.click()}
 async function openPiano(page:import('@playwright/test').Page,withOverrides=false){
  await page.goto('/');
@@ -159,7 +164,7 @@ test('A2 page makes a new five-line song, reports fixture stages, plays and rest
  await page.screenshot({path:'temp/songyu-loop-a2-desktop.png',fullPage:true});
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
  await page.screenshot({path:'temp/songyu-loop-a2-mobile.png',fullPage:true});
- await page.reload();expect((await mockStored(page)).id).toBe(p.id);await page.getByRole('button',{name:'播放全曲',exact:true}).click();await expect(page.getByRole('button',{name:'暂停全曲',exact:true})).toBeVisible({timeout:20000});
+ await page.reload();expect((await mockStored(page)).id).toBe(p.id);await enterWorkbench(page);await page.getByRole('button',{name:'播放全曲',exact:true}).click();await expect(page.getByRole('button',{name:'暂停全曲',exact:true})).toBeVisible({timeout:20000});
  expect(requests).toEqual([]);expect(errors).toEqual([]);
 });
 
@@ -302,7 +307,7 @@ test('C piano editor rejects a response that changes a sibling and preserves the
 });
 
 test('LOOP board edits real steps, preserves locks, persists drag order and imports the same project',async({page})=>{
- await page.goto('/');const before=await mockStored(page),sectionId=before.sections[1].id;
+ await page.goto('/');await enterWorkbench(page);const before=await mockStored(page),sectionId=before.sections[1].id;
  const rows=page.locator('#tracks .track');await expect(rows).toHaveCount(before.tracks.filter((t:any)=>t.sectionId===sectionId).length);
  const step=page.getByRole('button',{name:'吉他 第2格',exact:true}),wasOn=await step.getAttribute('aria-pressed');await step.click();await expect(step).toHaveAttribute('aria-pressed',wasOn==='true'?'false':'true');
  const edited=await mockStored(page),guitar=edited.tracks.find((t:any)=>t.sectionId===sectionId&&t.kind==='guitar');expect(guitar.manuallyEdited).toBe(true);expect(guitar.notes).not.toEqual(before.tracks.find((t:any)=>t.id===guitar.id).notes);
@@ -313,7 +318,9 @@ test('LOOP board edits real steps, preserves locks, persists drag order and impo
 });
 
 test('LOOP tap uses recorded timing; the PV chapter follows the project clock and dialogs return focus',async({page})=>{
- await page.goto('/');const pad=page.getByRole('button',{name:'敲击节奏',exact:true});for(let i=0;i<5;i++){await pad.click();if(i<4)await page.waitForTimeout(500)}
+ // Enter the workbench through the nav first, as a reader does: until its curtain is pulled the pad lies underneath.
+ await page.goto('/');await enterWorkbench(page);
+ const pad=page.getByRole('button',{name:'敲击节奏',exact:true});for(let i=0;i<5;i++){await pad.click();if(i<4)await page.waitForTimeout(500)}
  await page.getByRole('button',{name:/变成鼓点/}).click();const p=await mockStored(page);expect(p.tapTimes).toHaveLength(5);expect(p.bpm).toBeGreaterThan(90);expect(p.bpm).toBeLessThan(130);
  await page.getByRole('slider',{name:'播放进度',exact:true}).fill('10');await page.getByRole('navigation').getByRole('button',{name:'PV ✦',exact:true}).click();const pv=page.getByRole('region',{name:'歌词 PV',exact:true});await expect(pv).toBeInViewport({ratio:.5});await expect(pv.locator('.mv-time')).toContainText('00:10');
  const matches=await pv.locator('canvas').evaluate(async canvas=>{
@@ -332,8 +339,13 @@ test('LOOP keeps the prototype pieces in three chapters on desktop and phone and
  await page.goto('/');const actual=await page.evaluate(()=>{const top=(s:string)=>document.querySelector(s)!.getBoundingClientRect().top+scrollY;return {heroBottom:document.querySelector('.hero')!.getBoundingClientRect().bottom+scrollY,viewport:innerHeight,board:top('#board'),lyrics:top('#lyrics'),pv:top('#pv'),lyric:document.querySelector('.lyric')!.getBoundingClientRect().height}});
  // Chapter 1 fills the first screen, the Music Blocks bridge sits before the workbench, and the MV chapter comes last.
  expect(Math.abs(actual.heroBottom-actual.viewport)).toBeLessThanOrEqual(2);expect(actual.board).toBeGreaterThan(actual.viewport*1.5);expect(actual.board<actual.lyrics&&actual.lyrics<actual.pv).toBe(true);expect(actual.lyric).toBeLessThanOrEqual(original.lyric+8);
- const bridge=page.locator('.chapter-bridge');await expect(bridge).toHaveAttribute('aria-hidden','true');await expect(bridge).not.toHaveClass(/is-titled/);
- await page.evaluate(()=>{const b=document.querySelector('.chapter-bridge')!;scrollTo(0,b.getBoundingClientRect().top+scrollY+(b.clientHeight-innerHeight)*.6)});await expect(bridge).toHaveClass(/is-filled/);await expect(bridge).toHaveClass(/is-titled/);await page.evaluate(()=>scrollTo(0,0));
+ // The two scroll acts are decorative, driven by scroll position, and play back in reverse (ticket 29).
+ const bench=page.locator('.act-bench'),benchStage=bench.locator('.act-stage'),say=page.locator('.act-mv');
+ await expect(bench).toHaveAttribute('aria-hidden','true');await expect(say).toHaveAttribute('aria-hidden','true');await expect(benchStage).not.toHaveClass(/is-titled/);
+ const into=(selector:string,share:number)=>page.evaluate(([s,k])=>{const a=document.querySelector(s as string)!;scrollTo(0,a.getBoundingClientRect().top+scrollY+(a.clientHeight-innerHeight)*(k as number))},[selector,share]);
+ await into('.act-bench',.45);await expect(benchStage).toHaveClass(/is-covered/);await expect(benchStage).toHaveClass(/is-titled/);
+ await into('.act-mv',.35);await expect(say).toHaveClass(/is-swapped/);
+ await page.evaluate(()=>scrollTo(0,0));await expect(say).not.toHaveClass(/is-swapped/);await expect(benchStage).not.toHaveClass(/is-titled/);
  await expect(page.locator('.workspace-meta')).not.toBeVisible();await expect(page.locator('.engine-panel')).not.toBeVisible();await expect(page.locator('.transport')).toHaveCount(0);await expect(page.locator('.lyric').first().locator(':scope > button')).toHaveCount(1);
  await expect(page.getByRole('heading',{name:/敲一下.*变成一首歌/})).toBeVisible();await expect(page.locator('.hero .bigcard')).toBeVisible();await expect(page.locator('.creation-options')).not.toHaveAttribute('open');
  await page.screenshot({path:'temp/songyu-loop-restored-desktop.png',fullPage:true});

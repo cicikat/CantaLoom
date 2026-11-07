@@ -10,7 +10,7 @@ import {EnginePanel} from './EnginePanel';
 import {PatchlabCreation} from './components/PatchlabCreation';
 import {MixControls} from './components/MixControls';
 import {HeroTitle} from './components/HeroTitle';
-import {ChapterBridge} from './components/ChapterBridge';
+import {BenchAct,MvAct,chapterScrollTop} from './components/ChapterActs';
 import {boardPulse} from './components/board-pulse';
 import {ArtifactDownloads,ExportLoudnessReport} from './components/ArtifactDownloads';
 
@@ -23,7 +23,7 @@ export default function App(){
  useEffect(()=>{const close=(e:PointerEvent)=>{if(projectMenu.current&&!projectMenu.current.contains(e.target as Node))projectMenu.current.open=false};document.addEventListener('pointerdown',close);return()=>document.removeEventListener('pointerdown',close)},[]);
  const tracks=p.tracks.filter(t=>t.sectionId===selected.id),beat=time*p.bpm/60;
  useEffect(()=>{if(s.exportOpen)exportRef.current?.showModal();else exportRef.current?.close()},[s.exportOpen]);
- function go(id:string){if(projectMenu.current)projectMenu.current.open=false;production.invalidate('已切换创作区域，上次制作结果不会覆盖当前工程。');setEditor(undefined);setNav(id);document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'})}
+ function go(id:string){if(projectMenu.current)projectMenu.current.open=false;production.invalidate('已切换创作区域，上次制作结果不会覆盖当前工程。');setEditor(undefined);setNav(id);scrollTo({top:id==='compose'?0:chapterScrollTop(id),behavior:'smooth'})}
  function openExport(){exportTrigger.current=projectMenu.current?.querySelector('summary')??document.activeElement as HTMLElement;if(projectMenu.current)projectMenu.current.open=false;s.setExportOpen(true)}
  function openEditor(id:string){production.invalidate();setEditor(id);setVoiceOpen(true);setTimeout(()=>document.getElementById('phrase-editor')?.scrollIntoView({behavior:'smooth',block:'start'}),0)}
  function moveTrack(id:string,to:string){if(id===to)return;s.mutate('调整积木顺序',next=>{const from=next.tracks.findIndex(t=>t.id===id),target=next.tracks.findIndex(t=>t.id===to);if(from<0||target<0||next.tracks[from].sectionId!==next.tracks[target].sectionId)return;const [track]=next.tracks.splice(from,1);next.tracks.splice(target,0,track)})}
@@ -34,8 +34,8 @@ export default function App(){
   <main>
    <section className="hero" id="compose"><div className="hero-copy"><span className="eyebrow">✦ 给不会编曲的人造一个音乐游乐场</span><HeroTitle tap="敲一下。" pop="变成一首歌！"/><p className="intro">一句话、一段节奏，甚至一个奇怪的念头。让 AI 搭好音乐积木，喜欢哪块就留下，不喜欢就换掉。</p><PatchlabCreation studio={s} onLocal={()=>go('board')}/></div><div className="hero-right"><div className="sticker top">A LITTLE IDEA ♫</div><span className="starburst">✳</span><div className="bigcard"><div className="sun"/><div className="wave"/><div className="wave second"/><div className="boat">⛵</div><span className="record" id="songLabel">{p.metadata.title}</span></div><div className="sticker bottom">MAKE SOME NOISE! ↗</div><span className="spark">✦</span></div></section>
 
-   <ChapterBridge/>
-   <div className="chapter-blocks">
+   <BenchAct/>
+   <div className="act-pin bench-pin"><div className="chapter-blocks">
    <section className="sections" id="board"><div className="stepheader"><div><span className="number">STEP 01 / DRAG · DROP · PLAY</span><h2>你的音乐积木 🧩</h2></div><small>点方块改节奏 · 单轨重生 · 锁定喜欢的部分<br/>电脑可以拖动轨道排序，手机可以用 ↑↓ 移动</small></div><div className="layout"><div className="board"><div className="boardtop"><b>▦ LOOP BOARD <select aria-label="歌曲段落" className="section-select" value={selected.id} onChange={e=>{const section=p.sections.find(x=>x.id===e.target.value)!;s.setSection(section.id);s.seek(beatsToSeconds(p,section.start))}}>{p.sections.map(section=><option value={section.id} key={section.id}>{section.name}</option>)}</select></b><div className="boardactions">{playButton}<button className="minibtn" id="random" aria-label="重做未锁定积木" disabled={!!busy||p.mode==='free'} onClick={s.regenerateAll}>✦ 补全积木</button></div></div>
 
 
@@ -52,9 +52,10 @@ export default function App(){
     {voiceOpen&&<details className="singing-details" open={voiceOpen} onToggle={e=>setVoiceOpen(e.currentTarget.open)}><summary>逐句演唱与重唱</summary>{voiceOpen&&<QixuanPanel project={p} onChange={next=>s.recordChange(next,'制作逐句演唱')} onPreview={id=>void s.play({lyricId:id})} busy={!!busy}/>}</details>}
     <MixControls project={p} onChange={s.change} onPreview={stem=>void s.play({stem})} onStop={s.stop} busy={!!busy} playing={playing}/>
    </section>
-   </div>
+   </div></div>
 
-   <section className="chapter-mv" id="pv" aria-label="歌词 PV">
+   <MvAct/>
+   <div className="act-pin mv-pin"><section className="chapter-mv" id="pv" aria-label="歌词 PV">
     <div className="mv-marquee" aria-hidden="true"><div>{[0,1].map(k=><span key={k}>★ NOW SHOWING ★ 你的第一支歌词 MV ★ LYRIC VIDEO ★ 字幕跟着音乐走 ★ NOW SHOWING ★ 你的第一支歌词 MV ★ LYRIC VIDEO ★ 字幕跟着音乐走 </span>)}</div></div>
     <div className="mv-inner">
      <header className="mv-head"><span className="mv-kicker">CHAPTER 03 · 🎬 LYRIC VIDEO</span><h2>好啦，给这首歌<br/>加个 <em>MV！</em></h2><p>歌词字幕逐句出现 · 音乐与画面同步</p></header>
@@ -69,7 +70,7 @@ export default function App(){
       <ExportLoudnessReport report={s.exportReport}/><p className="export-status">{api.mock?'MOCK：下载 JSON 测试回执，未运行 FFmpeg，不生成 MP4。':s.health.ffmpeg?'本机 FFmpeg 已配置；导出使用当前工程音轨。':'MP4 需要本机 FFmpeg；仍可导出 WAV 与工程。'}</p>
      </div>
     </div>
-   </section>
+   </section></div>
 
   </main>
   <footer className="footer"><span>LOOP! MUSIC PLAYGROUND / SONGYU</span><span>BUILT FOR LITTLE IDEAS, 2026</span></footer>

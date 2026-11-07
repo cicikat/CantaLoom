@@ -55,10 +55,13 @@
 | 章节 | 结构与实现 |
 |---|---|
 | 1 · 首屏 `#compose` | 至少占满一屏。`HeroTitle` 给标题一份完整读屏文字，动画字母对读屏隐藏；`src/chapters.css` 用 `--beat` 节拍让左右元素交替入场，「变成一首歌！」逐字由旋转星星弹出并向右溅碎片 |
-| 2 · Music Blocks + 工作台 `#board` / `#lyrics` | `ChapterBridge` 是首屏之后的一段高滚动区（向上叠住首屏最后一屏），内部画面固定在视口；滚动进度写入 CSS 变量 `--p`，五个圆据此依次上升，铺满后显示 `Music Blocks` 并停留，之后接淡紫色工作台。过渡层 `aria-hidden`、不接收点击 |
+| 2 · Music Blocks + 工作台 `#board` / `#lyrics` | `BenchAct`（`ChapterActs.tsx`）是首屏之后的一条高轨道，内部画面 sticky 固定：三层纸错层升起、标题入场，最后紫色前景幕布向下拉开。工作台包在 `.bench-pin` 里，被拉到画面下方并在幕布拉开期间钉住不动 |
+| Let's 过渡 | `MvAct` 同理：三层纸升起后「go together」逐字翻转成「make a music video」，色块随字母伸缩，再吞下整句、撑满全屏，作为幕布向下拉开，露出钉在 `.mv-pin` 里的 MV |
 | 3 · MV 放映页 `#pv` | 深色章节，含字幕走马灯、胶片框画面、播放条、字幕样式/换色/导出与说明；画面仍是 `Landscape` / `drawPV`，未改画面与导出代码 |
 
-系统开启「减少动态效果」时，入场动画、过渡的圆和滚动联动全部关闭，过渡章变为普通纯色标题块。`.page` 使用 `overflow: clip`（替代 hidden）以保证过渡层的粘性定位生效且不产生横向滚动。
+两段过渡见[工单 29](../CC-Tasks/29-five-chapter-scroll-transitions.md)。每帧只读两条轨道的位置，再改少量元素的 transform / 透明度（色块尺寸除外），没变化就不写；纯计时函数在 `chapter-motion.ts`，有单元测试。过渡层 `aria-hidden`；幕布本身拦截点击，拉开后不留覆盖层。导航用 `chapterScrollTop()` 滚到幕布完全拉开的位置，键盘焦点进入被盖住的章节会直接跳过去。sticky 不进入父元素内边距，所以钉住距离用 `.act-pin::after` 占位块实现。
+
+系统开启「减少动态效果」时，入场动画和滚动联动全部关闭，两段过渡变为普通流中的静止全屏标题页，不钉住、不重叠。`.page` 使用 `overflow: clip`（替代 hidden）以保证 sticky 生效且不产生横向滚动。
 
 正式首页不再运行原型的随机格子、随机换词、独立振荡器或字幕定时器。原 HTML 文件保留原始演示，并提供正式入口说明，不能用 file:// 单文件代替 Node / Vite 应用。未改后端、公开契约、模型、混音或导出算法；UI 继续经既有 hooks、Client 和导出用例接入。原型重接后的构建、29 项相关单元测试、26 项 Mock 页面测试及 10 项真实模式页面/接口夹具已通过，详见[本轮记录](iteration-log.md#loop-prototype-wiring)。真实模型、绮萱、MP4 编码与人工听感仍按[工单 6](../CC-Tasks/6-joint-acceptance.md)验收。
 

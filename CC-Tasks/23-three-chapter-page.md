@@ -18,7 +18,7 @@ Owner：Toge（toge / Frontend / UX）。状态：页面实现与 Mock 回归完
 - [x] 第三章为深色「放映厅」：原 PV 弹层改为页面内章节 `#pv`（区域名「歌词 PV」），包含画面预览、播放、独立进度条、字幕样式、换色、导出 MP4 与说明；导航「PV ✦」滚动到该章。导出作品弹层保持不变。
 - [x] 竖屏与紧凑区域：手机导航不再折行、歌词卡在窄屏改单列、首屏插图与贴纸在单列时保持成组、章节上下留白加大、MV 页在手机上纵向排列；390px 无横向滚动。
 - [x] 更新受影响的 Mock / 真实模式页面测试（PV 从弹层改为章节、首屏与积木位置的新几何关系）。
-- [ ] toge 在电脑、手机实际滚动核对动效节奏、过渡停留时长与配色；如需调整节拍或停留距离，改 `src/chapters.css` 顶部的 `--beat` 与 ChapterBridge 的阈值。
+- [ ] toge 在电脑、手机实际滚动核对动效节奏、过渡停留时长与配色；如需调整节拍或停留距离，改 `src/chapters.css` 顶部的 `--beat`。第二章开头的圆形过渡（原 ChapterBridge）已由[工单 29](29-five-chapter-scroll-transitions.md)的幕布转场取代，过渡手感在工单 29 核对。
 
 实现与验证记录见[迭代日志](../docs/iteration-log.md#three-chapter-page)，接线说明见[原型接线边界](../docs/ARCHITECTURE.md#prototype-frontend)。
 
