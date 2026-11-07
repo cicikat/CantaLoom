@@ -313,7 +313,9 @@ test('LOOP board edits real steps, preserves locks, persists drag order and impo
 });
 
 test('LOOP tap uses recorded timing; the PV chapter follows the project clock and dialogs return focus',async({page})=>{
- await page.goto('/');const pad=page.getByRole('button',{name:'敲击节奏',exact:true});for(let i=0;i<5;i++){await pad.click();if(i<4)await page.waitForTimeout(500)}
+ // Enter the workbench first, as a reader does: until then the TAP pad lies under the Music Blocks planks (ticket 28).
+ await page.goto('/');await page.getByRole('navigation').getByRole('button',{name:/音乐积木/}).click();await expect(page.locator('.chapter-bridge')).toHaveClass(/is-open/);
+ const pad=page.getByRole('button',{name:'敲击节奏',exact:true});for(let i=0;i<5;i++){await pad.click();if(i<4)await page.waitForTimeout(500)}
  await page.getByRole('button',{name:/变成鼓点/}).click();const p=await mockStored(page);expect(p.tapTimes).toHaveLength(5);expect(p.bpm).toBeGreaterThan(90);expect(p.bpm).toBeLessThan(130);
  await page.getByRole('slider',{name:'播放进度',exact:true}).fill('10');await page.getByRole('navigation').getByRole('button',{name:'PV ✦',exact:true}).click();const pv=page.getByRole('region',{name:'歌词 PV',exact:true});await expect(pv).toBeInViewport({ratio:.5});await expect(pv.locator('.mv-time')).toContainText('00:10');
  const matches=await pv.locator('canvas').evaluate(async canvas=>{

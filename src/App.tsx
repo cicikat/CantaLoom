@@ -11,6 +11,7 @@ import {PatchlabCreation} from './components/PatchlabCreation';
 import {MixControls} from './components/MixControls';
 import {HeroTitle} from './components/HeroTitle';
 import {ChapterBridge} from './components/ChapterBridge';
+import {MvBridge} from './components/MvBridge';
 import {ArtifactDownloads,ExportLoudnessReport} from './components/ArtifactDownloads';
 
 const clock=(t:number)=>`${Math.floor(t/60).toString().padStart(2,'0')}:${Math.floor(t%60).toString().padStart(2,'0')}`;
@@ -53,6 +54,7 @@ export default function App(){
    </section>
    </div>
 
+   <MvBridge/>
    <section className="chapter-mv" id="pv" aria-label="歌词 PV">
     <div className="mv-marquee" aria-hidden="true"><div>{[0,1].map(k=><span key={k}>★ NOW SHOWING ★ 你的第一支歌词 MV ★ LYRIC VIDEO ★ 字幕跟着音乐走 ★ NOW SHOWING ★ 你的第一支歌词 MV ★ LYRIC VIDEO ★ 字幕跟着音乐走 </span>)}</div></div>
     <div className="mv-inner">
