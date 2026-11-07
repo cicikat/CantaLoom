@@ -17,7 +17,7 @@ test('real page explains missing setup before production and keeps local creatio
  await page.locator('.patchlab-creation form').evaluate((form:HTMLFormElement)=>form.requestSubmit());expect(calls).toBe(0);
  await page.getByLabel('自由创作主题',{exact:true}).fill('孤独、安静，旋律下行');await creationSettings(page);await page.getByRole('button',{name:'本地搭建积木',exact:true}).click();
  await expect(page.locator('.workspace-meta')).toContainText('A 小调');expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('songyu-project-v1')!).planning.source)).toBe('local-rules');
- await page.screenshot({path:'temp/songyu-loop-launch-setup.png',fullPage:true});expect(calls).toBe(0);await creationSettings(page);await setup.getByRole('button',{name:'先玩音乐积木',exact:true}).click();await expect(page.getByRole('heading',{name:/你的音乐积木/})).toBeVisible();
+ expect(calls).toBe(0);await creationSettings(page);await setup.getByRole('button',{name:'先玩音乐积木',exact:true}).click();await expect(page.getByRole('heading',{name:/你的音乐积木/})).toBeVisible();
 });
 
 test('rechecking configured capability fixtures enables production without claiming an LLM call succeeded',async({page})=>{

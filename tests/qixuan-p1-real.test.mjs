@@ -1,3 +1,4 @@
+import {realAcceptance} from './support/tier.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,readdir} from 'node:fs/promises';
@@ -6,9 +7,9 @@ import {qixuanStatus,renderQixuan} from '../server/services/qixuan.mjs';
 import {cacheRoot} from '../server/services/instruments.mjs';
 
 // Real OpenUtau/Qixuan A/B regression for v0.4.0 tuning parameters: every exposed parameter must change the actual rendered audio, and unsupported effects must stay rejected.
-// Skips when the engine is not installed; set SONGYU_REAL_TESTS=0 to disable explicitly.
-const voice=await qixuanStatus();
-const enabled=voice.available&&process.env.SONGYU_REAL_TESTS!=='0';
+// Opt in with SONGYU_TEST_TIER=acceptance; missing engines skip, SONGYU_REAL_TESTS=0 disables.
+const voice=realAcceptance?await qixuanStatus():{available:false};
+const enabled=realAcceptance&&voice.available;
 const take=Math.floor(Math.random()*10000);
 // Notes are shifted one semitone up from the p0 real fixture so this baseline can never share a cache key with it (lyricId is not a cache dependency).
 const base={lyricId:'p1-real-a',lyrics:'海浪轻轻摇晃',start:4,end:12,bpm:120,
@@ -18,7 +19,7 @@ const phrase=performance=>({...base,...(performance?{performance}:{})});
 const samples=async key=>{const wav=await readFile(path.join(cacheRoot,key+'.wav'));return new Int16Array(wav.buffer,wav.byteOffset+44,(wav.length-44)/2)};
 const diff=(a,b)=>{let sum=0;const n=Math.min(a.length,b.length);for(let i=0;i<n;i++)sum+=Math.abs(a[i]-b[i]);return sum/n};
 
-test('real Qixuan engine renders v0.4.0 tuning parameters into audibly different WAVs',{skip:!enabled&&'需要已安装的绮萱引擎；SONGYU_REAL_TESTS=0 可显式关闭',timeout:2400000},async()=>{
+test('real Qixuan engine renders v0.4.0 tuning parameters into audibly different WAVs',{skip:!enabled&&'需要已安装的绮萱引擎；设置 SONGYU_TEST_TIER=acceptance 启用，SONGYU_REAL_TESTS=0 可关闭',timeout:2400000},async()=>{
  const a=await renderQixuan(phrase());
  assert.equal(a.cached,false);assert.ok(Array.isArray(a.phonemes)&&a.phonemes.length>0,'响应携带真实音素序列');
  const pa=await samples(a.key);
