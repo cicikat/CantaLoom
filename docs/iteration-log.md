@@ -4,6 +4,15 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+<a id="prototype-direction-correction"></a>
+
+## 2026-11-07 · 纠正原型用途与前端接线方向
+
+- 工单：[5 · 原型方向更正](../CC-Tasks/5-toge-free-creation.md)、[6 · 原型真实验收](../CC-Tasks/6-joint-acceptance.md)；依据：toge 要求先更新文档，并反馈 Blacktea 喜欢、准备使用 LOOP! 原型。更正 [README](../README.md#launch)、[团队工作流](TEAM_WORKFLOW.md)、[架构边界](ARCHITECTURE.md#prototype-frontend)和[接口入口](INTERFACES.md)，以原型视觉与交互为前端接线基础，不再将另建的四页工作台视为默认替代设计。
+- 源码核对：原型有灵感、TAP、积木、歌词卡和 PV 弹层；内部仍为随机格子/换词、简单振荡器与独立字幕计时。可保留其设计并复用现有工程、hooks、Client、播放器和导出能力；技术实现需要替换不等于设计需要废弃。当前 index → main → App 仍打开 React 四页工作台，原型没有完成这些能力的接线。
+- 责任与历史边界：ca5773a 的初始 README 已将 HTML 定为视觉参考；b5e8e1a 的文档整理强化“不是当前应用入口”；2e3325a 在原型加提示并引导打开工作台。Git 署名不证明设计由署名本人提出或授权。当前可读的「查看下一步」聊天中，toge 要求接 A2/C 和方便交付，Agent 随后自行把原型保留作参考；这些要求不能作为换原型的授权。历史记录保留，在[工单 16](../CC-Tasks/已完成/16-easy-launch.md)增加更正，不改写当时测试结果。
+- 本轮仅文档更正，未改 HTML 横幅、UI、启动器、后端、共享接口或存档；工单 5 新增原型接线待办，原有 React 接线 checkbox 保留并注明范围。验证为 Markdown 链接、锚点、内容与源码核对及 git diff --check；不运行构建、模型或浏览器测试。后续须在原型接线后重新核对视觉与功能，当前不宣称原型已可真实制作音乐。
+
 <a id="frontend-main-integration"></a>
 
 ## 2026-11-07 · 前端工单 5 / 16 与最新 main 整合
