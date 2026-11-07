@@ -2,7 +2,7 @@
 
 面向 `03_patchlab_playful.html` 的 LOOP! 原型接线的翻阅参考（[设计与实现边界](ARCHITECTURE.md#prototype-frontend)）：**后端与音乐核心真实存在、设计上允许 UI 暴露并会真实生效的数据和开关**，以及看似能开但实际不存在的功能。流程与调用方法（代次保护、原子应用、失败语义）见 [ARCHITECTURE](ARCHITECTURE.md)，本文不重复；字段权威定义以 `shared/contracts/` 为准，新增或改义字段先走 [CHANGELOG 提案](../shared/contracts/CHANGELOG.md)。
 
-状态标记：**main**＝已合并（基线 `da54e03`）；**P0 分支**＝`feature/backend-p0-fine-tuning`（工单 15，v0.3.3，待 toge review）。接口存在不代表新页面/Mock 已接通，页面进度见 [Toge 工单](../CC-Tasks/5-toge-free-creation.md)。
+状态标记：**main**＝已合并（含 v0.3.3，基线 `ed3c652`）；**P1 分支**＝`feature/backend-p1-phoneme`（工单 15，v0.4.0，本地提交待合并）。接口存在不代表新页面/Mock 已接通，页面进度见 [Toge 工单](../CC-Tasks/5-toge-free-creation.md)。
 
 ## 创作输入（`api.compose` / `api.startProduction`）
 
@@ -31,13 +31,19 @@
 | vibratoDepth | 0–60 | 按 preset/auto | 颤音深度；长音 ≥0.65 s 才进入，auto 随 energy 收敛 |
 | dynamics | −120–60 | 按 preset/auto | DYN 曲线基准与逐音符力度 |
 | consonantMs | −60–60 | 按 preset/auto | 辅音起音偏移（按 BPM 换算 tick；休止后不提前） |
-| overrides[] | ≤100 条 | 无 | 逐音符覆盖：index 0–99、origin auto/manual、同上四项、pitch、locked |
+| overrides[] | ≤100 条 | 无 | 逐音符覆盖：index 0–99、origin auto/manual、同上四项、pitch、v0.4.0 颤音六参、phonemes、locked |
 
 **Pitch 曲线（P0 分支 / v0.3.3）**：`overrides[].pitch`＝2–64 个按 x 严格递增的点；x＝相对音符起点毫秒（−500–30000，负值先入），y＝十分之一半音整数（±1200），shape＝io/i/o/l（默认 io）。提供时替换该音符自动过渡点，删除即恢复自动；随演唱依赖进入缓存失效。
 
+**v0.4.0 逐音符颤音（P1）**：`overrides[]` 新增 vibratoLength（0–100，音符长度百分比）、vibratoPeriod（5–500 ms）、vibratoIn / vibratoOut（0–100，淡入淡出，合计 ≤100）、vibratoDrift（±100）、vibratoVolLink（±100，音量联动）；缺省保持既有自动形态。滑音仍由 transitionMs 与 pitch 曲线控制。
+
+**v0.4.0 逐音素覆盖（P1）**：`overrides[].phonemes` ≤8 条，index＝本音符音素化结果序号（0–15，真实音素序列见渲染响应 `phonemes`）；`offsetMs`（±300，按 BPM 换算 tick）调逐音素时序，`phoneme` 替换发音（须在该声库音素词表内，服务端预校验，非法明确报错）；二者至少其一。同一位置只允许一条覆盖；显式 0 位覆盖优先于旧 consonantMs。
+
+**v0.4.0 句级表现曲线（P1）**：`performance.curves` ≤6 条，abbr ∈ brec（气声增量 ±100）/ voic（发声 0–100，默认 100）/ genc（声线位移 ±100）/ velc（速度 0–200，默认 100）/ pexp（音高表现力 0–100，默认 100）/ shfc（音高偏移 ±1200×0.1 半音）；points 2–64 个按 x 严格递增，x＝相对句首毫秒，y 为对应描述符范围内整数；覆盖范围外回落引擎默认值。`performance.dynCurve`（2–64 点，y −240–120＝0.1 dB）提供时整体替换自动 DYN 曲线，句尾衰减与收音由其尾部点控制。全部为绮萱声库原生支持并经真实 WAV 对照验证；能力以 `GET /api/singing/qixuan` 的 `capabilities` 为准（从声库配置实测解析）。
+
 工程级辅助：`performanceHistory` 每句 ≤3 版；`restorePerformance(project,lineId)` 恢复上一版；`autoTuneProject(project,lineId?)` 全曲/单句自动调教（跳过锁定）。只改表达只重唱该句，不调 LLM。auto 且 preset≠natural 时渲染修订为 3（否则 2），不同版本缓存不互相命中。
 
-**不暴露**：换气、气声、声线张力、breath/ENE 等参数——引擎未验证支持，不做假开关（审计见工单 15 P1）。
+**不支持（如实报告，绝不做假开关）**：ene（energy，声库无 embed）、tenc（声线张力，无 embed）、换气声（无呼吸采样合成）、voiceColor（声库无子音色）、phonemeEnvelope（DiffSinger 逐音素音量包络/ATK/DEC 旗标对该渲染器无效）。以上字段不在契约中；状态接口 `capabilities.unsupported` 明确列出。
 
 ## 旋律与歌词编辑（共享函数，main + P0 分支）
 
@@ -52,9 +58,11 @@
 
 ## 绮萱渲染与歌声资产（main，P0 增强）
 
-`POST /api/singing/qixuan/render` 请求内可调：**runner**（CPU / DirectML，默认 CPU，工程级 `project.singingRunner`）、**take**（0–10000，递增＝重唱一版）、**performance**（上文全部调教数据）。响应 `renderParameters` 中 **steps=20、depth=0.6 是服务端固定声码器参数，状态可见但不可按请求调节**。单句 `durationSeconds` ≤35。
+`POST /api/singing/qixuan/render` 请求内可调：**runner**（CPU / DirectML，默认 CPU，工程级 `project.singingRunner`）、**take**（0–10000，递增＝重唱一版）、**performance**（上文全部调教数据）。响应 `renderParameters` 中 **steps=20、depth=0.6 是服务端固定声码器参数，状态可见但不可按请求调节**；v0.4.0 起响应另带可选 `phonemes`（本句真实音素序列，供逐音素索引参照）。单句 `durationSeconds` ≤35。
 
-版本与失效：当前演唱在 `vocalAssets[lineId]`，历史 `vocalHistory` 每句 ≤3 版；`restoreVocalAsset`（P0）仅在依赖与 runner 匹配时可恢复。缓存失效因素＝本句歌词/音符/BPM/起止/Performance（含 pitch）/声库与引擎版本/runner/渲染修订；兄弟句与器乐缓存不受影响。
+`GET /api/singing/qixuan` v0.4.0 起返回可选 `capabilities`：`curves`（brec/voic/genc/velc/pexp/shfc/ene/tenc 逐项布尔，从声库 dsconfig 与声码器配置实测解析）、`phonemeOverride`（offset/replace）、`unsupported`（明确不支持的效果清单）。前端以此决定调教 UI 可用项，不要自行假设。
+
+版本与失效：当前演唱在 `vocalAssets[lineId]`，历史 `vocalHistory` 每句 ≤3 版；`restoreVocalAsset`（P0）仅在依赖与 runner 匹配时可恢复。缓存失效因素＝本句歌词/音符/BPM/起止/Performance（含 pitch、颤音、音素与全部表现曲线）/声库与引擎版本/runner/渲染修订；兄弟句与器乐缓存不受影响。
 
 ## 器乐与轨道（main）
 
@@ -85,7 +93,7 @@
 
 ## 状态查询（main）
 
-`api.health()`：ffmpeg、llm、llmStatus（local/unverified/verified）。`api.engines()`：器乐 installed/ready/soundfonts/version 与歌声模式。`api.qixuan()`：available 判别联合，可用时含 engineVersion、parameters{steps,depth}、runners。`api.dictionary()`：拼音→音素。旧原生 `/api/singing/voices`、`/api/singing/render` 文件交换接口保留，React 工作台不直接调用。
+`api.health()`：ffmpeg、llm、llmStatus（local/unverified/verified）。`api.engines()`：器乐 installed/ready/soundfonts/version 与歌声模式。`api.qixuan()`：available 判别联合，可用时含 engineVersion、parameters{steps,depth}、runners，v0.4.0 起另含可选 capabilities。`api.dictionary()`：拼音→音素。旧原生 `/api/singing/voices`、`/api/singing/render` 文件交换接口保留，React 工作台不直接调用。
 
 ## SongProject 可选持久化字段速查
 
@@ -95,7 +103,7 @@
 
 - 百分比进度、任务持久化、跨进程断点恢复——没有，不做假。
 - 声码器 steps/depth、模型选择/路由（P2-B 待排期）——前端不可调；模型由本机后台配置，密钥不出后端。
-- 换气/气声/张力/breath/ENE、逐音素时序编辑（P1 待审计）——未支持。
+- ene/张力 tenc/换气声/voiceColor/phonemeEnvelope——v0.4.0 起经 `capabilities.unsupported` 如实标注，契约不收；气声（brec）、逐音素时序/发音已在 v0.4.0 真实支持，见上文演唱调教节。
 - 效果链、声像、自动化、LUFS 目标（P3 待排期）；混响仅 0–0.25 一个发送量。
 - 超 35 秒长歌曲、超过四段结构（P2-A 待排期）。
 - AI 生图开关——画面是原创程序化 Canvas；VisualPlanner 为本地规则。

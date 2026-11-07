@@ -16,21 +16,22 @@
 
 | ID | 来源 | 发起方 → 接收方 | 状态 |
 |---|---|---|---|
-| [15-P1-review](#15-p1-review) | 工单 15 P1 | Blacktea → Toge | 等待接口 review；实现尚在本地分支 |
+| [15-P1-review](#15-p1-review) | 工单 15 P1 | Blacktea → Toge | 后端已推送；等待接口接入 review |
 | [15-P2A-contracts](#15-p2a-contracts) | 工单 15 P2-A | Blacktea → Toge | 等待本任务共享范围确认 |
-| [15-P2B-routing](#15-p2b-routing) | 工单 15 P2-B | Blacktea → Toge | 等待后端交付 review 与接入安排 |
+| [15-P2B-routing](#15-p2b-routing) | 工单 15 P2-B | Blacktea → Toge | 后端已推送；等待接入 review 与安排 |
+| [5-browser-timing](#5-browser-timing) | 工单 5 页面回归 | Blacktea → Toge | 待核对高负载下的测试时序稳定性 |
 | [15-P3-mixgraph](#15-p3-mixgraph) | 工单 15 P3 | Blacktea → Toge | 等待共享契约及渲染归属确认 |
 
-以下分支、提交与实测说明来自本轮已核对的本地交付记录，不代表这些实现已在 main 或已发布。当前 main 的前端 Mock/局部编辑进度以[工单 5](CC-Tasks/5-toge-free-creation.md)为准。
+以下后端分支与提交已推送，main 的交付范围以对应 PR 合并结果为准；待确认的 P2-A/P3 仍不构成实施授权。当前 main 的前端 Mock/局部编辑进度以[工单 5](CC-Tasks/5-toge-free-creation.md)为准。
 
 <a id="15-p1-review"></a>
 
 ### 15-P1-review · 逐音素与高级表现接口
 
 - 更新：2026-11-07；来源：[工单 15](CC-Tasks/后端/15-p0.md) P1；Blacktea → Toge；状态：等待接口 review。
-- 已交付：本地 `feature/backend-p1-phoneme` 的 `d00548b` 提供 phonemes 覆盖、颤音参数、dynCurve/表现曲线、能力查询；本地记录已有真实引擎 WAV 对照。本次文档任务未重跑引擎，也未将该提交合入 main。
+- 已交付：已推送分支 `feature/backend-p1-phoneme` 的 `d00548b` 提供 phonemes 覆盖、颤音参数、dynCurve/表现曲线、能力查询；已有真实引擎 WAV 对照；本轮与最新 main 整合后重新运行真实音频回归，两项通过。
 - 对方下一步：review 新 Performance 字段与 capabilities/phonemes 语义，确定 Mock 与调教界面的接入范围；UI 只能开放安装声库实际支持的参数。完整字段、示例及真实测试边界见该分支工单 15 的“P1 交接 Toge”节与契约记录。
-- 边界与回执：共享契约 review 不自动授权代改对方 UI。对应实现进入可访问的后端交付 PR 后补 PR 链接；接收方在本条写明 review 结论，再按工单 5/6 分别记录 Mock、真实联调和听感结果。
+- 边界与回执：共享契约 review 不自动授权代改对方 UI。后端交付见 [PR #9](https://github.com/cicikat/CantaLoom/pull/9)；接收方在本条写明 review 结论，再按工单 5/6 分别记录 Mock、真实联调和听感结果。
 
 <a id="15-p2a-contracts"></a>
 
@@ -45,10 +46,10 @@
 
 ### 15-P2B-routing · 模型路由后端交付
 
-- 更新：2026-11-07；来源：[工单 15](CC-Tasks/后端/15-p0.md) P2-B；Blacktea → Toge；状态：等待后端交付 review 与接入安排。
-- 已交付：本地分支 `feature/backend-p1-phoneme` 的 `9718420` 提供 lyrics_planning / melody_composition / performance_planning，Admin 的 `LLM_ROUTES` 配置与 `GET /api/admin/llm` 脱敏追溯。未新增公共创作端点或共享工程字段；该实现未随本次文档 PR 发布。
+- 更新：2026-11-07；来源：[工单 15](CC-Tasks/后端/15-p0.md) P2-B；Blacktea → Toge；状态：后端已推送；等待接入 review 与安排。
+- 已交付：已推送分支 `feature/backend-p1-phoneme` 的 `9718420` 提供 lyrics_planning / melody_composition / performance_planning，Admin 的 `LLM_ROUTES` 配置与 `GET /api/admin/llm` 脱敏追溯。未新增公共创作端点或共享工程字段；该实现通过 [PR #9](https://github.com/cicikat/CantaLoom/pull/9) 交付，页面接入仍需 Toge review。
 - 对方下一步：确定是否及如何接入后台路由控件和任务追溯；如需将追溯写入工程，另提共享契约确认。不要把当前进程最近 100 次记录当作持久化工程历史；未配置单价或费用未知时显示未知。
-- 验收与回执：已交付分支的独立快照记录为构建通过、72 项通过/3 项跳过，真实三任务使用不同模型 ID 的调用 1/1 通过；这些是前一轮证据，本轮只做文档验证。review 后补可访问的后端 PR、Mock/页面接入工单及实际验证结果；不把模型输出成功标为页面、真实歌声或人工听感通过。
+- 验收与回执：已交付分支的独立快照记录为构建通过、72 项通过/3 项跳过，真实三任务使用不同模型 ID 的调用 1/1 通过；这些是前一轮路由证据；本轮整合的回归结果另记迭代日志。review 后补 Mock/页面接入工单及实际验证结果；不把模型输出成功标为页面、真实歌声或人工听感通过。
 
 <a id="15-p3-mixgraph"></a>
 
@@ -57,3 +58,13 @@
 - 更新：2026-11-07；来源：[工单 15](CC-Tasks/后端/15-p0.md) P3；Blacktea → Toge；状态：等待设计与跨层确认，未实施。
 - 对方下一步：双方确定 MixGraph / EffectChain / Automation 的字段、版本、效果器顺序/旁路、轨道音量/声像及参数自动化，以及 `src/audio.ts` / `src/audio-mix.ts` 试听和导出的统一渲染归属；明确本轮 Owner 与调用点。
 - 验收与回执：确认记录进入契约变更记录后再实施；补保存恢复、试听/离线一致性、真实分轨导出、LUFS 与 True Peak 的达标或无法达标报告。仅后端能力或现有 Web Audio 参数不能提前标作 P3 完成。
+
+
+<a id="5-browser-timing"></a>
+
+### 5-browser-timing · 页面测试的高负载时序稳定性
+
+- 更新：2026-11-07；来源：[工单 5](CC-Tasks/5-toge-free-creation.md)；Blacktea → Toge；状态：待核对测试稳定性，不代表低负载下功能失败。
+- 证据：本轮真实音频与页面并行回归时，Mock 的 LOOP tap 检查期望 BPM >90，实际 76；未改动的 main 7bee0eb 同一检查也失败（89）。低负载串行重跑该用例 1/1 通过。无 API 播放检查首跑在 5 秒内未见暂停按钮，main 基线及本分支串行重跑均通过。
+- 对方下一步：核对浏览器测试对真实墙钟点击间隔和异步离线混音的依赖；区分机器负载影响与产品行为，评估可重复的节奏输入/播放器就绪等待策略，不靠放宽断言掩盖节奏错误。涉及 tests/browser/mock.spec.ts 与 tests/browser/plan.spec.ts，本轮后端交付未改这些文件。
+- 验收与回执：在工单 5 记录测试环境、复现和稳定性验证，完整功能断言仍需保留；完成后按维护规则清除此条及索引。原始日志保存在本机 temp/backend-p1-p2b-mock.log、temp/backend-p1-p2b-http.log、temp/baseline-loop-tap.log 及对应 retry 日志。

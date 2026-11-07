@@ -4,6 +4,17 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+<a id="backend-p1-p2b-publish"></a>
+
+## 2026-11-07 · 交付 P1/P2-B 并修复启动测试临时路径
+
+- 工单：[15 · 后端升级](../CC-Tasks/后端/15-p0.md)、[16 · 启动入口](../CC-Tasks/已完成/16-easy-launch.md)；接入：[任务路由](ARCHITECTURE.md#task-routing)、[后台配置](ENGINES.md#llm-routing)；交接：[跨端清单](../CROSS-END-HANDOFF.md)。用户明确要求将剩余完成成果推送并直接合并，更新此前整单完成才 PR 的交付安排；P2-A/P3 未确认的跨层范围继续保留，不把该指令扩大为新跨区实施授权。
+- 交付：[后端 PR #9](https://github.com/cicikat/CantaLoom/pull/9)，推送 feature/backend-p1-phoneme 的 P1 音素/表现参数与 P2-B LLM 三任务路由。整合 main 7bee0eb，README 保留后端能力状态与最新 LOOP 前端进度，迭代日志保留双方全部历史记录；契约自动合并后通过构建和单元回归，未改动前端实现。
+- 路径修复：tests/launcher.test.mjs 移除写死的其他电脑临时路径，依据 import.meta.url 定位项目根目录，先建 temp/ 再 mkdtemp，并由 t.after 清理本次夹具；路由配置测试也从 .local 改用项目 temp/。启动器单项 1/1 通过；在全新含空格目录、缺少 temp 父目录且 cwd 不同的隔离环境运行同一测试，1/1 通过并验证清理。证据在本机 temp/launcher-portability-result.json。
+- 验证：整合后 build 通过（保留既有 Zod 注释与 bundle 大小警告）；npm test（SONGYU_REAL_TESTS=0）92 项，89 通过、3 跳过。单独真实绮萱 P0/P1 两项回归 2/2 通过（234.2 秒），覆盖真实 WAV 差异、缓存精准失效与原子文件；输出见本机 temp/backend-p1-p2b-real-audio.log。本轮没有重新调用真实 LLM，路由真实双模型 ID 证据沿用前一轮并保留其日期和边界。
+- 页面边界：Mock 首跑 25 通过/1 失败，真实 HTTP/页面筛选套件首跑 12 通过/1 失败。高负载 TAP 时间断言在未改动 main 基线也失败；音频任务结束后串行重跑两项均 1/1 通过。不能写成整套首跑全绿；具体错误、基线与重跑日志在 temp/，稳定性问题登记 [5-browser-timing](../CROSS-END-HANDOFF.md#5-browser-timing) 由 Toge 核对，未顺手修改前端用例。
+- 保全：此前 17 个未提交草稿仍保留在 stash 65cc8c0dc1ad9dd80eddf85a9add6bb4deb3a11b 与 backup/cross-end-handoff-2026-11-07/，不混入稳定后端交付。按用户授权提交后端 PR 并直接合入 main；PR/合并结果通过 Git 历史与 PR 入口核对，工作区不恢复草稿。
+
 <a id="cross-end-handoff"></a>
 
 ## 2026-11-07 · 根目录跨端交接与按需上下文
@@ -102,6 +113,25 @@
 - 对照实际代码确认：新三类响应未声明 Mock 标记，`buildFreeScore` 当前直接记录 LLM 来源。提出沿用 `mock:true`、工程记录为本地测试来源、真实模式检查嵌套标记的限定方案；列明共享字段、来源适配及测试范围，待 toge 确认后实施。
 - 本轮仅准备提案并更新任务状态，不勾选 A1 完成；未改 Mock、Schema、Client、工程或引擎运行时代码，未运行构建、模型或音频测试。文档相对链接、来源描述与 `git diff --check` 已核对。
 - `git fetch origin` 遇 TLS EOF，未能确认远端实时更新；工作区原为干净状态，本地 HEAD 与已缓存 origin/main 一致，本次功能分支从该基线创建。未推送、创建 PR 或部署。
+
+## 2026-11-07 · 工单 15 P2-B 后端任务路由；整单等待跨层确认
+
+- 工单：[15 · 后端音乐制作升级](../CC-Tasks/后端/15-p0.md)；接入：[架构任务路由](ARCHITECTURE.md#task-routing)、[后台路由配置](ENGINES.md#llm-routing)。Owner Blacktea，沿用 feature/backend-p1-phoneme。
+- 授权边界：用户要求继续整单后，明确选择「只实施后端，跨层改动等 Toge 确认」。保留 Kimi 未提交的长歌 server/shared/音乐核心和测试改动。本次独立提交仅包含后端任务路由、后端测试与文档；不提交 shared、src/model.ts、UI、Mock 或音频跨层适配，不推送、不提前创建 PR。
+- 实际实现：统一 lyrics_planning / melody_composition / performance_planning 路由，逐任务模型/URL/密钥引用/附加 System Prompt/温度/输出 Schema；旧 plan、compose、melody 调用接入。自动制作仅在显式配置表现路由时调用表现规划，保护锁定/手工内容，完整校验后原子应用。表现规划失败禁止通过单句 retry 绕过规划。Admin 配置原子保存，默认密钥继续 DPAPI；仅保存其他密钥的环境变量引用。新增本机 GET /api/admin/llm 查看脱敏路由与最近 100 次调用。
+- 失败、重试与费用：输出和临时 HTTP 错误受 2/3 次总调用次数及任务时间预算限制；永久 HTTP 错误/连接超时明确失败，无旧模板降级。输入歌词仅在 JSON 数据消息，错误/追溯不返回上游正文或密钥。未配置价格、失败调用或缺失 usage 时费用未知；配置价格时仅作 USD 估算，不视为供应商账单。
+- 验证：当前混合工作区 npm test（SONGYU_REAL_TESTS=0）82 项：79 通过、3 跳过、0 失败；独立暂存后端快照 75 项：72 通过、3 跳过、0 失败。跳过为两项真实歌声引擎测试和显式开关控制的真实路由测试。独立快照 npm run build 通过，仍有既有 Zod 注释与大 bundle 警告。新增 6 项路由/配置/失败保护测试包含真实 HTTP 夹具上的三个模型路由、受控重试、脱敏、DPAPI 配置边界与表现规划失败后拒绝单句重试；夹具不是实际供应商成功。
+- 真实 LLM：在独立后端快照使用现有本机加密配置，无永久修改配置；歌词规划 deepseek-v4.1-flash、旋律 deepseek-v4.1-flash-261017、表现规划 deepseek-v4.1-flash 均返回完整可校验输出，人工歌词未改写、音符未被表现规划修改。另一次选择 deepseek-v4-flash-0731 被上游拒绝，已验证明确失败且无回退。最初 smoke 证据位于本机 temp/ticket-15-verify/routing-real.json。新增可复现实测 tests/llm-router-real.test.mjs：首次因 90 秒旋律预算超时而明确失败；移除重复 Schema 并将旋律总预算调整为低于客户端窗口的 180 秒后，最终 1/1 通过（70.4 秒）。最终证据在 temp/ticket-15-verify/temp/ticket-15-routing-real/evidence.json，包含实际模型 ID、Prompt 摘要版本与 token；未配置价格，费用为 null。复现时显式设置 SONGYU_LLM_ROUTING_REAL=1、SONGYU_LYRICS_MODEL、SONGYU_MELODY_MODEL、SONGYU_PERFORMANCE_MODEL，再运行 node --test tests/llm-router-real.test.mjs；至少两个模型 ID 必须不同且在当前供应商可用。
+- 未验收与交接：未运行声库/真实 PCM/90 秒 MP4、本轮前端 E2E、手机/Safari 或人工听感；后端 LLM 输出成功不代表演唱或页面闭环通过。P2-A 分段恢复/长歌正式导出及 P3 统一 MixGraph/自动化/响度与 True Peak 需要 Toge 对共享契约与统一音频适配明确确认；整单未完成，不迁入已完成目录，也不按本次局部成果开 PR。
+
+## 2026-11-07 · P1 逐音素与高级人声表现（真实引擎 WAV 对照）
+
+- 工单：[15 · 后端音乐制作升级 P1](../CC-Tasks/后端/15-p0.md)；契约变更：[CHANGELOG v0.4.0](../shared/contracts/CHANGELOG.md)；接入方法：[演唱调教](ARCHITECTURE.md#performance)与 [INTERFACES](INTERFACES.md)。Owner：Blacktea，分支 `feature/backend-p1-phoneme`（从最新 main `ed3c652` 建分支，P0 已快进合并 main），仅本地提交。
+- 审计结论（官方 OpenUtau 源码 bc194b6 + 本机声库 dsconfig/声码器配置逐项核对）：原生支持＝pitch/vibrato 全参、dyn、音素 offset 与替换、brec、voic、genc、velc、pexp、shfc；不支持＝ene、tenc（声库无 embed）、换气声、voiceColor（无子音色）、phonemeEnvelope（DiffSinger 无逐音素包络）。能力由 `GET /api/singing/qixuan` 的 `capabilities` 从声库配置实测解析报告，不硬编码。
+- 契约 v0.4.0：`overrides[]` 新增颤音六参（vibratoLength/Period/In/Out/Drift/VolLink）与 `phonemes` 逐音素覆盖（offsetMs ±300 换算 tick、phoneme 替换经声库四份词表交集预校验，非法渲染前明确报错）；`performance` 新增 `dynCurve`（替换自动 DYN，句尾衰减/收音由尾部点控制）与 `curves`（brec/voic/genc/velc/pexp/shfc，句首相对毫秒，范围外回落引擎默认）。velc/pexp 属渲染器建议表达，USTX 显式声明描述符。全部字段可选，旧工程免迁移，无新 HTTP 端点。
+- 验证：`npx tsc -b` 与 `npm run build` 通过；`npm test` 68/68（含新 `tests/p1-phoneme.test.ts` 9 项：Schema 边界、USTX 映射、精准失效、能力解析，及既有真实引擎回归）；`npm run test:e2e:mock` 2/2。
+- 真实引擎对照 `tests/qixuan-p1-real.test.mjs` 通过（本机绮萱 CPU runner，2.1 分钟）：基线 vs 十组参数全部独立缓存键、非静音、与基线 16 位 PCM 平均样本差 1127–1508（brec 1442、voic 1127、genc 1508、velc 1326、pexp 1295、shfc 1410、dynCurve 1176、vibrato 1196、音素偏移 1377、音素替换 1343）；替换音素 zh/ang 进入真实音素序列；非法音素渲染前拒绝；基线缓存命中稳定；无 pending 残留。
+- 边界与交接：未改 Toge 页面 / Hook / Mock / E2E；Mock 不返回 capabilities/phonemes/新调教字段。未做人工听感评审（客观 PCM 差异不代替听感）；DirectML 未重跑；P2-A / P2-B / P3 未提前实施。
 
 ## 2026-11-07 · 接口与可调数据清单文档
 

@@ -135,3 +135,24 @@ dotnet build scripts/openutau-bridge/SongyuBridge.csproj -p:OpenUtauDirectory="$
 配置及浏览器测试的历史覆盖见[后台记录](iteration-log.md#admin-engine)，绮萱 CPU/DirectML 与资源安装证据见[绮萱记录](iteration-log.md#qixuan)。当前联调准备见 [工单 4](../CC-Tasks/4-blacktea-integration.md)，共同验收见 [工单 6](../CC-Tasks/6-joint-acceptance.md)，未排期后台方向见 [工单 12](../CC-Tasks/12-admin-backlog.md)。
 
 后台媒体回归：`node scripts/verify-admin-media.mjs` 重放既有真实 WAV/MP4，只验证页面呈现与真实 FFmpeg 预览转码，不代表新模型生成；`ADMIN_MEDIA_INPUT` 指定含 pipeline.wav / pipeline.mp4 的目录。检查测试页播放器与下载、已解码视频帧及画面像素、窄屏滚动条隐藏。
+
+
+<a id="llm-routing"></a>
+
+## 按任务配置 LLM（工单 15 P2-B，后端接口）
+
+沿用本机 `PUT /api/admin/config`（JSON、同源与 `X-SONGYU-CSRF`），新增 `LLM_ROUTES` 字符串字段。值为任务路由对象的 JSON 字符串，总长上限 30000；以下是其解码后的示例，填写时用 `JSON.stringify(routes)`：
+
+```json
+{
+  "lyrics_planning": {"provider":"provider-a","baseUrl":"https://provider.example/v1","model":"lyrics-model","keyRef":"LLM_API_KEY","temperature":0.7},
+  "melody_composition": {"provider":"provider-b","baseUrl":"https://other.example/v1","model":"melody-model","keyRef":"MELODY_API_KEY","temperature":0.8,"systemPrompt":"保持自然的乐句呼吸。"},
+  "performance_planning": {"provider":"provider-a","baseUrl":"https://provider.example/v1","model":"performance-model","keyRef":"LLM_API_KEY","temperature":0.5,"inputPerMillion":1,"outputPerMillion":2}
+}
+```
+
+这是配置示例，不是可直接连接的供应商。省略某任务时沿用 LLM_BASE_URL / LLM_MODEL / LLM_API_KEY；清空为 `"{}"` 或空字符串恢复旧配置。`performance_planning` 只有显式配置时才参与自动制作。任务的输出 Schema 固定在对应服务中，不能通过后台降低校验要求。
+
+`keyRef` 只保存环境变量名称，不接受内嵌 apiKey/key/secret 等未知字段。默认 LLM_API_KEY 继续使用既有 Windows DPAPI 加密存储；其他命名密钥由进程环境配置，当前后台不能写入它们。任务路由自身不保存密钥值。URL 只接受无用户名、密码、查询串、片段的 HTTPS，或 loopback HTTP。错误配置原子拒绝，保留旧文件和旧环境。
+
+`GET /api/admin/llm` 查看路由、keyConfigured 与脱敏调用追溯；未配置单价时 cost/costCurrency 为 null。请求信封为 `{ "LLM_ROUTES": "{...}" }`；成功响应仍为既有配置快照（values/keyConfigured/keyMask/revision 等），非法字段、密钥内嵌或 URL 返回 400，配置写入期间有运行任务返回 409。后台现有连通检查检查 lyrics_planning 的有效模型与密钥引用；它只证明最小聊天调用可达，不表示三个任务已通过完整 Schema 校验。没有新增后台页面控件，Toge 可通过上述 API 接入；前端绝不能读取密钥引用对应的值。

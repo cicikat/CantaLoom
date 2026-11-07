@@ -10,10 +10,11 @@ export interface AudioResult extends MockTag {audioUrl:string;key:string}
 export interface InstrumentResult extends AudioResult {providerId:'fluidsynth';soundfont:string;sampleRate:24000;startSeconds:0;cached:boolean}
 export type Runner='CPU'|'DirectML';
 export interface VoiceParameters {steps:number;depth:number}
-export interface AvailableQixuan extends MockTag {available:true;id:string;version:string;providerId:'openutau-diffsinger';label:string;engineVersion:string;parameters:VoiceParameters;runners?:Runner[]}
+export interface QixuanCapabilities {curves:{brec:boolean;voic:boolean;genc:boolean;velc:boolean;pexp:boolean;shfc:boolean;ene:boolean;tenc:boolean};phonemeOverride:{offset:boolean;replace:boolean};unsupported:string[]}
+export interface AvailableQixuan extends MockTag {available:true;id:string;version:string;providerId:'openutau-diffsinger';label:string;engineVersion:string;parameters:VoiceParameters;runners?:Runner[];capabilities?:QixuanCapabilities}
 export type QixuanStatus=AvailableQixuan|({available:false;id:string;version:string;message:string}&MockTag);
 export interface QixuanInput {lyricId:string;lyrics:string;start:number;end:number;bpm:number;notes:RenderNote[];runner?:Runner;take?:number;engineVersion:string;performance?:Performance}
-export interface QixuanResult extends AudioResult {voiceId:string;voiceVersion:string;providerId:'openutau-diffsinger';engineVersion:string;renderParameters:VoiceParameters&{runner:Runner};take:number;isDemo:boolean;cached:boolean;startSeconds:number;durationSeconds:number;createdAt:string}
+export interface QixuanResult extends AudioResult {voiceId:string;voiceVersion:string;providerId:'openutau-diffsinger';engineVersion:string;renderParameters:VoiceParameters&{runner:Runner};take:number;isDemo:boolean;cached:boolean;startSeconds:number;durationSeconds:number;createdAt:string;phonemes?:string[]}
 export interface Engines extends MockTag {instruments:{installed:boolean;ready:boolean;soundfonts:string[];version?:string};singing:string}
 export interface ImportInput {wav:string;voice:{id:string;version:string;providerId:'openutau-exchange'|'diffsinger';label:string}}
 export interface ExportInput {wav:string;scenes:{png:string;duration:number}[];duration:number;lyrics:{text:string;start:number;end:number}[];style:'cinema'|'poster'|'minimal';title:string;singingCredit?:'demo'|'qixuan'|'external'}
