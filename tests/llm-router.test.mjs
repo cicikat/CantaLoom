@@ -40,8 +40,8 @@ test('bounded validation and transient retries; permanent failures and timeouts 
 });
 
 test('task configuration persists atomically, references encrypted default key and rejects unsafe URLs or embedded keys',async()=>{
- await mkdir(path.resolve('.local/ticket-15'),{recursive:true});
- const directory=await mkdtemp(path.resolve('.local/ticket-15/router-'));
+ await mkdir(path.resolve('temp/ticket-15'),{recursive:true});
+ const directory=await mkdtemp(path.resolve('temp/ticket-15/router-'));
  const env={},options={directory,env,protect:async s=>Buffer.from(s).toString('base64'),unprotect:async s=>Buffer.from(s,'base64').toString()};
  try{
   const route={provider:'fixture',baseUrl:'https://example.invalid/v1',model:'m',keyRef:'LLM_API_KEY'};
