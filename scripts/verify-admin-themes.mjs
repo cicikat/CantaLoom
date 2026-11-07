@@ -1,0 +1,15 @@
+import {chromium,expect} from '@playwright/test';
+import {mkdir} from 'node:fs/promises';
+import path from 'node:path';
+const output=path.resolve(process.env.ADMIN_THEME_OUTPUT||path.join(process.env.SONGYU_EXTERNAL_ROOT||path.resolve('../external'),'runtime/exports/admin-themes-20261107'));await mkdir(output,{recursive:true});
+const browser=await chromium.launch();const page=await browser.newPage({viewport:{width:1440,height:1000},reducedMotion:'reduce'});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+try{
+ await page.goto('http://127.0.0.1:3001/admin#overview');await page.waitForSelector('body[data-ready="true"]');await expect(page.locator('#theme-select')).toHaveValue('candy');const geometry={};
+ for(const theme of ['candy','aurora','pop']){await page.locator('#theme-select').selectOption(theme);await expect(page.locator('body')).toHaveAttribute('data-theme',theme);await page.screenshot({path:path.join(output,theme+'.png'),fullPage:true});geometry[theme]=await page.evaluate(()=>['aside','main','header','#overview','.cards'].map(selector=>{const r=document.querySelector(selector).getBoundingClientRect();return [selector,r.x,r.y,r.width,r.height]}));await page.reload();await expect(page.locator('#theme-select')).toHaveValue(theme)}
+ if(JSON.stringify(geometry.candy)!==JSON.stringify(geometry.aurora)||JSON.stringify(geometry.candy)!==JSON.stringify(geometry.pop))throw Error('Theme changed layout');
+ await page.locator('nav a[href="#config"]').click();await page.locator('input[name="LLM_MODEL"]').fill('unsaved-theme-check');await page.locator('#theme-select').selectOption('aurora');await expect(page.locator('input[name="LLM_MODEL"]')).toHaveValue('unsaved-theme-check');
+ for(const width of [390,320]){await page.setViewportSize({width,height:844});for(const theme of ['candy','aurora','pop']){await page.locator('#theme-select').selectOption(theme);if(!await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth))throw Error('Mobile overflow');await page.screenshot({path:path.join(output,theme+'-'+width+'.png'),fullPage:true});await page.locator('#nav-toggle').click();await expect(page.locator('#sidebar')).toBeVisible();await page.keyboard.press('Escape')}}
+ await page.evaluate(()=>localStorage.setItem('cantaloom-admin-theme','invalid'));await page.reload();await expect(page.locator('#theme-select')).toHaveValue('candy');
+ const blocked=await browser.newPage();await blocked.addInitScript(()=>Object.defineProperty(window,'localStorage',{get(){throw Error('blocked')}}));await blocked.goto('http://127.0.0.1:3001/admin');await blocked.waitForSelector('body[data-ready="true"]');await blocked.locator('#theme-select').selectOption('pop');await expect(blocked.locator('body')).toHaveAttribute('data-theme','pop');await blocked.close();
+ if(errors.length)throw Error(errors.join('; '));console.log('PASS: three palettes, default, persistence, invalid/blocked storage, unchanged layout, unsaved fields, 390/320px drawer');console.log(output);
+}finally{await browser.close()}
