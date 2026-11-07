@@ -4,6 +4,11 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+## 2026-11-07 · 本地历史工单纳入版本管理
+
+- 用户明确要求全部提交并推送合并。将工作区原有未追踪的 2.md / 3.md 原文保留，按现行命名收录为 [2 · 自由创作原方案](../CC-Tasks/2-free-composition-original.md)、[3 · 自动调教原方案](../CC-Tasks/3-auto-performance-original.md)，补充历史状态与当前工单入口；未改原方案内容，未宣称整体完成。
+- 更新 [README](../README.md#协作工单) 索引；旧日期下“当时未入库”的记录保留。纯文档检查链接与 git diff --check。
+
 ## 2026-11-07 · 后台测试页直接播放与内置浏览器 PV 兼容
 
 - 工单：[13 · 后台制作链路追加修正](../CC-Tasks/已完成/13-admin-pipeline.md)；说明：[引擎与后台](ENGINES.md#admin)。Owner：Blacktea，延续本地后端分支。

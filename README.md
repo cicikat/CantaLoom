@@ -81,7 +81,7 @@ npm start
 | 本轮文档合并 | [8 · 文档主题合并与历史归位](CC-Tasks/已完成/8-docs-consolidation.md) |
 | 后台双栏与链路测试 | [13 · 后台制作链路](CC-Tasks/已完成/13-admin-pipeline.md) |
 | 后台后续方向 | [12 · 后台与资源管理](CC-Tasks/12-admin-backlog.md)，待排期 |
-| 历史方案 | [1 · 动态旋律](CC-Tasks/1-dynamic-melody-and-performance.md)、[9 · 初始工作台](CC-Tasks/9-initial-workbench.md)、[10 · P2.1 后续建议](CC-Tasks/10-guided-composition.md)、[11 · 解耦迁移](CC-Tasks/11-frontend-backend-decoupling.md)；旧 2/3 未随仓库保存，不复用编号 |
+| 历史方案 | [1 · 动态旋律](CC-Tasks/1-dynamic-melody-and-performance.md)、[9 · 初始工作台](CC-Tasks/9-initial-workbench.md)、[10 · P2.1 后续建议](CC-Tasks/10-guided-composition.md)、[11 · 解耦迁移](CC-Tasks/11-frontend-backend-decoupling.md)；恢复的原文：[2 · 自由创作](CC-Tasks/2-free-composition-original.md)、[3 · 自动调教](CC-Tasks/3-auto-performance-original.md)，当前进度以工单 4/5/6 为准 |
 
 ## 文档与验证入口
 
