@@ -1,9 +1,9 @@
 let csrf='',loaded=false,busy=false;const $=s=>document.querySelector(s);const form=$('#settings');const labels={FFMPEG_PATH:'FFmpeg 可执行文件',FLUIDSYNTH_PATH:'FluidSynth 可执行文件',SONGYU_SOUNDFONT:'默认 SoundFont 文件名',DIFFSINGER_PYTHON:'DiffSinger Python',DIFFSINGER_DICTIONARY:'DiffSinger 音素词典',OPENUTAU_PATH:'OpenUtau 可执行文件（诊断用）'};
-const themeSelect=$('#theme-select'),themeKey='cantaloom-admin-theme';
-function applyTheme(value){const theme=['candy','aurora','pop'].includes(value)?value:'candy';document.body.dataset.theme=theme;themeSelect.value=theme;return theme}
+const themeToggle=$('#theme-toggle'),themeKey='cantaloom-admin-theme';
+function applyTheme(value){const theme=value==='black'?'black':'candy',label=theme==='black'?'切换到日间模式':'切换到夜间模式';document.body.dataset.theme=theme;themeToggle.setAttribute('aria-label',label);themeToggle.title=label;themeToggle.setAttribute('aria-pressed',String(theme==='black'));return theme}
 let storedTheme;try{storedTheme=localStorage.getItem(themeKey)}catch{}
 applyTheme(storedTheme);
-themeSelect.addEventListener('change',()=>{const theme=applyTheme(themeSelect.value);try{localStorage.setItem(themeKey,theme)}catch{}});
+themeToggle.addEventListener('click',()=>{const theme=applyTheme(document.body.dataset.theme==='black'?'candy':'black');try{localStorage.setItem(themeKey,theme)}catch{}});
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n};
 for(const [key,label] of Object.entries(labels)){const l=el('label',label),input=el('input');input.name=key;input.placeholder='留空使用引擎默认路径';input.autocomplete='off';l.append(input);$('#paths').append(l)}
 function notice(message,error=false){$('#notice').textContent=message;$('#notice').className=error?'error':'';const inline=$('#connection-result');if(inline){inline.textContent=message;inline.className=error?'error':'muted'}}

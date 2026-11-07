@@ -4,6 +4,12 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+## 2026-11-07 · 主题简化为糖果日间与纯黑夜间
+
+- 工单：[14 · 主题切换](../CC-Tasks/已完成/14-admin-themes.md)；说明：[后台](ENGINES.md#admin)。按用户新要求删除极光/贴纸主题及选择框，改为右上角月亮/太阳图标按钮，有标题、可访问名称和按下状态。
+- 糖果为默认日间；夜间背景、侧栏、面板为 #000，其他控件使用中性灰阶，无彩色渐变。保存图标切换结果，旧 aurora/pop 偏好回退日间。布局与精简文案保持。
+- `node scripts/verify-admin-themes.mjs` 通过：默认/图标切换/刷新保存/旧值与禁用存储回退、纯黑背景断言、日夜几何尺寸一致、未保存字段保留、320/390px 抽屉。已核对截图，git diff --check 通过；仅后台样式和交互改动，无引擎运行。截图：外部根目录 `runtime/exports/admin-themes-20261107/black.png`。
+
 ## 2026-11-07 · 后台三套主题与文案精简
 
 - 工单：[14 · 主题与文案](../CC-Tasks/已完成/14-admin-themes.md)；使用：[后台](ENGINES.md#admin)。Owner：Blacktea。参考用户本地管理面板原型的配色，原型原文保留不改。
