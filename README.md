@@ -2,8 +2,6 @@
 
 面向零音乐基础的本地音乐创作工作台：输入灵感或歌词，编曲、编辑、试听，由绮萱演唱并导出作品。仓库：[cicikat/CantaLoom](https://github.com/cicikat/CantaLoom)。
 
-协作直达：**[toge 的清单与收到的交接](#toge-tasks)** · **[红茶的清单](#blacktea-tasks)** · **[共同验收](CC-Tasks/6-joint-acceptance.md)**。
-
 <a id="launch"></a>
 
 ## 打开声屿
@@ -88,30 +86,21 @@ npm start
 
 ## 协作工单
 
-这里按接手人提供当前入口，具体进度与 checkbox 只在工单维护。规则见 [AGENTS 项目专属工作流](AGENTS.md#project-workflow)。
+本项目用 CC-Tasks/数字-任务简述.md 管理计划，checkbox 只在工单中更新；已完成工单归入 [CC-Tasks/已完成/](CC-Tasks/已完成/)，保留编号和文件名；完成记录写入 [docs/iteration-log.md](docs/iteration-log.md)，新记录在上，每条注明工单及相关文档地址。规则见 [AGENTS 项目专属工作流](AGENTS.md#project-workflow)。
 
-<a id="toge-tasks"></a>
-
-### toge · 前端与体验
-
-- **我的清单：[5 · 自由创作 Mock、页面与局部编辑](CC-Tasks/5-toge-free-creation.md)**。
-- **红茶交给我的材料：[工单 5 · 收到的交接](CC-Tasks/5-toge-free-creation.md#incoming-handoffs)**，已链接工单 15 的 P0 接口说明；接入范围与验收仍在工单 5 / 6 跟踪。
-
-<a id="blacktea-tasks"></a>
-
-### Blacktea（红茶）· 后端与音乐引擎
-
-- [4 · 接口交接与真实联调准备](CC-Tasks/4-blacktea-integration.md)：示例、实测工具、资源与联调环境。
-- [15 · 后端音乐制作升级及 P0 交接](CC-Tasks/后端/15-p0.md)：阶段安排及交给 toge 的接口材料。
-- [12 · 后台与资源管理](CC-Tasks/12-admin-backlog.md)：后续方向，待排期。
-
-### 双方共同验收
-
-[6 · 原型接线后的真实闭环与听感](CC-Tasks/6-joint-acceptance.md)。分别记录 Mock、真实引擎、页面和人工听感。
-
-交工单时，把材料链接登记到接收人的现有工单，并附所在分支与 commit / PR；具体格式见[工单交接与地址](docs/TEAM_WORKFLOW.md#task-handoff)。
-
-历史查阅统一从 [CC-Tasks 目录](CC-Tasks/)进入；已关闭工单在[已完成目录](CC-Tasks/已完成/)，完成过程与证据见[迭代日志](docs/iteration-log.md)。历史方案不在这里逐项展开，未明确关闭的原文仍保留原位置。
+| 谁 / 任务 | 应做清单与依赖 |
+|---|---|
+| Blacktea（红茶） | [4 · 接口交接与真实联调准备](CC-Tasks/4-blacktea-integration.md)：字段/示例、可移植实测工具、授权资源与联调环境 |
+| Blacktea（红茶） | [15 · 后端音乐制作升级](CC-Tasks/后端/15-p0.md)：P0 精细调声与单句重唱已完成并通过真实引擎验收，接口交接见工单；P1–P3 待排期 |
+| Toge（toge） | [5 · 自由创作 Mock、页面与局部编辑](CC-Tasks/5-toge-free-creation.md)：LOOP! 原型接线与 Mock 验证已完成；调教和混音控件待实施 |
+| 双方共同验收 | [6 · 原型接线后的真实闭环与听感](CC-Tasks/6-joint-acceptance.md)：依赖 4/5 就绪，分别记录 Mock、真实引擎、页面和人工听感 |
+| 前一轮工单整理 | [7 · 项目工作流整理](CC-Tasks/已完成/7-documentation-workflow.md)：已完成的范围与验证入口 |
+| 本轮文档合并 | [8 · 文档主题合并与历史归位](CC-Tasks/已完成/8-docs-consolidation.md) |
+| 日常使用入口 | [16 · 单一双击入口与准备状态](CC-Tasks/已完成/16-easy-launch.md)，已完成；实际资源配置仍依赖红茶工单 4 |
+| 后台主题 | [14 · 日夜切换与文案精简](CC-Tasks/已完成/14-admin-themes.md) |
+| 后台双栏与链路测试 | [13 · 后台制作链路](CC-Tasks/已完成/13-admin-pipeline.md) |
+| 后台后续方向 | [12 · 后台与资源管理](CC-Tasks/12-admin-backlog.md)，待排期 |
+| 历史方案 | [1 · 动态旋律](CC-Tasks/1-dynamic-melody-and-performance.md)、[9 · 初始工作台](CC-Tasks/9-initial-workbench.md)、[10 · P2.1 后续建议](CC-Tasks/10-guided-composition.md)、[11 · 解耦迁移](CC-Tasks/11-frontend-backend-decoupling.md)；恢复的原文：[2 · 自由创作](CC-Tasks/2-free-composition-original.md)、[3 · 自动调教](CC-Tasks/3-auto-performance-original.md)，当前进度以工单 4/5/6 为准 |
 
 ## 文档与验证入口
 
