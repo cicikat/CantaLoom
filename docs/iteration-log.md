@@ -4,6 +4,17 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+
+## 2026-11-07 · 工单 15 P2-B 后端任务路由；整单等待跨层确认
+
+- 工单：[15 · 后端音乐制作升级](../CC-Tasks/后端/15-p0.md)；接入：[架构任务路由](ARCHITECTURE.md#task-routing)、[后台路由配置](ENGINES.md#llm-routing)。Owner Blacktea，沿用 feature/backend-p1-phoneme。
+- 授权边界：用户要求继续整单后，明确选择「只实施后端，跨层改动等 Toge 确认」。保留 Kimi 未提交的长歌 server/shared/音乐核心和测试改动。本次独立提交仅包含后端任务路由、后端测试与文档；不提交 shared、src/model.ts、UI、Mock 或音频跨层适配，不推送、不提前创建 PR。
+- 实际实现：统一 lyrics_planning / melody_composition / performance_planning 路由，逐任务模型/URL/密钥引用/附加 System Prompt/温度/输出 Schema；旧 plan、compose、melody 调用接入。自动制作仅在显式配置表现路由时调用表现规划，保护锁定/手工内容，完整校验后原子应用。表现规划失败禁止通过单句 retry 绕过规划。Admin 配置原子保存，默认密钥继续 DPAPI；仅保存其他密钥的环境变量引用。新增本机 GET /api/admin/llm 查看脱敏路由与最近 100 次调用。
+- 失败、重试与费用：输出和临时 HTTP 错误受 2/3 次总调用次数及任务时间预算限制；永久 HTTP 错误/连接超时明确失败，无旧模板降级。输入歌词仅在 JSON 数据消息，错误/追溯不返回上游正文或密钥。未配置价格、失败调用或缺失 usage 时费用未知；配置价格时仅作 USD 估算，不视为供应商账单。
+- 验证：当前混合工作区 npm test（SONGYU_REAL_TESTS=0）82 项：79 通过、3 跳过、0 失败；独立暂存后端快照 75 项：72 通过、3 跳过、0 失败。跳过为两项真实歌声引擎测试和显式开关控制的真实路由测试。独立快照 npm run build 通过，仍有既有 Zod 注释与大 bundle 警告。新增 6 项路由/配置/失败保护测试包含真实 HTTP 夹具上的三个模型路由、受控重试、脱敏、DPAPI 配置边界与表现规划失败后拒绝单句重试；夹具不是实际供应商成功。
+- 真实 LLM：在独立后端快照使用现有本机加密配置，无永久修改配置；歌词规划 deepseek-v4.1-flash、旋律 deepseek-v4.1-flash-261017、表现规划 deepseek-v4.1-flash 均返回完整可校验输出，人工歌词未改写、音符未被表现规划修改。另一次选择 deepseek-v4-flash-0731 被上游拒绝，已验证明确失败且无回退。最初 smoke 证据位于本机 temp/ticket-15-verify/routing-real.json。新增可复现实测 tests/llm-router-real.test.mjs：首次因 90 秒旋律预算超时而明确失败；移除重复 Schema 并将旋律总预算调整为低于客户端窗口的 180 秒后，最终 1/1 通过（70.4 秒）。最终证据在 temp/ticket-15-verify/temp/ticket-15-routing-real/evidence.json，包含实际模型 ID、Prompt 摘要版本与 token；未配置价格，费用为 null。复现时显式设置 SONGYU_LLM_ROUTING_REAL=1、SONGYU_LYRICS_MODEL、SONGYU_MELODY_MODEL、SONGYU_PERFORMANCE_MODEL，再运行 node --test tests/llm-router-real.test.mjs；至少两个模型 ID 必须不同且在当前供应商可用。
+- 未验收与交接：未运行声库/真实 PCM/90 秒 MP4、本轮前端 E2E、手机/Safari 或人工听感；后端 LLM 输出成功不代表演唱或页面闭环通过。P2-A 分段恢复/长歌正式导出及 P3 统一 MixGraph/自动化/响度与 True Peak 需要 Toge 对共享契约与统一音频适配明确确认；整单未完成，不迁入已完成目录，也不按本次局部成果开 PR。
+
 ## 2026-11-07 · P1 逐音素与高级人声表现（真实引擎 WAV 对照）
 
 - 工单：[15 · 后端音乐制作升级 P1](../CC-Tasks/后端/15-p0.md)；契约变更：[CHANGELOG v0.4.0](../shared/contracts/CHANGELOG.md)；接入方法：[演唱调教](ARCHITECTURE.md#performance)与 [INTERFACES](INTERFACES.md)。Owner：Blacktea，分支 `feature/backend-p1-phoneme`（从最新 main `ed3c652` 建分支，P0 已快进合并 main），仅本地提交。

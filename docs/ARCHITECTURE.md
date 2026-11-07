@@ -238,3 +238,18 @@ Performance 支持 natural/soft/strong、Auto/Manual、人工 overrides/锁定�
 当前 Mock **未定义** compose / melody / production；上述接口返回404，不连接真实模型。新增 fixture 的来源标记、工程应用协议需双方确认，不能把 source=llm 的夹具记为实际 LLM 调用。后端与 Mock 可按团队流程分 PR，但必须明确未接入项。
 
 方法与边界见[自由创作](#composition)、[自动制作](#production)；真实历史执行与人工/网页验收缺口见 [v0.3.2 报告](iteration-log.md#v032)。
+
+
+<a id="task-routing"></a>
+
+## LLM 任务路由（工单 15 P2-B，后端）
+
+`server/services/llm-router.mjs` 统一发送三类任务。`lyrics_planning` 由旧 `/api/plan` 和 `/api/compose` 调用；`melody_composition` 由 `/api/melody` 及自由作曲调用；`performance_planning` 在自动制作中显式配置对应路由后调用。未配置表现路由的旧制作流程继续使用原本的规则调教；已配置后失败则制作失败，不回退规则，也不进入演唱。
+
+每个任务使用已有共享输出 Schema；表现规划的服务端包装 Schema 为 `{phrases:[{id,performance}]}`，Performance 复用共享定义。表现规划只提交可修改乐句的歌词、音符与 BPM，排除锁定句、锁定音符、手工或锁定调教；所有目标 ID 与覆盖索引先校验，完整结果一次应用。无新增创作 HTTP 端点或公共字段，页面、Mock、Client 不在本次后端改动中。
+
+本机配置与请求示例见 [引擎后台的路由配置](ENGINES.md#llm-routing)。系统规则和输出 Schema 放 system 消息，歌词与历史工程仅作为 JSON user 数据；任务附加 Prompt 不能替换运行时校验。每任务独立温度、模型、Base URL、密钥引用和附加 System Prompt。输出校验失败最多重试 2 次（旋律 3 次调用上限）；429/502/503/504 受同一上限约束并短暂退避，其他 HTTP 失败及连接超时立即失败。规划和表现规划总预算 90 秒，旋律总预算 180 秒（低于既有客户端 190 秒等待窗口）；重试不重置总预算。上游响应正文、异常详情和密钥不会进入错误或管理调用记录。
+
+`server/services/llm-router.d.mts` 提供 TaskRoute / TaskTrace / AdminLlmResponse 类型。`GET /api/admin/llm` 受原本机 Host/Origin 访问限制，返回有效路由及最近 100 次任务调用的脱敏记录：task/provider/model/promptVersion/attempts/promptTokens/completionTokens/milliseconds/state。Prompt 版本由任务、模板版本与最终系统 Prompt 的 SHA-256 摘要组成。记录只在当前进程内保留；没有共享工程追溯字段，不承诺工程导出保存这些记录。调用失败的费用保持未知；成功时只有配置输入/输出单价才计算 USD 估算，不视为供应商账单。失败前未返回 usage 的计费同样无法估算。
+
+取消及过期：本轮没有新增取消状态；HTTP 断开不保证停止已受理的上游任务。进程重启清空路由历史，制作任务仍遵循原有内存任务的 404 语义。Kimi 的长歌共享契约、分段恢复以及 P3 MixGraph/统一音频适配等待 Toge 确认，本轮后端路由提交不包含这些改动。实际测试和未完成交接见 [迭代日志](iteration-log.md)与[工单 15](../CC-Tasks/后端/15-p0.md)。
