@@ -344,7 +344,7 @@ test('LOOP keeps the prototype pieces in three chapters on desktop and phone and
  await expect(bench).toHaveAttribute('aria-hidden','true');await expect(say).toHaveAttribute('aria-hidden','true');await expect(benchStage).not.toHaveClass(/is-titled/);
  const into=(selector:string,share:number)=>page.evaluate(([s,k])=>{const a=document.querySelector(s as string)!;scrollTo(0,a.getBoundingClientRect().top+scrollY+(a.clientHeight-innerHeight)*(k as number))},[selector,share]);
  await into('.act-bench',.45);await expect(benchStage).toHaveClass(/is-covered/);await expect(benchStage).toHaveClass(/is-titled/);
- await into('.act-mv',.35);await expect(say).toHaveClass(/is-swapped/);
+ await into('.act-mv',.75);await expect(say).toHaveClass(/is-swapped/);
  await page.evaluate(()=>scrollTo(0,0));await expect(say).not.toHaveClass(/is-swapped/);await expect(benchStage).not.toHaveClass(/is-titled/);
  await expect(page.locator('.workspace-meta')).not.toBeVisible();await expect(page.locator('.engine-panel')).not.toBeVisible();await expect(page.locator('.transport')).toHaveCount(0);await expect(page.locator('.lyric').first().locator(':scope > button')).toHaveCount(1);
  await expect(page.getByRole('heading',{name:/敲一下.*变成一首歌/})).toBeVisible();await expect(page.locator('.hero .bigcard')).toBeVisible();await expect(page.locator('.creation-options')).not.toHaveAttribute('open');
@@ -352,6 +352,58 @@ test('LOOP keeps the prototype pieces in three chapters on desktop and phone and
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'temp/songyu-loop-restored-mobile.png',fullPage:true});
  const p=await openPiano(page);await page.getByRole('button',{name:'编辑第2句旋律',exact:true}).click();await expect(page.getByRole('region',{name:'单句钢琴卷帘'}).locator('.phrase-toolbar>b')).toHaveText(p.lyrics[1].text);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test('both chapter openers restore the original overlapping circles, timed title pop and full-screen hold',async({page})=>{
+ await page.goto('/');
+ for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
+  await page.setViewportSize(viewport);
+  for(const selector of ['.act-bench','.act-mv']){
+   const track=page.locator(selector),stage=track.locator('.act-stage');
+   const metrics=await track.evaluate(el=>{
+    const top=el.getBoundingClientRect().top+scrollY,h=innerHeight;
+    return {top,h,overlap:el.previousElementSibling!.getBoundingClientRect().bottom+scrollY-top};
+   });
+   expect(Math.abs(metrics.overlap-metrics.h)).toBeLessThanOrEqual(1);
+   await page.evaluate(y=>scrollTo(0,y),metrics.top);
+   await expect(stage).not.toHaveClass(/is-titled/);
+   expect(await page.evaluate(()=>!!document.elementFromPoint(innerWidth/2,innerHeight*.47)?.closest('.act'))).toBe(false);
+   await page.evaluate(y=>scrollTo(0,y),metrics.top+metrics.h*1.8*.2);
+   await expect.poll(()=>stage.evaluate(el=>parseFloat((el as HTMLElement).style.getPropertyValue('--p')))).toBeCloseTo(.2,2);
+   const ring=await stage.locator('.act-ring').first().evaluate(el=>{
+    const css=getComputedStyle(el),matrix=new DOMMatrixReadOnly(css.transform);
+    return {diameter:parseFloat(css.width),scale:matrix.d,y:matrix.f,p:parseFloat((el.parentElement as HTMLElement).style.getPropertyValue('--p'))};
+   });
+   const diameter=Math.max(viewport.width,viewport.height*.85)*1.5,e=ring.p/.24;
+   expect(ring.diameter).toBeCloseTo(diameter,0);
+   expect(ring.scale).toBeCloseTo(.55+.45*e,2);
+   expect(Math.abs(ring.y-e*(-viewport.height-.15*diameter))).toBeLessThan(1);
+   // Stop scrolling just after the threshold: the final letter must finish popping in on its own clock.
+   await page.evaluate(y=>scrollTo(0,y),metrics.top+metrics.h*1.8*.43);
+   await expect(stage).toHaveClass(/is-titled/);
+   const last=stage.locator(selector==='.act-bench'?'.bridge-blocks>span:last-child':'.say-lets');
+   await expect(last).toHaveCSS('opacity','1');
+   await expect(last).toHaveCSS('translate','0px');
+   await page.evaluate(y=>scrollTo(0,y),metrics.top+metrics.h*1.8*.5);
+   await expect(stage).toHaveClass(/is-covered/);
+   const pin=track.locator('xpath=following-sibling::*[1]');
+   await expect(pin).not.toHaveClass(/is-open/);
+   await page.evaluate(y=>scrollTo(0,y),metrics.top+metrics.h*1.8);
+   await expect(pin).not.toHaveClass(/is-open/);
+   expect(metrics.h*1.8*(1-.43)).toBeGreaterThan(metrics.h);
+   await page.evaluate(y=>scrollTo(0,y),metrics.top);
+   await expect(stage).not.toHaveClass(/is-titled/);
+  }
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ }
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.evaluate(()=>scrollTo(0,0));
+ for(const selector of ['.act-bench','.act-mv']){
+  await expect(page.locator(`${selector} .act-stage`)).toHaveCSS('position','relative');
+  await expect(page.locator(selector)).toHaveCSS('margin-top','0px');
+ }
+ await page.getByRole('button',{name:'音乐积木',exact:true}).click();
+ await expect(page.locator('.bench-pin')).toHaveClass(/is-open/);
 });
 
 test('C expression controls preserve notes and siblings, re-sing one line, recover history and honor locks',async({page})=>{

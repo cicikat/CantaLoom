@@ -69,22 +69,20 @@
    Each act is a tall track; its 100vh stage is pinned with sticky. The page after it lives in .act-pin, which pulls
    that page up under the stage and pins it there for the last --act-reveal of scrolling, so the curtain can be pulled
    down to uncover it in place. ChapterActs.tsx writes the per-frame transforms. Track lengths are tuned here. */
-:root{--act-bench-text:130vh;--act-bench-reveal:95vh;--act-mv-text:220vh;--act-mv-reveal:95vh;--bench:#ece7f8;--bench-line:#ddd4f3;--bench-line-strong:#cbbdee}
+:root{--act-bench-text:180vh;--act-bench-reveal:95vh;--act-mv-text:400vh;--act-mv-reveal:95vh;--bench:#ece7f8;--bench-line:#ddd4f3;--bench-line-strong:#cbbdee}
 /* The track overlaps the pinned page, so only the stage itself may catch clicks. */
-.act{position:relative;z-index:2;height:calc(100vh + var(--act-text) + var(--act-reveal));pointer-events:none}
+.act{position:relative;z-index:2;height:calc(100vh + var(--act-text) + var(--act-reveal));margin-top:-100vh;pointer-events:none}
 .act-bench{--act-text:var(--act-bench-text);--act-reveal:var(--act-bench-reveal)}
 .act-mv{--act-text:var(--act-mv-text);--act-reveal:var(--act-mv-reveal)}
-/* Each stage continues the page above it (dotted hero paper / workbench mat). The discs may rise over that page as
-   it scrolls away (the clip only cuts the bottom, where pulled curtains leave), but they catch no clicks until the
-   stage is pinned, so the page above stays fully usable. Once a disc covers the screen the paper is dropped and
-   clicks pass to whatever the disc uncovers when it is pulled away. */
-.act-stage{position:sticky;top:0;height:100vh;clip-path:inset(-100vh 0 0 0);pointer-events:auto;contain:layout style}
-.act-bench .act-stage{background:var(--off) radial-gradient(#d6d9ce 1px,transparent 1px) 0 0/24px 24px}
-.act-mv .act-stage{background-color:var(--bench);background-image:linear-gradient(var(--bench-line-strong) 1.5px,transparent 1.5px),linear-gradient(90deg,var(--bench-line-strong) 1.5px,transparent 1.5px),linear-gradient(var(--bench-line) 1px,transparent 1px),linear-gradient(90deg,var(--bench-line) 1px,transparent 1px);background-size:128px 128px,128px 128px,32px 32px,32px 32px}
-.act-stage.is-covered,.act-stage.is-filled{background:none;pointer-events:none}
-.act-ring{position:absolute;left:0;top:0;border:3px solid var(--ink);border-radius:50%;background:var(--c);box-shadow:0 -10px 0 rgba(32,33,35,.08);pointer-events:none;visibility:hidden;will-change:transform}
-.is-pinned>.act-ring{pointer-events:auto}
-.is-covered>.act-ring:not(.is-last),.is-filled>.act-ring{visibility:hidden!important}
+/* Restore the original overlap, ring radius, top anchor, linear rise and .06 stagger from 1f2c3d8.
+   The transparent stage lies over the last screen of the preceding chapter, without adding a paper screen. */
+.act-stage{position:sticky;top:0;height:100vh;overflow:hidden;pointer-events:none;contain:layout style}
+.act-ring{--s:calc(var(--i)*.06);--e:clamp(0,(var(--p,0) - var(--s))/.24,1);--R:calc(max(100vw,85dvh)*.75);position:absolute;left:50%;top:100%;width:calc(var(--R)*2);height:calc(var(--R)*2);margin-left:calc(var(--R)*-1);border:3px solid var(--ink);border-radius:50%;background:var(--c);transform-origin:50% 0;transform:translateY(calc(var(--e)*(-100dvh - 15%))) scale(calc(.55 + .45*var(--e)));will-change:transform}
+.is-covered>.act-ring{visibility:hidden}
+.bench-curtain{position:absolute;inset:0}
+.is-covered .bench-curtain{background:var(--violet);pointer-events:auto}
+.act-mv .is-covered .say-curtain{background:var(--yellow)}
+.is-covered .say-curtain{pointer-events:auto}
 .say-curtain{will-change:transform}
 .act-cast{position:absolute;left:0;right:0;bottom:100%;height:64px;background:linear-gradient(to top,rgba(32,33,35,.14),rgba(32,33,35,0));pointer-events:none}
 /* Sticky boxes never move into their parent's padding, so the extra pinned distance is a spacer after the page. */
@@ -95,16 +93,20 @@
 .act-pin>*{position:sticky;top:0}
 
 /* Act 1 · Music Blocks title on the violet front layer. */
-.act-title{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px;text-align:center}
+.act-title{--x:clamp(0,(var(--p,0) - .84)/.16,1);position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px;text-align:center;translate:0 calc(var(--x)*-10vh);scale:calc(1 - var(--x)*.08)}
 .bridge-kicker{margin:0;font-size:12px;font-weight:900;letter-spacing:2px;color:var(--off);background:var(--ink);padding:8px 14px;border-radius:6px}
 .bridge-word{margin:0;display:flex;flex-direction:column;align-items:center;gap:.1em;font-size:clamp(68px,11.5vw,176px);font-weight:1000;font-style:italic;line-height:.95;letter-spacing:-.04em}
 .bridge-music{display:flex;color:var(--off);-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:.045em .045em 0 var(--ink)}
 .bridge-music span{display:inline-block}
 .bridge-blocks{display:flex;gap:.1em;font-size:.6em}
 .bridge-blocks span{display:grid;place-items:center;width:1em;height:1em;border:3px solid var(--ink);border-radius:.16em;background:var(--c);box-shadow:.08em .08em 0 var(--ink);color:var(--ink);font-style:normal;letter-spacing:0;rotate:var(--r)}
+.bridge-word span span,.bridge-kicker,.bridge-steps,.bridge-hint{opacity:0;translate:0 .5em;scale:.5;transition:opacity .2s,translate .25s,scale .25s}
+.bridge-kicker,.bridge-steps,.bridge-hint{translate:0 14px;scale:1}
+.is-titled .bridge-word span span{opacity:1;translate:0 0;scale:1;transition:opacity .2s calc(var(--j)*45ms),translate .55s var(--bounce) calc(var(--j)*45ms),scale .55s var(--bounce) calc(var(--j)*45ms)}
+.is-titled .bridge-kicker,.is-titled .bridge-steps,.is-titled .bridge-hint{opacity:1;translate:0 0;transition:opacity .3s .25s,translate .5s var(--bounce) .25s}
 .bridge-steps{display:flex;gap:7px}
 .bridge-steps i{width:18px;height:18px;border:2px solid var(--ink);border-radius:4px;background:var(--off)}
-@media (prefers-reduced-motion:no-preference){.is-titled .bridge-steps i{animation:step-light 1.2s steps(1) infinite;animation-delay:calc(var(--k)*150ms)}}
+@media (prefers-reduced-motion:no-preference){.is-active .bridge-steps i{animation:step-light 1.2s steps(1) infinite;animation-delay:calc(var(--k)*150ms)}}
 .bridge-hint{margin:0;font-size:13px;font-weight:800;color:#2c2540}
 @keyframes step-light{0%{background:var(--yellow);translate:0 -3px}12.5%,100%{background:var(--off);translate:0 0}}
 
@@ -112,9 +114,11 @@
 .say-curtain{position:absolute;inset:0}
 .say-curtain>.act-cast{opacity:0}
 .is-filled .say-curtain>.act-cast{opacity:1}
-.say-block{position:absolute;left:0;top:0;border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink);background:var(--mint);pointer-events:auto}
+.say-block{position:absolute;left:0;top:0;border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink);background:var(--mint);pointer-events:none}
 .say-text{position:absolute;inset:0;margin:0;transform-origin:50% 47%;color:var(--ink);font-weight:1000;font-style:italic;line-height:1.12;letter-spacing:-.03em;white-space:nowrap}
 .say-lets,.say-phrase{position:absolute;left:0;top:0;display:block;width:max-content}
+.say-lets,.say-phrase,.say-block{opacity:0;translate:0 .5em;transition:opacity .2s,translate .25s}
+.is-titled .say-lets,.is-titled .say-phrase,.is-titled .say-block{opacity:1;translate:0 0;transition:opacity .3s .25s,translate .55s var(--bounce) .25s}
 .say-phrase{perspective:6em}
 .say-ch{display:inline-block;transform-origin:50% 60% -.35em;backface-visibility:hidden}
 .say-gap{display:inline-block;width:.28em}
@@ -228,9 +232,11 @@
 
 /* Reduced motion: each act is a still full-screen title page in normal flow; nothing is pinned or overlapped. */
 @media (prefers-reduced-motion:reduce){
- .act{height:auto}
+ .act{height:auto;margin-top:0}
  .act-stage{position:relative;clip-path:none}
  .act-pin{margin-top:0}
  .act-pin::after{display:none}
  .act-pin>*{position:relative}
+ .act-title{translate:none;scale:none}
+ .bridge-word span span,.bridge-kicker,.bridge-steps,.bridge-hint,.say-lets,.say-phrase,.say-block{opacity:1;translate:none;scale:none;transition:none}
 }

@@ -1,16 +1,15 @@
 import {memo,useEffect,useRef,type CSSProperties,type RefObject} from 'react';
-import {actProgress,cascade,coverRadius,easeBack,easeInOut,easeOut,lerp,ringFrame,span,stepSwap,swapTarget} from './chapter-motion';
+import {actProgress,cascade,easeInOut,easeOut,lerp,span,stepSwap,swapTarget} from './chapter-motion';
 
 // Two scroll "acts" sit between the three content chapters:
 //   hero → BenchAct ("Music Blocks") → workbench → MvAct ("Let's …") → MV theatre.
 // Each act is a tall track whose 100vh stage is pinned with position:sticky. The page right after it is wrapped in
 // `.act-pin`, which pins that page underneath the stage during the act's last stretch, so the curtain can be pulled
-// down to reveal it in place. Scroll position alone decides every frame (except the letter swap, which plays on its
-// own clock but is clamped by scroll), so scrolling back replays the act in reverse. Only transforms, opacity and the
+// down to reveal it in place. Scroll decides each phase; title pops and the letter swap finish on their own clocks,
+// so stopping the scroll never leaves a title half assembled. Scrolling back resets the opener. Only transforms, opacity and the
 // one text block's size change per frame; nothing in the content chapters is covered once its curtain is gone.
 
-/** Progress of an act (see actProgress) plus `top`, the stage's top edge in viewport pixels. */
-type Act={enter:number;text:number;reveal:number;lead:number;top:number};
+type Act=ReturnType<typeof actProgress>;
 interface Scene{measure():void;draw(act:Act|null,now:number):boolean}
 
 /** Writes a style value only when it changed, so idle scroll frames touch nothing. */
@@ -23,31 +22,18 @@ function writer(){
 type Put=ReturnType<typeof writer>;
 const move=(x:number,y:number)=>`translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0)`;
 
-/**
- * The discs of an act: each rises from below the bottom centre of the screen and grows until the last one covers
- * everything, so the eye always has a centre to follow. Positions are worked out in viewport pixels and shifted by
- * the stage's own top, so the discs rise steadily (over the page above) even while the stage is still scrolling in.
- * They only catch clicks once the stage is pinned (`is-pinned`), so the page above stays usable underneath.
- */
+/** Original 1f2c3d8 opener: the CSS owns the rings' geometry and title's timed pop, scroll only sets --p. */
 function discs(stage:HTMLElement,put:Put){
- const all=Array.from(stage.querySelectorAll<HTMLElement>(':scope>.act-ring'));let R=0;
  return {
-  get radius(){return R},
-  measure(W:number,H:number){R=coverRadius(W,H);all.forEach(d=>{d.style.width=d.style.height=`${(2*R).toFixed(1)}px`})},
-  /** `progress(i)` is disc i's 0–1 rise; `drop` pulls the last disc down like a curtain. Returns whether the last covers the screen. */
-  draw(W:number,H:number,top:number,progress:(i:number)=>number,drop=0){
-   let covered=false;
-   all.forEach((d,i)=>{
-    const t=progress(i),{x,y,scale}=ringFrame(t,W,H,R),last=i===all.length-1;if(last)covered=t>=1;
-    put(d,'transform',`translate3d(${(x-R).toFixed(1)}px,${(y-R-top+(last?drop:0)).toFixed(1)}px,0) scale(${scale.toFixed(4)})`);
-    put(d,'visibility',t>0?'visible':'hidden');
-   });
-   stage.classList.toggle('is-covered',covered);stage.classList.toggle('is-pinned',top<=.5);
-   return covered;
+  draw(p:number,reveal:number){
+   put(stage,'--p',p.toFixed(4));
+   stage.classList.toggle('is-covered',p>=.48);
+   stage.classList.toggle('is-titled',p>.42);
+   stage.classList.toggle('is-active',p>.42&&reveal<1);
   },
  };
 }
-const Discs=({colors}:{colors:readonly string[]})=><>{colors.map((c,i)=><span key={i} className={`act-ring${i===colors.length-1?' is-last':''}`} style={{'--c':c} as CSSProperties}/>)}</>;
+const Discs=({colors}:{colors:readonly string[]})=><>{colors.map((c,i)=><span key={i} className="act-ring" style={{'--i':i,'--c':c} as CSSProperties}/>)}</>;
 /** Length of the spacer that keeps a page pinned under its curtain (0 when reduced motion removes it). */
 function pinReveal(pin:HTMLElement){const after=getComputedStyle(pin,'::after');return after.display==='none'?0:parseFloat(after.height)||0}
 
@@ -58,7 +44,7 @@ function useScrollAct(trackRef:RefObject<HTMLDivElement|null>,build:(track:HTMLD
   if(!track||!stage||!pin?.classList.contains('act-pin'))return;
   const motion=matchMedia('(prefers-reduced-motion: reduce)'),scene=buildRef.current(track,stage,pin);
   let frame=0,reveal=0;
-  const read=():Act=>{const t=track.getBoundingClientRect();return {...actProgress(t.top,t.height,stage.offsetHeight,pin.getBoundingClientRect().top,reveal),top:stage.getBoundingClientRect().top}};
+  const read=():Act=>{const t=track.getBoundingClientRect();return actProgress(t.top,t.height,stage.offsetHeight,pin.getBoundingClientRect().top,reveal)};
   const tick=(now:number)=>{
    frame=0;const act=motion.matches?null:read();
    pin.classList.toggle('is-open',!act||act.reveal>=1);
@@ -89,45 +75,34 @@ export function chapterScrollTop(id:string){
  return Math.ceil(top(pin)+reveal+(el.getBoundingClientRect().top-page.getBoundingClientRect().top));
 }
 
-// ---------- Act 1 · Music Blocks: discs rise to the centre, then the violet one is pulled down off the workbench ----------
+// ---------- Act 1 · original Music Blocks opener, then the violet page pulls down off the workbench ----------
 const BLOCKS=[['B','var(--yellow)'],['l','var(--mint)'],['o','var(--orange)'],['c','var(--blue)'],['k','var(--off)'],['s','#f2b8d8']] as const;
 const DISCS_1=['var(--yellow)','var(--orange)','var(--mint)','var(--blue)','var(--violet)'] as const;
 
 export const BenchAct=memo(function BenchAct(){
  const track=useRef<HTMLDivElement>(null);
  useScrollAct(track,(_el,stage)=>{
-  const title=stage.querySelector<HTMLElement>('.act-title')!,word=stage.querySelector<HTMLElement>('.bridge-word')!;
-  const letters=Array.from(stage.querySelectorAll<HTMLElement>('.bridge-music>span')),tiles=Array.from(stage.querySelectorAll<HTMLElement>('.bridge-blocks>span'));
-  const fades=Array.from(stage.querySelectorAll<HTMLElement>('[data-at]'));
-  const put=writer(),ring=discs(stage,put);let W=0,H=0,em=0;
+  const curtain=stage.querySelector<HTMLElement>('.bench-curtain')!;
+  const put=writer(),ring=discs(stage,put);let H=0;
   return {
-   measure(){W=stage.clientWidth;H=stage.offsetHeight;ring.measure(W,H);em=parseFloat(getComputedStyle(word).fontSize)||100},
+   measure(){H=stage.offsetHeight},
    draw(act){
-    // `q` runs from the stage peeking in under the hero to the end of the title page; the hero itself is left alone.
-    const {lead:q,reveal:r,top}=act??{lead:.9,reveal:0,top:0};
-    // The violet disc is the curtain: pulled down, it uncovers the workbench behind a curved edge.
-    const drop=easeInOut(r)*(H/2+ring.radius+24);
-    ring.draw(W,H,top,i=>span(q,.04+i*.08,.3+i*.08),drop);
-    // The step lights only blink while the title page can be seen.
-    stage.classList.toggle('is-titled',q>.62&&r<1);
-    // Title rides the violet disc; it drifts up while held and sinks a little faster than the disc when pulled.
-    put(title,'transform',move(0,-span(q,.8,1)*H*.04+drop+easeInOut(r)*H*.06));
-    letters.forEach((ch,i)=>{const t=span(q,.58+i*.02,.7+i*.02),k=easeBack(t);put(ch,'transform',`translate3d(0,${((1-k)*em*.9).toFixed(1)}px,0) rotate(${((1-k)*(i%2?9:-9)).toFixed(1)}deg)`);put(ch,'opacity',Math.min(1,t*4).toFixed(3))});
-    // The tiles are tossed up from below one after another, spinning, and land with a bounce.
-    tiles.forEach((tile,j)=>{const t=span(q,.64+j*.022,.78+j*.022),k=easeBack(t,2.2);put(tile,'transform',`translate3d(0,${((1-k)*em*1.3).toFixed(1)}px,0) rotate(${((1-k)*(j%2?-40:40)).toFixed(1)}deg)`);put(tile,'opacity',Math.min(1,t*5).toFixed(3))});
-    fades.forEach(node=>{const at=Number(node.dataset.at),k=easeOut(span(q,at,at+.06));put(node,'opacity',k.toFixed(3));put(node,'transform',move(0,(1-k)*16))});
+    const {intro:p,reveal:r}=act??{intro:1,reveal:0};
+    ring.draw(p,r);
+    // Only the final pull-down is new; the original opener and one-screen hold stay intact.
+    put(curtain,'transform',move(0,easeInOut(r)*(H+120)));
     return false;
    },
   };
  });
  return <div className="act act-bench" ref={track} aria-hidden="true"><div className="act-stage">
   <Discs colors={DISCS_1}/>
-  <div className="act-title">
-   <p className="bridge-kicker" data-at=".6">CHAPTER 02 · 音乐积木工作台</p>
-   <p className="bridge-word"><span className="bridge-music">{Array.from('Music').map((ch,j)=><span key={j}>{ch}</span>)}</span><span className="bridge-blocks">{BLOCKS.map(([ch,color],j)=><span key={j} style={{'--c':color,'--r':`${j%2?5:-6}deg`} as CSSProperties}>{ch}</span>)}</span></p>
-   <span className="bridge-steps" data-at=".66">{Array.from({length:8},(_,k)=><i key={k} style={{'--k':k} as CSSProperties}/>)}</span>
-   <p className="bridge-hint" data-at=".72">↓ 继续往下，拉开幕布开始搭积木</p>
-  </div>
+  <div className="bench-curtain"><div className="act-title">
+   <p className="bridge-kicker">CHAPTER 02 · 音乐积木工作台</p>
+   <p className="bridge-word"><span className="bridge-music">{Array.from('Music').map((ch,j)=><span key={j} style={{'--j':j} as CSSProperties}>{ch}</span>)}</span><span className="bridge-blocks">{BLOCKS.map(([ch,color],j)=><span key={j} style={{'--j':j+5,'--c':color,'--r':`${j%2?5:-6}deg`} as CSSProperties}>{ch}</span>)}</span></p>
+   <span className="bridge-steps">{Array.from({length:8},(_,k)=><i key={k} style={{'--k':k} as CSSProperties}/>)}</span>
+   <p className="bridge-hint">↓ 继续往下，拉开幕布开始搭积木</p>
+  </div></div>
  </div></div>;
 });
 
@@ -150,7 +125,7 @@ const IN:Keyframe[]=[
 const SWAP_MS=1600,OUT_GAP=.045,OUT_LEN=.32,IN_AT=.12,IN_GAP=.04,IN_LEN=.44;
 const GAP=.3,PAD_X=.32,PAD_Y=.1;
 const MINT=[188,228,187],VIOLET=[187,164,248];
-const DISCS_2=['var(--violet)','var(--orange)','var(--mint)','var(--yellow)'] as const;
+const DISCS_2=['var(--violet)','var(--blue)','var(--orange)','var(--mint)','var(--yellow)'] as const;
 
 function Phrase({text}:{text:string}){
  return <span className="say-phrase">{Array.from(text).map((ch,i)=>ch===' '?<span key={i} className="say-gap"/>:<span key={i} className="say-ch">{ch}</span>)}</span>;
@@ -172,7 +147,7 @@ export const MvAct=memo(function MvAct(){
   let m=0,target:0|1=0,shown=-1,clock=0;
   return {
    measure(){
-    W=stage.clientWidth;H=stage.offsetHeight;ring.measure(W,H);
+    W=stage.clientWidth;H=stage.offsetHeight;
     text.style.fontSize='100px';
     // Everything is measured once at 100px and scaled, so text size never feeds back into the measurement.
     const l=lets.offsetWidth,b=to.offsetWidth,h=to.offsetHeight;
@@ -186,9 +161,8 @@ export const MvAct=memo(function MvAct(){
     const k=f/100;letsW=l*k;wB=b*k;lineH=h*k;edgeA=rawA.map(x=>x*k);edgeB=rawB.map(x=>x*k);shown=-1;
    },
    draw(act,now){
-    const live=!!act,{text:P,reveal:r,lead:q,top}=act??{text:.5,reveal:0,lead:1,top:0};
-    // Discs rise out of the workbench mat exactly like Act 1; the last (yellow) one is the backdrop for "Let's".
-    ring.draw(W,H,top,i=>span(q,.03+i*.06,.2+i*.06));
+    const live=!!act,{story:P,reveal:r,intro:q}=act??{story:.5,reveal:0,intro:1};
+    ring.draw(q,r);
     const dt=clock?Math.min(64,now-clock):16;
     const was=m;target=swapTarget(P,target,.4,.34);
     m=live?stepSwap(m,target,dt,SWAP_MS,P,[.3,.36],[.54,.62]):1;
@@ -199,10 +173,7 @@ export const MvAct=memo(function MvAct(){
      shown=m;
     }
     el.classList.toggle('is-swapped',m>=1);
-    // Once the yellow disc covers the screen, "Let's" and the block pop up on separate beats.
-    const letsIn=span(P,.1,.16),blockIn=span(P,.14,.2);
-    const letsLag=(1-easeBack(span(P,.1,.24)))*f*.9,blockLag=(1-easeBack(span(P,.14,.3)))*f*1.4;
-    put(lets,'opacity',letsIn.toFixed(3));[from,to,block].forEach(n=>put(n,'opacity',blockIn.toFixed(3)));
+    // The opener pops in on its own clock at the original .42 threshold, then holds before the phrase swap.
     // The block's right edge tracks the furthest letter still standing: old letters hold it until they roll away,
     // new ones push it out as they land, so the block stretches and shrinks in step with the swap (both ways).
     // Old letters: the furthest one still showing (a leaving letter slides the edge back to its neighbour).
@@ -224,9 +195,9 @@ export const MvAct=memo(function MvAct(){
      const space=.28*f,sentence=letsW+space+wB,lx0=(W-(letsW+GAP*f+bw))/2,lx1=(W-sentence)/2;
      lx=lerp(lx0,lx1,join);px=lerp(lx0+letsW+GAP*f+padX,lx1+letsW+space,join);ly=cy-lineH/2;by=cy-bh/2;wrap=[lx1-padX,by,sentence+2*padX,bh];
     }
-    put(lets,'transform',move(lx,ly+letsLag));
-    put(from,'transform',move(px,by+padY+blockLag));put(to,'transform',move(px,by+padY+blockLag));
-    const rest=[px-padX,by+blockLag,bw,bh],full=[-14,-14,W+28,H+28];
+    put(lets,'transform',move(lx,ly));
+    put(from,'transform',move(px,by+padY));put(to,'transform',move(px,by+padY));
+    const rest=[px-padX,by,bw,bh],full=[-14,-14,W+28,H+28];
     const [X,Y,BW,BH]=rest.map((v,i)=>lerp(lerp(v,wrap[i],join),full[i],ex));
     put(block,'transform',move(X,Y));
     put(block,'width',`${BW.toFixed(1)}px`);put(block,'height',`${BH.toFixed(1)}px`);

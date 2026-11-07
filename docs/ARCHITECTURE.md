@@ -55,8 +55,8 @@
 | 章节 | 结构与实现 |
 |---|---|
 | 1 · 首屏 `#compose` | 至少占满一屏。`HeroTitle` 给标题一份完整读屏文字，动画字母对读屏隐藏；`src/chapters.css` 用 `--beat` 节拍让左右元素交替入场，「变成一首歌！」逐字由旋转星星弹出并向右溅碎片 |
-| 2 · Music Blocks + 工作台 `#board` / `#lyrics` | `BenchAct`（`ChapterActs.tsx`）是首屏之后的一条高轨道，内部画面 sticky 固定：五个圆从底部中间升起长大、标题入场，最后紫圆作为幕布向下拉开（圆弧边）。工作台包在 `.bench-pin` 里，被拉到画面下方并在幕布拉开期间钉住不动 |
-| Let's 过渡 | `MvAct`：四个圆从工作台格纸上升起，黄圆盖满后「go together」逐字翻转成「make a music video」，色块随字母伸缩，再吞下整句、撑满全屏，作为幕布向下拉开，露出钉在 `.mv-pin` 里的 MV。圆在舞台钉住前可越过上一页但不拦点击 |
+| 2 · Music Blocks + 工作台 `#board` / `#lyrics` | `BenchAct`（`ChapterActs.tsx`）重叠首页最后一屏，复用 `1f2c3d8` 的五圆几何与 180vh 滚动行程；标题到 `.42` 后按原版 CSS 节拍自动弹出，停留约一屏后才向下拉开紫色页。工作台包在 `.bench-pin` 里，在幕布拉开期间钉住不动 |
+| Let's 过渡 | `MvAct`：复用同样的五圆入场、前一屏重叠与约一屏标题停顿，末色为黄；之后保留原有 220vh 文字编排，「go together」逐字翻转成「make a music video」，色块随字母伸缩，再吞下整句、撑满全屏、向下拉开，露出钉在 `.mv-pin` 里的 MV |
 | 3 · MV 放映页 `#pv` | 深色章节，含字幕走马灯、胶片框画面、播放条、字幕样式/换色/导出与说明；画面仍是 `Landscape` / `drawPV`，未改画面与导出代码 |
 
 两段过渡见[工单 29](../CC-Tasks/29-five-chapter-scroll-transitions.md)。每帧只读两条轨道的位置，再改少量元素的 transform / 透明度（色块尺寸除外），没变化就不写；纯计时函数在 `chapter-motion.ts`，有单元测试。过渡层 `aria-hidden`；幕布本身拦截点击，拉开后不留覆盖层。导航用 `chapterScrollTop()` 滚到幕布完全拉开的位置，键盘焦点进入被盖住的章节会直接跳过去。sticky 不进入父元素内边距，所以钉住距离用 `.act-pin::after` 占位块实现。

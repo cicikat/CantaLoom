@@ -13,26 +13,15 @@ export const easeBack=(t:number,s=1.6)=>t<=0?0:t>=1?1:1+(s+1)*(t-1)**3+s*(t-1)**
 /**
  * Progress through a scroll "act": a tall track whose 100vh stage is pinned with position:sticky,
  * followed by a pinned page whose curtain is pulled away during the last `reveal` pixels.
- * - enter: the stage rising from the bottom of the screen (0) to the top (1)
- * - text:  the pinned text page, 0–1
+ * - intro: original 280vh opener overlapping the preceding screen, leaving 180vh of scroll (0–1)
+ * - story: any additional text choreography after the original opener and its one-screen hold
  * - reveal: the curtain being pulled down over the pinned page underneath, 0–1
- * - lead:  enter and text as one run, 0 when the stage peeks in at the bottom and 1 when the text page ends
  */
 export function actProgress(trackTop:number,trackHeight:number,stageHeight:number,pinTop:number,reveal:number){
  const textLength=Math.max(1,trackHeight-stageHeight-reveal);
- return {enter:clamp(1-trackTop/stageHeight),text:clamp(-trackTop/textLength),reveal:reveal>0?clamp(-pinTop/reveal):pinTop<=0?1:0,lead:clamp((stageHeight-trackTop)/(stageHeight+textLength))};
+ const introLength=Math.min(textLength,stageHeight*1.8);
+ return {intro:clamp(-trackTop/introLength),story:clamp((-trackTop-introLength)/Math.max(1,textLength-introLength)),reveal:reveal>0?clamp(-pinTop/reveal):pinTop<=0?1:0};
 }
-
-/**
- * A disc rising from below the bottom centre of the screen and growing until it covers the whole screen.
- * Coordinates are viewport pixels; `radius` is the full-size radius, `t` 0–1.
- */
-export function ringFrame(t:number,width:number,height:number,radius:number){
- const e=easeInOut(t),scale=lerp(.45,1,e);
- return {x:width/2,y:lerp(height+radius*.45,height/2,e),scale};
-}
-/** Radius that covers the whole screen from its centre, plus the border. */
-export const coverRadius=(width:number,height:number)=>Math.hypot(width/2,height/2)+6;
 
 /** Scroll decides which phrase should show; the gap between `off` and `on` stops it from flickering at the edge. */
 export const swapTarget=(p:number,previous:0|1,on:number,off:number):0|1=>p>=on?1:p<=off?0:previous;
