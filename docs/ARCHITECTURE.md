@@ -197,10 +197,13 @@ Performance 可选 mode=auto/manual、energy、locked、overrides。旧 JSON 无
 - `restorePerformance`：恢复上一版；表达锁定后禁止自动覆盖。
 - overrides 用当前句的音符 index 指定参数；UI 调整音符顺序后须核对这些索引，不要把旧索引悄悄套到另一音符。
 - overrides[].pitch 是可保存、可编辑的单音符 Pitch 曲线（v0.3.3）：x=相对音符毫秒、y=十分之一半音、shape=io/i/o/l，2–64 个严格递增点；提供时替换该音符自动过渡点（snap_first=false），经 notePerformance 进入 USTX 与演唱依赖。清除曲线即恢复自动过渡。契约与兼容记录见 [CHANGELOG v0.3.3](../shared/contracts/CHANGELOG.md)。
+- v0.4.0 逐音符颤音全参（vibratoLength/Period/In/Out/Drift/VolLink）与逐音素覆盖 `overrides[].phonemes`（index=音素化结果序号；offsetMs 按 BPM 换算 tick；phoneme 替换发音，服务端按声库音素词表预校验，非法明确拒绝）。显式 0 位音素覆盖优先于旧 consonantMs 映射。
+- v0.4.0 句级表现曲线 `performance.curves`（brec 气声/voic 发声/genc 声线/velc 速度/pexp 音高表现力/shfc 音高偏移，点=句首相对毫秒×描述符整数，覆盖范围外回落引擎默认）与 `dynCurve`（提供时整体替换自动 DYN，句尾衰减/收音由尾部点控制）。velc/pexp 属渲染器建议表达，生成 USTX 时显式声明描述符；能力由 `GET /api/singing/qixuan` 的 capabilities 实测解析报告，不硬编码。
+- 不支持并如实标注：ene/tenc（声库无对应 embed）、换气声、voiceColor（无子音色）、phonemeEnvelope（DiffSinger 无逐音素包络）。契约不收这些字段，UI 不得出现假开关；绮萱以外声库接入时须重新审计。
 - 每次仅改变表达后只重唱该句，沿用现有 generateQixuan / applyVocalResult；不得重生成歌词/旋律。缓存含歌词、音符、表达解析版本与渲染修订。
 - `performancePlan(project)` 可导出实际逐音符规划和 DYN 曲线。此为确定性分析结果；工程持久化的是每句 Performance 与人工 overrides/history。
 
-使用真实支持的 USTX Pitch x=毫秒、y=十分之一半音、phoneme offset=按BPM换算的tick；大跳不强制连滑、长音延迟进入小颤音、休止后不提前辅音。没有伪造 breath/ENE 属性，未暴露未验证参数。
+使用真实支持的 USTX Pitch x=毫秒、y=十分之一半音、phoneme offset=按BPM换算的tick；大跳不强制连滑、长音延迟进入小颤音、休止后不提前辅音。v0.4.0 起暴露的表达参数逐一经真实 WAV 对照验证（tests/qixuan-p1-real.test.mjs），未支持的效果不进入契约。
 
 ### 分轨与混音
 

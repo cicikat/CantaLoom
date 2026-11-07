@@ -4,6 +4,15 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+## 2026-11-07 · P1 逐音素与高级人声表现（真实引擎 WAV 对照）
+
+- 工单：[15 · 后端音乐制作升级 P1](../CC-Tasks/后端/15-p0.md)；契约变更：[CHANGELOG v0.4.0](../shared/contracts/CHANGELOG.md)；接入方法：[演唱调教](ARCHITECTURE.md#performance)与 [INTERFACES](INTERFACES.md)。Owner：Blacktea，分支 `feature/backend-p1-phoneme`（基于未合并的 P0 分支），仅本地提交。
+- 审计结论（官方 OpenUtau 源码 bc194b6 + 本机声库 dsconfig/声码器配置逐项核对）：原生支持＝pitch/vibrato 全参、dyn、音素 offset 与替换、brec、voic、genc、velc、pexp、shfc；不支持＝ene、tenc（声库无 embed）、换气声、voiceColor（无子音色）、phonemeEnvelope（DiffSinger 无逐音素包络）。能力由 `GET /api/singing/qixuan` 的 `capabilities` 从声库配置实测解析报告，不硬编码。
+- 契约 v0.4.0：`overrides[]` 新增颤音六参（vibratoLength/Period/In/Out/Drift/VolLink）与 `phonemes` 逐音素覆盖（offsetMs ±300 换算 tick、phoneme 替换经声库四份词表交集预校验，非法渲染前明确报错）；`performance` 新增 `dynCurve`（替换自动 DYN，句尾衰减/收音由尾部点控制）与 `curves`（brec/voic/genc/velc/pexp/shfc，句首相对毫秒，范围外回落引擎默认）。velc/pexp 属渲染器建议表达，USTX 显式声明描述符。全部字段可选，旧工程免迁移，无新 HTTP 端点。
+- 验证：`npx tsc -b` 与 `npm run build` 通过；`npm test` 68/68（含新 `tests/p1-phoneme.test.ts` 9 项：Schema 边界、USTX 映射、精准失效、能力解析，及既有真实引擎回归）；`npm run test:e2e:mock` 2/2。
+- 真实引擎对照 `tests/qixuan-p1-real.test.mjs` 通过（本机绮萱 CPU runner，2.1 分钟）：基线 vs 十组参数全部独立缓存键、非静音、与基线 16 位 PCM 平均样本差 1127–1508（brec 1442、voic 1127、genc 1508、velc 1326、pexp 1295、shfc 1410、dynCurve 1176、vibrato 1196、音素偏移 1377、音素替换 1343）；替换音素 zh/ang 进入真实音素序列；非法音素渲染前拒绝；基线缓存命中稳定；无 pending 残留。
+- 边界与交接：未改 Toge 页面 / Hook / Mock / E2E；Mock 不返回 capabilities/phonemes/新调教字段。未做人工听感评审（客观 PCM 差异不代替听感）；DirectML 未重跑；P2-A / P2-B / P3 未提前实施。P0 分支仍未合并，本分支与其为堆叠关系，PR 需按顺序 review。
+
 ## 2026-11-07 · 接口与可调数据清单文档
 
 - 工单：支撑 [4 · 接口交接](../CC-Tasks/4-blacktea-integration.md)、[15 · P0 交接](../CC-Tasks/后端/15-p0.md)与 [5 · Toge 接入](../CC-Tasks/5-toge-free-creation.md)。新增 [INTERFACES.md](INTERFACES.md)：按原型接线视角汇总后端/音乐核心真实存在且设计上可调的数据（创作输入、Performance 与 v0.3.3 Pitch 曲线、旋律/歌词编辑函数、绮萱 runner/take、器乐 program/soundfont、mixSettings 与 stem、制作任务状态、导出署名），并列出不存在或不应暴露的开关与 Mock 缺口；README 与 ARCHITECTURE 同步索引。
