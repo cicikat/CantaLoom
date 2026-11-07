@@ -67,7 +67,7 @@ async function main(){
   console.log(`FFmpeg: ${health.ffmpeg?'ready':'unavailable (WAV and local creation still work)'}. LLM: ${health.llmStatus||'unverified'}.`);
   if(check){console.log('Startup check passed: built page, JavaScript asset and API respond successfully.');return;}
   if(!noOpen&&process.platform==='win32'){
-   const browser=spawn('rundll32.exe',['url.dll,FileProtocolHandler',url],{stdio:'ignore',windowsHide:true});
+   const browser=spawn('rundll32.exe',['url.dll,FileProtocolHandler',process.argv.includes('--admin')?url+'admin':url],{stdio:'ignore',windowsHide:true});
    browser.once('error',()=>console.log(`Open this address in your browser: ${url}`));
   }
   console.log('Keep this window open. Press Ctrl+C to stop the studio.');

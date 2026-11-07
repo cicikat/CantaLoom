@@ -1,3 +1,7 @@
+# 2026-11-07 管理启动与模型路由
+
+[工单 25](../CC-Tasks/已完成/25-admin-routing.md)；[使用说明](ENGINES.md#管理调试启动与路由)。新增管理启动 bat，三任务路由表单及独立 DPAPI 密钥保存。build 通过；管理与路由测试 12/12（含真实 Windows DPAPI）。未调用真实模型，未完成人工浏览器交互验收；无跨端交接。
+
 # SONGYU 迭代日志
 
 <a id="pr11-integration"></a>
