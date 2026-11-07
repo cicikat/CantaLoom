@@ -129,3 +129,5 @@ npm start
 背景为原创程序化 Canvas，没有 AI 生图调用；不训练模型，不分发第三方权重，公开作品须保留适用的歌声/技术署名。历史方案与测试数字在各日期记录中保留，不作为当前环境已通过的承诺。
 
 管理调试：双击 `start-admin.bat`，路由设置见 [管理调试启动与路由](docs/ENGINES.md#管理调试启动与路由)。本轮工单：[25](CC-Tasks/已完成/25-admin-routing.md)。
+
+资源台模型发现：[工单 26](CC-Tasks/已完成/26-admin-model-discovery.md)。
