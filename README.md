@@ -93,7 +93,11 @@ npm start
 | 谁 / 任务 | 应做清单与依赖 |
 |---|---|
 | Blacktea（红茶） | [4 · 接口交接与真实联调准备](CC-Tasks/4-blacktea-integration.md)：字段/示例、可移植实测工具、授权资源与联调环境 |
-| Blacktea（红茶） | [15 · 后端音乐制作升级](CC-Tasks/后端/15-p0.md)：P0 精细调声与单句重唱已完成并通过真实引擎验收，接口交接见工单；P1–P3 待排期 |
+| Blacktea（红茶） | [15 · 后端音乐制作升级](CC-Tasks/后端/15-p0.md)：P0 精细调声与单句重唱、P1 逐音素与高级人声表现已完成并通过真实引擎验收，接口交接见工单；P2-B 后端任务路由已实施并有不同模型 ID 的真实调用；P2-A / P3 跨层范围等待 Toge 确认，整单未完成 |
+| Blacktea（红茶） | [19 · 渲染音质与创作产物导出](CC-Tasks/后端/19-render-quality-and-artifacts.md)：48kHz 渲染、MIDI/USTX/分轨下载、导出响度归一与 LUFS 报告已实现并通过真实浏览器混音/MP4 回归；人工 DAW 与听感待验收 |
+| Blacktea（红茶） | [20 · 鼓组律动与演奏人性化](CC-Tasks/后端/20-groove-and-humanization.md)：自由鼓组 backbeat/fill 与动态已接核心，可选 swing/确定性人性化已在 MIDI/API 实施；页面选项与人工听评待验 |
+| Blacktea（红茶） | [21 · 和声、声部连接与拍号速度](CC-Tasks/后端/21-harmony-voice-leading-form.md)：契约提案待评审授权，依赖 15 P2-A 确认，待排期 |
+| Blacktea（红茶） | [22 · 制作后端治理](CC-Tasks/后端/22-backend-production-ops.md)：缓存配额、任务持久化、渲染并发池；领取工单 12 子任务，待排期 |
 | Toge（toge） | [5 · 自由创作 Mock、页面与局部编辑](CC-Tasks/5-toge-free-creation.md)：LOOP!、调教及现有混音路径已接线并通过 Mock；视觉核对及真实共同验收待完成 |
 | Toge（toge） | [23 · 首页三个视觉章节与竖屏版式](CC-Tasks/23-three-chapter-page.md)：入场动效、Music Blocks 过渡、MV 放映页与竖屏调整已实现并通过 Mock；待 toge 实际滚动核对 |
 | 双方共同验收 | [6 · 原型接线后的真实闭环与听感](CC-Tasks/6-joint-acceptance.md)：依赖 4/5 就绪，分别记录 Mock、真实引擎、页面和人工听感 |

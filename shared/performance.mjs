@@ -7,7 +7,13 @@ export function notePerformance(notes,index,bpm,input){
  const leap=previous?Math.abs(previous.midi-n.midi):0,legato=connected&&(input.mode!=='auto'||leap<=5);
  const delta=legato?Math.max(-50,Math.min(50,(previous.midi-n.midi)*10)):0;
  const custom=input.overrides?.find(n=>n.index===index)?.pitch,pitch=custom?{data:pitchCurveSchema.parse(custom),snap_first:false}:{data:[{x:-p.transitionMs,y:delta,shape:'io'},{x:Math.max(10,p.transitionMs*.7),y:0,shape:'io'}],snap_first:!!legato};
- return {pitch,vibrato:{length:n.duration*60/bpm>=.65?(input.mode==='auto'?Math.min(40,15+(n.duration*60/bpm-.65)*18):45):0,period:185,depth:p.vibratoDepth,in:25,out:35,shift:0,drift:0},phoneme_expressions:[],phoneme_overrides:p.consonantMs&&n.syllable!=='+'?[{index:0,offset:Math.round(p.consonantMs*bpm*480/60000)}]:[]};
+ // USTX vibrato: length/in/out are % of note length, period ms, depth cents, drift % of depth, vol_link % volume wobble. Defaults keep the pre-v0.4.0 automatic shape.
+ const seconds=n.duration*60/bpm,autoLength=seconds>=.65?(input.mode==='auto'?Math.min(40,15+(seconds-.65)*18):45):0;
+ const vibrato={length:p.vibratoLength??autoLength,period:p.vibratoPeriod??185,depth:p.vibratoDepth,in:p.vibratoIn??25,out:p.vibratoOut??35,shift:0,drift:p.vibratoDrift??0,vol_link:p.vibratoVolLink??0};
+ // Phoneme overrides: explicit per-phoneme edits (v0.4.0); legacy consonantMs still maps to phoneme 0 when no explicit edit targets it.
+ const edits=(p.phonemes??[]).map(e=>({index:e.index,...(e.offsetMs?{offset:Math.round(e.offsetMs*bpm*480/60000)}:{}),...(e.phoneme?{phoneme:e.phoneme}:{})})).filter(o=>o.offset||o.phoneme);
+ if(p.consonantMs&&n.syllable!=='+'&&!edits.some(o=>o.index===0))edits.unshift({index:0,offset:Math.round(p.consonantMs*bpm*480/60000)});
+ return {pitch,vibrato,phoneme_expressions:[],phoneme_overrides:edits.sort((a,b)=>a.index-b.index)};
 }
 export function plannedNote(notes,index,bpm,input){
  const base=resolvePerformance(input);if(input.mode!=='auto')return {...base,...input.overrides?.find(n=>n.index===index)};
@@ -17,7 +23,14 @@ export function plannedNote(notes,index,bpm,input){
  for(const name of ['transitionMs','vibratoDepth','dynamics','consonantMs'])if(input[name]!==undefined)auto[name]=input[name];
  return {...base,...auto,...input.overrides?.find(n=>n.index===index)};
 }
-export function performanceCurves(notes,start,end,input,bpm=120){const points=new Map([[0,resolvePerformance(input).dynamics]]);notes.forEach((n,i)=>{const p=plannedNote(notes,i,bpm,input);points.set(Math.round((n.beat-start)*480),p.dynamics);points.set(Math.round((n.beat+n.duration*.7-start)*480),p.dynamics-(i===notes.length-1?16:5))});points.set(Math.round((end-start)*480),resolvePerformance(input).dynamics-18);const sorted=[...points].sort((a,b)=>a[0]-b[0]);return [{abbr:'dyn',xs:sorted.map(p=>p[0]),ys:sorted.map(p=>p[1])}]}
+export function performanceCurves(notes,start,end,input,bpm=120){
+ // Manual dynCurve replaces the automatic DYN shape; engine-curve x is milliseconds from the phrase start, y integers in the descriptor range of each abbr. Outside the covered ticks OpenUtau uses the expression default.
+ const ms=x=>Math.round(x*bpm*480/60000),manual=(points)=>({xs:points.map(p=>ms(p.x)),ys:points.map(p=>Math.round(p.y))});
+ let dyn;
+ if(input.dynCurve)dyn={abbr:'dyn',...manual(input.dynCurve)};
+ else{const points=new Map([[0,resolvePerformance(input).dynamics]]);notes.forEach((n,i)=>{const p=plannedNote(notes,i,bpm,input);points.set(Math.round((n.beat-start)*480),p.dynamics);points.set(Math.round((n.beat+n.duration*.7-start)*480),p.dynamics-(i===notes.length-1?16:5))});points.set(Math.round((end-start)*480),resolvePerformance(input).dynamics-18);const sorted=[...points].sort((a,b)=>a[0]-b[0]);dyn={abbr:'dyn',xs:sorted.map(p=>p[0]),ys:sorted.map(p=>p[1])}}
+ return [dyn,...(input.curves??[]).map(c=>({abbr:c.abbr,...manual(c.points)}))];
+}
 
 export function automaticPhrase(text,notes,energy=.6,previous={preset:'natural'}){
  if(previous.locked)return previous;

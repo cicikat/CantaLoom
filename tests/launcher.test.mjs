@@ -1,10 +1,16 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,mkdir,writeFile} from 'node:fs/promises';
+import {mkdtemp,mkdir,writeFile,rm} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
 import {reuseStudio} from '../scripts/reuse-studio.mjs';
 
-test('launcher reuses only the same compiled app and respects check/no-open',async()=>{
- const directory=await mkdtemp('D:/vibe-coding_/temp/songyu-launcher-');await mkdir(directory+'/dist/assets',{recursive:true});
+test('launcher reuses only the same compiled app and respects check/no-open',async(t)=>{
+ const temporaryRoot=fileURLToPath(new URL('../temp/',import.meta.url));
+ await mkdir(temporaryRoot,{recursive:true});
+ const directory=await mkdtemp(path.join(temporaryRoot,'songyu-launcher-'));
+ t.after(()=>rm(directory,{recursive:true,force:true}));
+ await mkdir(directory+'/dist/assets',{recursive:true});
  const html='<title>声屿 SONGYU</title><div id="root"></div><script src="/assets/index-fixture.js"></script>',js='// launcher identity fixture';
  await writeFile(directory+'/dist/index.html',html);await writeFile(directory+'/dist/assets/index-fixture.js',js);
  let mode='current',opened=0;

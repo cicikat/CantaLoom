@@ -21,3 +21,5 @@ Owner：Toge（toge / Frontend / UX）。状态：页面实现与 Mock 回归完
 - [ ] toge 在电脑、手机实际滚动核对动效节奏、过渡停留时长与配色；如需调整节拍或停留距离，改 `src/chapters.css` 顶部的 `--beat` 与 ChapterBridge 的阈值。
 
 实现与验证记录见[迭代日志](../docs/iteration-log.md#three-chapter-page)，接线说明见[原型接线边界](../docs/ARCHITECTURE.md#prototype-frontend)。
+
+合并回执（2026-11-07）：用户确认保留三个章节设计，整合 main 的文档与启动器测试路径修复；本机 build、单元/接口及两组页面回归通过，详见[PR #11 整合记录](../docs/iteration-log.md#pr11-integration)。实机动效核对仍保留未完成状态。

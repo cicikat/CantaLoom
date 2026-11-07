@@ -1,5 +1,24 @@
 # 公共契约变更
 
+## 工单 20 · 确定性律动与器乐渲染参数（2026-11-07）
+
+- Owner Blacktea；依据用户继续完成工单 20 的限定范围实施 shared/free-score、MIDI 和器乐输入；不修改 SongPlan、工程 Schema、Client、Mock、UI，不延伸到混音或旧模式重构。
+- InstrumentInput 新增可选 groove：projectId / trackId（1–150 字）、version（正整数）、swingTicks（0–120 整数）、timingTicks（0–20 整数）、velocityAmount（0–0.2）；后 3 项缺省为 0。480 tick/beat；偶数八分音符（beat 的 .5 位置）后移 swingTicks；非鼓器乐 timing/velocity 使用稳定 tuple + 参数种子，不移动工程 beat。vocal 不应用。新增可选 locked / manuallyEdited 及 notes[].locked：任一保护即整轨不做渲染偏移，调用方必须透传真实保护状态。
+- MIDI 声明同步，groove 与保护标记经统一 instrumentInput 保留进入现有渲染 input hash；旧调用不带 groove 时 MIDI 保持原字节。算法 revision 独立进入缓存键（不伪造随机时间种子）。
+- 自由鼓组采用 2/4 backbeat、energy 分层、末小节 fill、交替踩镲力度；TAP 底鼓按原 16 格量化规则保留，补全关闭仅生成 TAP 底鼓。锁定/手写自由轨道返回原数据副本。旧模式已有 backbeat/TAP 语义，明确保持原实现。
+- 调用点：midiFile 与 InstrumentRenderer；当前 UI/浏览器和 production 不自动携带 groove，选项需后续按共享边界由 Toge 接线；不能把 API 可用写成页面已开放。
+- 测试 Owner Blacktea：实际 MIDI 事件、保护、确定性、缓存/真实 WAV 差异。Mock/UI Owner Toge，未代改；交接 20-groove-render，人工听评另验。
+
+
+## 工单 19 · 只读产物与响度（2026-11-07）
+
+- Owner Blacktea；按工单 19 明确范围实施，不修改 Client/UI/Mock。
+- GET `/api/artifacts/:file`：64 位小写十六进制 key + mid/ustx/wav；逐轨下载，无 zip 依赖。GET `/api/artifacts/:file/loudness` 仅接受 WAV，返回 ebur128 的 integratedLufs / truePeakDbtp；静音值为 null。缺失 404，测量不可用 503。
+- `/api/export` 保持 MP4 二进制响应，新增 `X-Songyu-Loudness` JSON 头（input/output/target）；output 为编码后 AAC 的实测值，允许编码误差，不伪称达标。
+- InstrumentResult.sampleRate 从 24000 升级 48000；声明同步，48kHz 缓存 revision=2（工单 20 后为 3）；旧工程不重写。后续用户明确要求工作区干净后推送合并，本次纳入已存在的 Mock sampleRate 单行兼容修正，仅对齐响应契约、不扩展 Mock 音频能力。
+- 测试：下载字节/路径隔离、真实渲染 WAV、FFmpeg 响度与 MP4；页面接入和人工听感另验。
+
+
 ## 2026-11-07 · A1 与 P0 合并兼容
 
 - 本轮按 toge「推送」授权整合已完成的工单 5 与 main；仅解决相邻声明冲突，同时保留 A1 的可选 mock 标记与 P0 的 PitchPoint / pitchCurveSchema 声明。没有新增字段、修改约束或扩展调用语义；既有两项授权和说明保留。
@@ -44,9 +63,24 @@
 
 2026-11-06 文档说明：下文 v0.3–v0.3.2 的授权是对应历史任务记录，不适用于新字段或新任务；本次只整理说明，未修改任何 Schema、类型、Client 或 Mock。现行流程见[团队工作流](../../docs/TEAM_WORKFLOW.md)，当前缺口见[Toge 工单](../../CC-Tasks/5-toge-free-creation.md)。
 
+## v0.4.0 逐音素与高级人声表现（工单 15 P1）
+
+- 状态：工单授权范围内实施，后端已推送，交付见 [PR #9](https://github.com/cicikat/CantaLoom/pull/9)（分支 `feature/backend-p1-phoneme`）；用户本轮明确要求直接合并，Toge 页面/Mock 接入另行 review。
+- 关联计划/任务与 Owner：[15 · 后端音乐制作升级 P1](../../CC-Tasks/后端/15-p0.md)，Owner Blacktea。工单交付清单明确「音素编辑：新增 PhonemeEdit 契约及能力查询」「调声/Pitch 编辑：扩展 Performance、Note 契约及应用函数」。
+- Frontend reviewer：toge（待 PR）；Backend reviewer：Blacktea。
+- 路径/Schema/字段：
+  - `shared/contracts/melody.mjs`：`performanceSchema.overrides[]` 新增可选 `vibratoLength`（0–100）、`vibratoPeriod`（5–500）、`vibratoIn` / `vibratoOut`（0–100，含默认合计 ≤100）、`vibratoDrift`（±100）、`vibratoVolLink`（±100）与 `phonemes`（`phonemeEditSchema`：index 0–15，`offsetMs` ±300 与 `phoneme` 1–20 字至少其一，每音符 ≤8 条且位置唯一）；`performanceSchema` 新增可选 `dynCurve`（2–64 点，x=句首相对毫秒，y=−240–120 即 0.1 dB）与 `curves`（`expressionCurveSchema`：abbr ∈ brec/voic/genc/velc/pexp/shfc，points 2–64 严格递增，y 限各描述符范围，abbr 唯一）。相邻 `.d.mts` 新增 `PhonemeEdit` / `CurvePoint` / `ExpressionAbbr` / `ExpressionCurve` 类型与 `phonemeEditSchema` / `dynCurveSchema` / `expressionCurveSchema` / `curveRanges` 声明。
+  - `shared/contracts/index.mjs`：`qixuanStatusSchema` 可用分支新增可选 `capabilities`（curves 八项布尔、phonemeOverride、unsupported 清单）；`qixuanResultSchema` 新增可选 `phonemes`（真实音素序列，桥接报告原有字段透传）。
+- 新增、删除或语义变更：仅新增可选字段。音素 offsetMs 按 BPM 换算 USTX tick；phoneme 替换经服务端按声库四份音素词表交集预校验，非法在渲染前明确报错。velc/pexp 为渲染器建议表达，生成 USTX 时显式写入描述符。`dynCurve` 提供时整体替换自动 DYN；各曲线覆盖范围外回落引擎默认值。ene/tenc/换气声/voiceColor/phonemeEnvelope 明确不支持，不进入契约。
+- 旧工程与旧调用方兼容方式：全部字段可选，旧 JSON 无需迁移；不含新字段的 Performance 生成的 USTX、依赖串与缓存键逐字节同 v0.3.3（单元回归锁定）。capabilities/phonemes 可选，旧客户端忽略。
+- 受影响的 UI / 服务 / Mock：`notePerformance` / `performanceCurves`（shared/performance.mjs）映射新参数；`server/services/qixuan.mjs` 解析声库能力、音素预校验与 USTX 描述符；无新 HTTP 端点。Mock 不返回 capabilities/phonemes/新调教字段，扩展归 toge。
+- Mock 示例提供人 / 实现人 / 待接入 PR：本任务提供真实请求/响应示例（见工单 P1 交接节）；Mock 与页面接入待 toge PR。
+- 契约与回归测试：`tests/p1-phoneme.test.ts`（Schema、USTX 映射、精准失效、能力解析）、`tests/qixuan-p1-real.test.mjs`（真实引擎十组参数 WAV 对照、非法音素拒绝）；既有 `tests/p0-tuning.test.ts` 与 `tests/qixuan-real.test.mjs` 保持通过。
+- 关联 PR：[PR #9](https://github.com/cicikat/CantaLoom/pull/9)，分支 `feature/backend-p1-phoneme` 已推送；P0（v0.3.3）已随 `ed3c652` 快进合并 main。
+
 ## v0.3.3 可编辑 Pitch 曲线（工单 15-p0）
 
-- 状态：工单授权范围内实施，后端已本地提交，待 toge PR review 确认。
+- 状态：工单授权范围内实施，已随 `ed3c652` 快进合并 main（2026-11-07）。
 - 关联计划/任务与 Owner：[15 · 后端音乐制作升级 P0](../../CC-Tasks/后端/15-p0.md)，Owner Blacktea。工单交付清单明确「调声/Pitch 编辑：扩展 Performance、Note 契约及应用函数」。
 - Frontend reviewer：toge（待 PR）；Backend reviewer：Blacktea。
 - 路径/Schema/字段：`shared/contracts/melody.mjs` 的 `performanceSchema.overrides[]` 新增可选 `pitch`；新增 `pitchPointSchema` / `pitchCurveSchema`；相邻 `.d.mts` 新增 `PitchPoint` 类型与两个常量声明。
@@ -55,7 +89,7 @@
 - 受影响的 UI / 服务 / Mock：USTX 渲染（`notePerformance` → server 绮萱与 `openUtauProject` 导出）、演唱依赖（`resolvePerformance` 自动包含 pitch）；无新 HTTP 端点，单句重唱复用 `POST /api/singing/qixuan/render`。Mock 当前不返回 pitch，扩展归 toge。
 - Mock 示例提供人 / 实现人 / 待接入 PR：本任务提供真实请求/响应示例（见工单交接节）；Mock 与页面接入待 toge PR。
 - 契约与回归测试：`tests/p0-tuning.test.ts`（Schema、USTX 映射、精准失效）、`tests/qixuan-real.test.mjs`（真实引擎缓存/PCM 差异）、`tests/browser/p0-resing.spec.ts`（真实混音验收）。
-- 关联 PR：本地分支 `feature/backend-p0-fine-tuning`（未推送）。
+- 关联 PR：分支 `feature/backend-p0-fine-tuning`，已快进合并 main（`ed3c652`）。
 
 ## v0.2.1
 

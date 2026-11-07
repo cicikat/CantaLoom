@@ -1,3 +1,5 @@
+import {performedNotes} from './groove.mjs';
+import {grooveSchema} from './contracts/groove.mjs';
 // Standard MIDI File type 1, 480 ticks per quarter. All positions are absolute beats.
 export const gmPrograms={drums:0,bass:33,guitar:24,keys:0,melody:80,vocal:53};
 const u32=n=>[(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255];
@@ -13,10 +15,10 @@ export function midiFile({bpm,tracks,endBeat=0}){
   const program=track.program??gmPrograms[track.kind];
   if(!Number.isInteger(program)||program<0||program>127)throw Error('Invalid GM program');
   // Separate simultaneous repetitions of the same pitch onto separate channels.
-  for(const n of [...track.notes].sort((a,b)=>a.beat-b.beat)){
+  if(track.groove)grooveSchema.parse(track.groove);
+  for(const {note:n,start,end,velocity} of performedNotes(track,endBeat)){
    if(!Number.isFinite(n.beat)||n.beat<0||!Number.isFinite(n.duration)||n.duration<=0||!Number.isInteger(n.midi)||n.midi<0||n.midi>127||!Number.isFinite(n.velocity)||n.velocity<0||n.velocity>1)throw Error('Invalid MIDI note');
    const pitch=track.kind==='drums'?({kick:36,snare:38,hat:42}[n.sound]??n.midi):n.midi;
-   const start=Math.round(n.beat*480),end=Math.max(start+1,Math.round((n.beat+n.duration)*480));
    let channel=9;
    if(track.kind!=='drums'){
     let lane=lanes.findIndex(l=>(l.get(pitch)??-1)<=start);
@@ -24,7 +26,7 @@ export function midiFile({bpm,tracks,endBeat=0}){
     lanes[lane].set(pitch,end);channel=lanes[lane].channel;
     if(channel===undefined){if(nextChannel===9)nextChannel++;if(nextChannel>15)throw Error('MIDI channel capacity exceeded; export individual tracks');channel=nextChannel++;lanes[lane].channel=channel;}
    }
-   events.push({tick:start,order:1,data:[0x90|channel,pitch,Math.max(1,Math.round(n.velocity*127))]},{tick:end,order:0,data:[0x80|channel,pitch,0]});
+   events.push({tick:start,order:1,data:[0x90|channel,pitch,Math.max(1,Math.round(velocity*127))]},{tick:end,order:0,data:[0x80|channel,pitch,0]});
   }
   const channels=track.kind==='drums'?[9]:lanes.map(l=>l.channel);
   const bytes=channels.flatMap(c=>[0,0xc0|c,program]);let cursor=0;

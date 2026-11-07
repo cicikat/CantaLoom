@@ -270,10 +270,13 @@ Performance 可选 mode=auto/manual、energy、locked、overrides。旧 JSON 无
 - `restorePerformance`：恢复上一版；表达锁定后禁止自动覆盖。
 - overrides 用当前句的音符 index 指定参数；UI 调整音符顺序后须核对这些索引，不要把旧索引悄悄套到另一音符。
 - overrides[].pitch 是可保存、可编辑的单音符 Pitch 曲线（v0.3.3）：x=相对音符毫秒、y=十分之一半音、shape=io/i/o/l，2–64 个严格递增点；提供时替换该音符自动过渡点（snap_first=false），经 notePerformance 进入 USTX 与演唱依赖。清除曲线即恢复自动过渡。契约与兼容记录见 [CHANGELOG v0.3.3](../shared/contracts/CHANGELOG.md)。
+- v0.4.0 逐音符颤音全参（vibratoLength/Period/In/Out/Drift/VolLink）与逐音素覆盖 `overrides[].phonemes`（index=音素化结果序号；offsetMs 按 BPM 换算 tick；phoneme 替换发音，服务端按声库音素词表预校验，非法明确拒绝）。显式 0 位音素覆盖优先于旧 consonantMs 映射。
+- v0.4.0 句级表现曲线 `performance.curves`（brec 气声/voic 发声/genc 声线/velc 速度/pexp 音高表现力/shfc 音高偏移，点=句首相对毫秒×描述符整数，覆盖范围外回落引擎默认）与 `dynCurve`（提供时整体替换自动 DYN，句尾衰减/收音由尾部点控制）。velc/pexp 属渲染器建议表达，生成 USTX 时显式声明描述符；能力由 `GET /api/singing/qixuan` 的 capabilities 实测解析报告，不硬编码。
+- 不支持并如实标注：ene/tenc（声库无对应 embed）、换气声、voiceColor（无子音色）、phonemeEnvelope（DiffSinger 无逐音素包络）。契约不收这些字段，UI 不得出现假开关；绮萱以外声库接入时须重新审计。
 - 每次仅改变表达后只重唱该句，沿用现有 generateQixuan / applyVocalResult；不得重生成歌词/旋律。缓存含歌词、音符、表达解析版本与渲染修订。
 - `performancePlan(project)` 可导出实际逐音符规划和 DYN 曲线。此为确定性分析结果；工程持久化的是每句 Performance 与人工 overrides/history。
 
-使用真实支持的 USTX Pitch x=毫秒、y=十分之一半音、phoneme offset=按BPM换算的tick；大跳不强制连滑、长音延迟进入小颤音、休止后不提前辅音。没有伪造 breath/ENE 属性，未暴露未验证参数。
+使用真实支持的 USTX Pitch x=毫秒、y=十分之一半音、phoneme offset=按BPM换算的tick；大跳不强制连滑、长音延迟进入小颤音、休止后不提前辅音。v0.4.0 起暴露的表达参数逐一经真实 WAV 对照验证（tests/qixuan-p1-real.test.mjs），未支持的效果不进入契约。
 
 ### 分轨与混音
 
@@ -316,3 +319,42 @@ Client 在解析前后检查顶层及已知嵌套 Mock 来源（project、compos
 A1 授权见[契约记录](../shared/contracts/CHANGELOG.md)，当前证据见[A1 迭代记录](iteration-log.md#a1-free-creation-mock)。浏览器回归输出统一放在项目根目录的 `temp/`：`npm run test:e2e:mock -- --output=./temp/songyu-a1-mock-test-results`。本机备份放在根目录 `backup/`；两者均由 Git 忽略，不提交截图、下载临时文件或备份内容。旧仓库外产物的迁移与缺失项见[归位记录](iteration-log.md#project-local-artifacts)。此项只调整存放约定，未重新验证 Windows 下载文件占用问题。
 
 方法与边界见[自由创作](#composition)、[自动制作](#production)；真实历史执行与人工/网页验收缺口见 [v0.3.2 报告](iteration-log.md#v032)。
+
+
+<a id="task-routing"></a>
+
+## LLM 任务路由（工单 15 P2-B，后端）
+
+`server/services/llm-router.mjs` 统一发送三类任务。`lyrics_planning` 由旧 `/api/plan` 和 `/api/compose` 调用；`melody_composition` 由 `/api/melody` 及自由作曲调用；`performance_planning` 在自动制作中显式配置对应路由后调用。未配置表现路由的旧制作流程继续使用原本的规则调教；已配置后失败则制作失败，不回退规则，也不进入演唱。
+
+每个任务使用已有共享输出 Schema；表现规划的服务端包装 Schema 为 `{phrases:[{id,performance}]}`，Performance 复用共享定义。表现规划只提交可修改乐句的歌词、音符与 BPM，排除锁定句、锁定音符、手工或锁定调教；所有目标 ID 与覆盖索引先校验，完整结果一次应用。无新增创作 HTTP 端点或公共字段，页面、Mock、Client 不在本次后端改动中。
+
+本机配置与请求示例见 [引擎后台的路由配置](ENGINES.md#llm-routing)。系统规则和输出 Schema 放 system 消息，歌词与历史工程仅作为 JSON user 数据；任务附加 Prompt 不能替换运行时校验。每任务独立温度、模型、Base URL、密钥引用和附加 System Prompt。输出校验失败最多重试 2 次（旋律 3 次调用上限）；429/502/503/504 受同一上限约束并短暂退避，其他 HTTP 失败及连接超时立即失败。规划和表现规划总预算 90 秒，旋律总预算 180 秒（低于既有客户端 190 秒等待窗口）；重试不重置总预算。上游响应正文、异常详情和密钥不会进入错误或管理调用记录。
+
+`server/services/llm-router.d.mts` 提供 TaskRoute / TaskTrace / AdminLlmResponse 类型。`GET /api/admin/llm` 受原本机 Host/Origin 访问限制，返回有效路由及最近 100 次任务调用的脱敏记录：task/provider/model/promptVersion/attempts/promptTokens/completionTokens/milliseconds/state。Prompt 版本由任务、模板版本与最终系统 Prompt 的 SHA-256 摘要组成。记录只在当前进程内保留；没有共享工程追溯字段，不承诺工程导出保存这些记录。调用失败的费用保持未知；成功时只有配置输入/输出单价才计算 USD 估算，不视为供应商账单。失败前未返回 usage 的计费同样无法估算。
+
+取消及过期：本轮没有新增取消状态；HTTP 断开不保证停止已受理的上游任务。进程重启清空路由历史，制作任务仍遵循原有内存任务的 404 语义。Kimi 的长歌共享契约、分段恢复以及 P3 MixGraph/统一音频适配等待 Toge 确认，本轮后端路由提交不包含这些改动。实际测试和未完成交接见 [迭代日志](iteration-log.md)与[工单 15](../CC-Tasks/后端/15-p0.md)。
+
+
+### 创作产物与响度报告（工单 19）
+
+器乐新渲染为 48kHz / PCM s16，当前 revision=3（48kHz 为 revision=2，律动为 revision=3）使旧缓存自然失效；浏览器统一混音仍为现有 24kHz，因此本次不承诺最终 WAV 全链路 48kHz。位深保持 s16，未以缺少跨浏览器实测的 s24 替换稳定入口。
+
+已知资产 key 可通过 `GET /api/artifacts/{key}.mid`、`.ustx`、`.wav` 下载缓存原字节。MIDI 是对应器乐渲染轨道的工程，并非整曲聚合 MIDI；USTX 对应演唱缓存源工程。不存在返回 404，只接受 64 位小写十六进制 key 和后缀白名单。逐轨下载零新增依赖；zip 暂不提供。
+
+`GET /api/artifacts/{key}.wav/loudness` 只读调用 FFmpeg ebur128 返回 `{integratedLufs,truePeakDbtp}`，静音无穷值使用 null，测量不可用返回 503；不改变音频。调用方可按人声/器乐 key 分别查询，无需改变 production 任务契约。
+
+MP4 导出使用 loudnorm（I=-14 LUFS、TP=-1.5 dBTP、LRA=11），48kHz AAC 192k。响应保持 MP4 下载，`X-Songyu-Loudness` JSON 头给出 input、output 和 target；output 是解码最终 AAC 的 ebur128 实测值，目标 TP 是上限，不要求安静素材贴近上限。页面尚未展示报告，不改变浏览器混音算法。真实资源 smoke 命令为 `node scripts/verify-render-quality.mjs`，需要可用 FluidSynth、SoundFont、FFmpeg 与 Playwright Chromium；输出仅在 `temp/task19/`。
+
+
+<a id="groove-render"></a>
+
+### 鼓组与确定性渲染律动（工单 20）
+
+自由模式 `freeArrangement` 使用 `drumPattern` 生成 2/4 backbeat、分层踩镲和段落末小节 fill。energy 改变节奏密度、fill 复杂度与力度；TAP 底鼓落点保留，rhythmCompletion=false 仅生成录入 kick。旧模式维持既有风格/TAP 实现，旧工程不会被加载过程自动重写。
+
+`POST /api/instruments/render` 的可选 groove 示例：`{projectId:"project-1",trackId:"track-1",version:1,swingTicks:60,timingTicks:15,velocityAmount:0.08}`。MIDI 分辨率 480 tick/beat；swing 延后 .5 拍的事件，非鼓 timing/velocity 用 tuple+参数的纯伪随机数生成器，保持同输入 MIDI 字节一致。位置只在 MIDI 编码时偏移，工程 beat 不变；末端裁剪、非负 onset 和最小 1 tick 时值保障事件有效。
+
+调用方透传 locked / manuallyEdited / notes[].locked；任一保护禁用整轨 groove，后端在 hash 前去掉该 groove，保护轨道不会因开关改变缓存键。非保护参数和身份/版本进入缓存键，revision=3。缺省不传 groove 不应用任何额外渲染律动。现有页面/浏览器和 production 尚不传这些字段，API 选项可用不等于页面已接；不应只在服务端启用而让浏览器导出使用另一套节奏。接线须保持参数/保护标记在保存、预览和导出间一致。
+
+运行 `node --test tests/groove.test.mjs` 可验证事件流与真实 FluidSynth PCM/缓存（缺少引擎自动 skip）；`node scripts/verify-render-quality.mjs --free` 用本地规则自由编曲测试 Chromium 解码/统一混音与真实 MP4，非真实 LLM 创作和人工听评。
