@@ -4,6 +4,10 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+## 2026-11-07 · 后台浏览器测试随导航更新
+
+- 工单：[13 · 后台管理](../CC-Tasks/已完成/13-admin-pipeline.md)。用户明确授权仅更新后台管理测试。将 tests/browser/admin.spec.ts 的旧标题、单页配置/资源操作更新为当前侧栏导航，补窄屏抽屉的打开与选中后收起检查；不修改其他前端 E2E 或正式 UI。`npm run test:e2e -- tests/browser/admin.spec.ts` 1/1 通过。
+
 ## 2026-11-07 · 本地历史工单纳入版本管理
 
 - 用户明确要求全部提交并推送合并。将工作区原有未追踪的 2.md / 3.md 原文保留，按现行命名收录为 [2 · 自由创作原方案](../CC-Tasks/2-free-composition-original.md)、[3 · 自动调教原方案](../CC-Tasks/3-auto-performance-original.md)，补充历史状态与当前工单入口；未改原方案内容，未宣称整体完成。
