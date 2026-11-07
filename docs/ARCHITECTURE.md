@@ -298,6 +298,6 @@ Client 在解析前后检查顶层及已知嵌套 Mock 来源（project、compos
 
 默认 Mock 制作阶段由轮询推进固定测试状态，不是实际引擎进度。测试可用 `createMockRequest(scenario)` 从 src/api/mock.ts 建立独立 transport；scenario 为 success / planning-failure / singing-failure / lost，不向公共请求加测试字段。歌声失败保留已完成测试音，逐句 retry 可复用已有 composition / project；ready-for-mix 后仍须浏览器混音。伴奏使用既有浏览器 synth，歌声为显式 isDemo/mock 的本地 PCM 测试音；没有安装或调用 FluidSynth / 绮萱。部分音符锁定时，Mock 保留该句全部现有音符，不假装真实 LLM 续写；无法满足音乐约束的过密或无可唱字符歌词明确失败。
 
-A1 授权见[契约记录](../shared/contracts/CHANGELOG.md)，当前证据见[A1 迭代记录](iteration-log.md#a1-free-creation-mock)。Windows 浏览器回归建议将下载临时输出放在仓库外：`npm run test:e2e:mock -- --output=D:/vibe-coding_/temp/songyu-a1-mock-test-results`，避免 Vite 监视被占用的下载临时文件。
+A1 授权见[契约记录](../shared/contracts/CHANGELOG.md)，当前证据见[A1 迭代记录](iteration-log.md#a1-free-creation-mock)。浏览器回归输出统一放在项目根目录的 `temp/`：`npm run test:e2e:mock -- --output=./temp/songyu-a1-mock-test-results`。本机备份放在根目录 `backup/`；两者均由 Git 忽略，不提交截图、下载临时文件或备份内容。旧仓库外产物的迁移与缺失项见[归位记录](iteration-log.md#project-local-artifacts)。此项只调整存放约定，未重新验证 Windows 下载文件占用问题。
 
 方法与边界见[自由创作](#composition)、[自动制作](#production)；真实历史执行与人工/网页验收缺口见 [v0.3.2 报告](iteration-log.md#v032)。

@@ -4,6 +4,15 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+<a id="project-local-artifacts"></a>
+
+## 2026-11-07 · 临时产物与备份归入项目目录
+
+- 工单：[17 · 项目内临时产物与备份归位](../CC-Tasks/已完成/17-project-local-artifacts.md)；规则：[AGENTS](../AGENTS.md#project-workflow)，入口：[README](../README.md#架构与数据)，验证输出约定：[ARCHITECTURE](ARCHITECTURE.md#mock)。按 toge 要求，检查 11 月 6–7 日的全局 temp / backups，将确认属于 SONGYU 的现存产物移入项目根目录 `temp/`，本机备份使用 `backup/`。目录内容由 Git 忽略，保留本机文件。
+- 实际迁移 9 项、11 个文件、1,471,034 字节：`songyu-launcher-80IGB4/`、`songyu-launcher-iIvtH4/`、`songyu-push-merge-launch/`、`songyu-push-merge-mock/`，以及 `songyu-a2-desktop.png`、`songyu-a2-mobile.png`、`songyu-c-piano-desktop.png`、`songyu-c-piano-mobile.png`、`songyu-launch-setup.png`。均为 11 月 7 日产物；全局 backups 为空，没有发现 11 月 6 日的匹配项。迁移清单及逐文件 SHA-256 保留在本机 `temp/songyu-artifact-migration-2026-11-07.json`。
+- 迁移前后逐文件 SHA-256 一致，原路径已移走，未覆盖目标或删除数据；同盘移动未释放磁盘空间。需要回退时可按清单移回原路径。两个 push-merge 输出目录仅有 `.last-run.json`，不宣称包含完整报告。此前日志提到的 A1 / A2 / C / launch 其他测试输出目录当前未找到，没有补造产物。
+- 下方历史执行命令保留当时路径与结果；已迁移的四张 A2 / C 截图现位于本项目 `temp/` 同名文件，两个 push-merge 目录也位于本项目 `temp/`。这些路径变更不代表重跑历史验收。更新架构中的后续命令、README 和忽略规则；本轮仅检查迁移完整性、文档引用、Git 忽略规则及 diff，未运行构建、浏览器、真实模型或引擎，未推送远端。
+
 <a id="prototype-direction-correction"></a>
 
 ## 2026-11-07 · 纠正原型用途与前端接线方向
