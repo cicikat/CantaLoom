@@ -1,8 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {actProgress,cascade,easeBack,span,stepSwap,swapTarget} from '../src/components/chapter-motion';
+import {actProgress,cascade,easeBack,PHRASE_HOLD_MS,PHRASE_SWAP_MS,phraseFrame,span} from '../src/components/chapter-motion';
 
-// Ticket 29: the scroll acts are pure functions of scroll position, so these pin the timing contract.
+// Ticket 29: pin the scroll geometry and the entry-triggered phrase playback.
 const V=800,REVEAL=760,INTRO=V*1.8,TRACK=V+INTRO+REVEAL;
 
 test('original opener holds a full screen before the curtain reveals the pinned page',()=>{
@@ -12,23 +12,29 @@ test('original opener holds a full screen before the curtain reveals the pinned 
  const open=actProgress(-INTRO-380,TRACK,V,-380,REVEAL);assert.equal(open.intro,1);assert.equal(open.reveal,.5);
  assert.equal(actProgress(-4000,TRACK,V,-3080,REVEAL).reveal,1);
  const mvTrack=V+INTRO+V*2.2+REVEAL;
- assert.equal(actProgress(-INTRO,mvTrack,V,V*2.2,REVEAL).story,0,'phrase swap waits until the original hold finishes');
+ assert.equal(actProgress(-INTRO,mvTrack,V,V*2.2,REVEAL).story,0,'closing curtain waits until the original hold finishes');
  assert.equal(actProgress(-INTRO-V*1.1,mvTrack,V,V*1.1,REVEAL).story,.5);
  // Reduced motion removes the spacer: the page counts as uncovered once it reaches the top.
  assert.equal(actProgress(0,V,V,0,0).reveal,1);assert.equal(actProgress(0,V,V,10,0).reveal,0);
 });
 
-test('phrase target holds between the two thresholds so it cannot flicker',()=>{
- assert.equal(swapTarget(.25,0,.3,.22),0);assert.equal(swapTarget(.3,0,.3,.22),1);
- assert.equal(swapTarget(.25,1,.3,.22),1);assert.equal(swapTarget(.22,1,.3,.22),0);
+test('entering Lets plays the whole phrase swap while scroll stays still, then stops requesting frames',()=>{
+ const start=100;
+ assert.deepEqual(phraseFrame(.4,start,null),{startedAt:null,progress:0,running:false});
+ assert.deepEqual(phraseFrame(.5,start,null),{startedAt:start,progress:0,running:true});
+ assert.equal(phraseFrame(.5,start+PHRASE_HOLD_MS,start).progress,0,'first phrase has time to land');
+ assert.equal(phraseFrame(.5,start+PHRASE_HOLD_MS+PHRASE_SWAP_MS/2,start).progress,.5);
+ assert.deepEqual(phraseFrame(.5,start+PHRASE_HOLD_MS+PHRASE_SWAP_MS,start),{startedAt:start,progress:1,running:false});
 });
 
-test('swap clock moves both ways and scroll forces it at the ends',()=>{
- const ready:[number,number]=[.1,.16],done:[number,number]=[.5,.58];
- assert.equal(stepSwap(0,1,400,1600,.35,ready,done),.25);
- assert.equal(stepSwap(.5,0,400,1600,.2,ready,done),.25);
- assert.equal(stepSwap(0,1,16,1600,.6,ready,done),1,'a fast fling past the act still finishes the swap');
- assert.equal(stepSwap(1,0,16,1600,.05,ready,done),0,'scrolling far back resets it');
+test('small scrolls never restart playback; leaving resets it and skipping ahead settles it',()=>{
+ assert.equal(phraseFrame(.7,1200,100).startedAt,100);
+ assert.equal(phraseFrame(.4,1200,100).startedAt,100,'hysteresis holds near the entry threshold');
+ assert.deepEqual(phraseFrame(.3,1200,100),{startedAt:null,progress:0,running:false});
+ assert.equal(phraseFrame(.5,1300,null).startedAt,1300,'returning starts a fresh playback');
+ const skipped=phraseFrame(1,2000,100,true);
+ assert.equal(skipped.progress,1);assert.equal(skipped.running,false);
+ assert.equal(phraseFrame(1,2100,skipped.startedAt).progress,1,'coming back from the closing curtain keeps the finished phrase');
 });
 
 test('letters cascade in order and finish together with the swap',()=>{

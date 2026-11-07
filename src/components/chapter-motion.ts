@@ -1,5 +1,5 @@
 // Pure timing helpers for the scroll-driven chapter transitions (ChapterActs).
-// Every value is a function of scroll position, so scrolling back up replays the same frames in reverse.
+// Scroll drives the circles and curtains; entering Let's starts a self-running phrase animation.
 
 export const clamp=(v:number,lo=0,hi=1)=>Math.min(hi,Math.max(lo,v));
 /** 0 before `from`, 1 after `to`, linear in between. */
@@ -23,16 +23,16 @@ export function actProgress(trackTop:number,trackHeight:number,stageHeight:numbe
  return {intro:clamp(-trackTop/introLength),story:clamp((-trackTop-introLength)/Math.max(1,textLength-introLength)),reveal:reveal>0?clamp(-pinTop/reveal):pinTop<=0?1:0};
 }
 
-/** Scroll decides which phrase should show; the gap between `off` and `on` stops it from flickering at the edge. */
-export const swapTarget=(p:number,previous:0|1,on:number,off:number):0|1=>p>=on?1:p<=off?0:previous;
-
-/**
- * The phrase swap plays on its own clock so letters never freeze half blurred, but scroll keeps it honest:
- * before `ready` it is held at 0 and after `done` it is forced to 1, so a fast fling can't leave it behind.
- */
-export function stepSwap(m:number,target:0|1,dt:number,duration:number,p:number,ready:[number,number],done:[number,number]){
- const moved=target?Math.min(1,m+dt/duration):Math.max(0,m-dt/duration);
- return clamp(moved,span(p,done[0],done[1]),span(p,ready[0],ready[1]));
+export const PHRASE_HOLD_MS=1200,PHRASE_SWAP_MS=1600;
+/** Enter once, let the first phrase land, then finish the swap even with no more scroll events.
+ * Scrolling out resets it; a fast jump to the closing curtain settles it and leaves no animation loop behind. */
+export function phraseFrame(intro:number,now:number,startedAt:number|null,finish=false){
+ if(intro<=.34)return {startedAt:null,progress:0,running:false};
+ let start=startedAt??(intro>.42?now:null);
+ if(start===null)return {startedAt:null,progress:0,running:false};
+ if(finish)start=Math.min(start,now-PHRASE_HOLD_MS-PHRASE_SWAP_MS);
+ const progress=span(now-start,PHRASE_HOLD_MS,PHRASE_HOLD_MS+PHRASE_SWAP_MS);
+ return {startedAt:start,progress,running:progress<1};
 }
 
 /** Local 0–1 progress of letter `i` inside a staggered cascade that is `m` (0–1) of the way through. */

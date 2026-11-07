@@ -1,5 +1,5 @@
 import {memo,useEffect,useRef,type CSSProperties,type RefObject} from 'react';
-import {actProgress,cascade,easeInOut,easeOut,lerp,span,stepSwap,swapTarget} from './chapter-motion';
+import {actProgress,cascade,easeInOut,easeOut,lerp,phraseFrame,span} from './chapter-motion';
 
 // Two scroll "acts" sit between the three content chapters:
 //   hero → BenchAct ("Music Blocks") → workbench → MvAct ("Let's …") → MV theatre.
@@ -122,7 +122,7 @@ const IN:Keyframe[]=[
  {transform:'translateY(-.07em) rotateX(0deg) scale(.98)',opacity:1,filter:'blur(0px)',offset:.86,easing:'ease-in-out'},
  {transform:'translateY(0em) rotateX(0deg) scale(1)',opacity:1,filter:'blur(0px)'},
 ];
-const SWAP_MS=1600,OUT_GAP=.045,OUT_LEN=.32,IN_AT=.12,IN_GAP=.04,IN_LEN=.44;
+const OUT_GAP=.045,OUT_LEN=.32,IN_AT=.12,IN_GAP=.04,IN_LEN=.44;
 const GAP=.3,PAD_X=.32,PAD_Y=.1;
 const MINT=[188,228,187],VIOLET=[187,164,248];
 const DISCS_2=['var(--violet)','var(--blue)','var(--orange)','var(--mint)','var(--yellow)'] as const;
@@ -144,7 +144,7 @@ export const MvAct=memo(function MvAct(){
   const put=writer(),ring=discs(stage,put);
   const outChars=Array.from(from.querySelectorAll<HTMLElement>('.say-ch')),inChars=Array.from(to.querySelectorAll<HTMLElement>('.say-ch'));
   let W=0,H=0,f=100,stacked=false,letsW=0,wB=0,lineH=0,edgeA:number[]=[],edgeB:number[]=[];
-  let m=0,target:0|1=0,shown=-1,clock=0;
+  let startedAt:number|null=null,shown=-1;
   return {
    measure(){
     W=stage.clientWidth;H=stage.offsetHeight;
@@ -163,10 +163,9 @@ export const MvAct=memo(function MvAct(){
    draw(act,now){
     const live=!!act,{story:P,reveal:r,intro:q}=act??{story:.5,reveal:0,intro:1};
     ring.draw(q,r);
-    const dt=clock?Math.min(64,now-clock):16;
-    const was=m;target=swapTarget(P,target,.4,.34);
-    m=live?stepSwap(m,target,dt,SWAP_MS,P,[.3,.36],[.54,.62]):1;
-    const running=live&&m!==target&&m!==was;clock=running?now:0;
+    const playback=phraseFrame(q,now,startedAt,!live||P>=.66||r>0);
+    startedAt=playback.startedAt;
+    const m=playback.progress;
     if(m!==shown){
      outs.forEach((a,i)=>{a.currentTime=cascade(m,i,0,OUT_GAP,OUT_LEN,total)*1000});
      ins.forEach((a,j)=>{a.currentTime=cascade(m,j,IN_AT,IN_GAP,IN_LEN,total)*1000});
@@ -208,7 +207,7 @@ export const MvAct=memo(function MvAct(){
     put(curtain,'transform',move(0,easeInOut(r)*(H+120)));
     const h=live?span(m,.8,1)*(1-span(P,.62,.68)):0;
     put(hint,'opacity',h.toFixed(3));put(hint,'transform',move(0,(1-h)*12));
-    return running;
+    return live&&playback.running;
    },
    dispose(){[...outs,...ins].forEach(a=>a.cancel())},
   };

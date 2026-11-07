@@ -406,6 +406,47 @@ test('both chapter openers restore the original overlapping circles, timed title
  await expect(page.locator('.bench-pin')).toHaveClass(/is-open/);
 });
 
+test('Lets plays and completes its phrase animation after entry without further scrolling, then replays on return',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.goto('/');
+ const act=page.locator('.act-mv'),stage=act.locator('.act-stage'),block=stage.locator('.say-block');
+ const outgoing=stage.locator('.say-phrase').first().locator('.say-ch').first();
+ const incoming=stage.locator('.say-phrase').last().locator('.say-ch').last();
+ for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
+  await page.setViewportSize(viewport);
+  const top=await act.evaluate(el=>el.getBoundingClientRect().top+scrollY);
+  const enter=top+viewport.height*1.8*.5;
+  await page.evaluate(y=>scrollTo(0,y),top);
+  await expect(act).not.toHaveClass(/is-swapped/);
+  // One scroll enters the yellow page. No wheel/mouse/scroll calls until the whole phrase has finished.
+  await page.evaluate(y=>scrollTo(0,y),enter);
+  await expect(stage).toHaveClass(/is-titled/);
+  await expect(outgoing).toHaveCSS('opacity','1');
+  const initialWidth=await block.evaluate(el=>el.getBoundingClientRect().width),stoppedAt=await page.evaluate(()=>scrollY);
+  await expect(act).toHaveClass(/is-swapped/,{timeout:6000});
+  await expect(outgoing).toHaveCSS('opacity','0');await expect(incoming).toHaveCSS('opacity','1');
+  await expect(block).toHaveCSS('background-color','rgb(187, 164, 248)');
+  expect(await block.evaluate(el=>el.getBoundingClientRect().width)).toBeGreaterThan(initialWidth);
+  expect(await page.evaluate(()=>scrollY)).toBe(stoppedAt);
+  await expect(stage.locator('.say-hint')).toHaveCSS('opacity','1');
+  // Small movements within the page preserve the completed phrase; leaving and returning starts it again.
+  await page.evaluate(y=>scrollTo(0,y),enter+20);await expect(act).toHaveClass(/is-swapped/);
+  await page.evaluate(y=>scrollTo(0,y),top+viewport.height*1.8*.2);
+  await expect(act).not.toHaveClass(/is-swapped/);await expect(incoming).toHaveCSS('opacity','0');
+  await page.evaluate(y=>scrollTo(0,y),enter);
+  await expect(outgoing).toHaveCSS('opacity','1');
+  await expect(act).toHaveClass(/is-swapped/,{timeout:6000});
+  expect(Math.abs(await page.evaluate(()=>scrollY)-enter)).toBeLessThanOrEqual(1);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ }
+ await page.getByRole('navigation').getByRole('button',{name:'PV ✦',exact:true}).click();
+ await expect(page.locator('.mv-pin')).toHaveClass(/is-open/);
+ await expect(page.getByRole('region',{name:'歌词 PV',exact:true})).toBeInViewport({ratio:.5});
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await expect(act).toHaveClass(/is-swapped/);await expect(incoming).toHaveCSS('opacity','1');
+ expect(errors).toEqual([]);
+});
+
 test('C expression controls preserve notes and siblings, re-sing one line, recover history and honor locks',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  const before=await openPiano(page),row=page.locator('.qixuan-line').first(),panel=row.locator('.expression-panel');
