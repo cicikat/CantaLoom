@@ -4,6 +4,8 @@
 
 ## 开发入口与依赖
 
+日常使用从 [README 的双击入口](../README.md#launch) 进入。中文启动器复用既有 start.bat；开发命令与 Mock 留在开发说明，不要求使用者靠命令分辨原型与工作台。制作前准备检查只读资源配置，不代替真实引擎验收。
+
 需要 Node.js 22.12+，两人各自 clone 仓库并在根目录执行 `npm ci`。前端默认无需引擎：
 
 ```powershell
@@ -11,13 +13,19 @@ npm run dev:mock
 # http://127.0.0.1:5173，仅 Vite，不启动后端
 ```
 
-Mock 当前覆盖旧工作台；compose / melody / production 仍待扩展，不能把“已有 Mock”理解为新流程已经可用。后端独立运行 `npm run dev:backend`；不需要改 JSX，交付时仍按影响范围验证构建和相关测试。
+Mock 已覆盖旧工作台及 compose / melody / production 的 API 夹具、任务阶段和单句重试；工单 5 A2 已接通首页输入到试听，C 钢琴卷帘与指定句重作曲已接线，均通过 Mock 页面回归；真实页面闭环与人工听感仍待工单 6，不能把 Mock 通过理解为真实引擎验收。后端独立运行 `npm run dev:backend`；不需要改 JSX，交付时仍按影响范围验证构建和相关测试。
 
 真实联调：分别启动 `npm run dev:frontend` / `npm run dev:backend`，或同机 `npm run dev`。复制 `.env.development.example` 为 `.env.development.local`，配置 `VITE_API_PROXY_TARGET=http://127.0.0.1:3001`（或 SSH 本地转发端口）。不要在 `.env.local` 设置 Mock 开关覆盖团队模式。所有 `VITE_` 值对浏览器公开，禁止写密钥；后端端口/密钥放本机 `.env` 或加密后台配置。
 
 跨电脑优先 SSH 将队友公共 API 转发到自己的 loopback 端口。不修改后端 `127.0.0.1` 监听地址，不公开管理端口，不为联调解除 Host / Origin / CSRF / DPAPI 限制。后台只能直接访问后端本机地址，默认 `http://127.0.0.1:3001/admin`；Vite 不代理 `/api/admin`、`/admin`、`/admin-assets`。
 
 真实演唱需要已授权声库、声码器与 OpenUtau 桥接，器乐可选 FluidSynth，真实 MP4 需要 FFmpeg。第三方资源与密钥不进 Git。部分实测脚本仍有原机器绝对路径，按[Blacktea 工单 B2](../CC-Tasks/4-blacktea-integration.md)核对，不承诺环境变量能覆盖所有历史脚本。
+
+## 前端设计与实现边界
+
+以 `03_patchlab_playful.html` 的 LOOP! 视觉与交互为前端接线基础，保留原型的版式、积木操作、歌词卡片和 PV 入口。现有 React 四页工作台有可复用的工程、播放和 API 接线，但其存在或测试通过不构成替换原型设计的授权。技术框架和演示脚本需要调整，不等于需要重做视觉；涉及布局、导航或主流程替换时先向 toge 说明具体变化并确认，不能由 Agent 自行把原型降为参考、废弃或历史页面。
+
+当前入口已按 toge 本轮明确要求改为 LOOP! 单页并重新接线，见[原型接线边界](ARCHITECTURE.md#prototype-frontend)和[工单 5](../CC-Tasks/5-toge-free-creation.md)。历史“新页面”指当时四页接线；本轮已在 LOOP! 重跑 Mock、本地创作及失败保护，真实制作和人工听感仍须工单 6 验收。
 
 ## 文件所有权
 
@@ -35,6 +43,12 @@ Mock 当前覆盖旧工作台；compose / melody / production 仍待扩展，不
 
 目录和层间调用见 [ARCHITECTURE](ARCHITECTURE.md)，引擎/后台/资源见 [ENGINES](ENGINES.md)。这里维护所有权与协作规则，避免多份文档重复定义结构。
 
+## 跨端交接登记
+
+需要对方接手、确认或联调的事项，由发起方 Agent 在本轮提交前自动同步到根目录 [CROSS-END-HANDOFF.md](../CROSS-END-HANDOFF.md)，原工单只留交接 ID 和链接，checkbox 仍由原工单维护。对方填写确认范围与回执；共享契约仍按下节确认，登记不等于获得实施授权。
+
+交接正文不作为启动必读或自动上下文，只在相关任务中按工单号、接收方或模块检索。完成后将实际结果与证据写回原工单及迭代日志，再默认删除交接条目和索引行；需短暂保留时标注已完成、日期与证据，下一次整理移除。已确认但未实施/未验证的交接继续保留。
+
 ## 接口先行与 Mock 交接
 
 1. 需要新字段或改变含义时，先在[共享变更记录](../shared/contracts/CHANGELOG.md)写提案：Owner、字段/调用点、兼容方式、Mock/测试负责人、确认状态与关联任务/PR。
@@ -43,7 +57,7 @@ Mock 当前覆盖旧工作台；compose / melody / production 仍待扩展，不
 4. 默认一个 PR 同步运行时 `.mjs`、声明 `.d.mts`、Client、Mock 与契约测试。确需分两人 PR：先约定同一契约，后端 PR 明示“后端交付 / Mock与页面待接”，toge接入 PR 链接它；未联调前不宣称产品完成，不发布依赖未完成 Mock 的新入口。
 5. 新增可选字段优先；删除/改义字段提供旧工程与调用方迁移方案。新流程的结果应用与失败保护按 [API 说明](ARCHITECTURE.md#public-api)和交接执行。
 
-Mock 为浏览器内部 transport，不回落真实后端。测试音显式 isDemo/mock，任务状态不伪造真实推理；存档用 `songyu-mock-project-v1`，真实用 `songyu-project-v1`，Mock 工程/WAV 文件名带 .mock，PV 是 JSON 回执。真实模式拒绝 Mock 响应/歌声资产。新自由创作的 Mock 来源协议仍需确认，不能把 fixture 记为真实 LLM 成功。
+Mock 为浏览器内部 transport，不回落真实后端。测试音显式 isDemo/mock，任务状态不伪造真实推理；存档用 `songyu-mock-project-v1`，真实用 `songyu-project-v1`，Mock 工程/WAV 文件名带 .mock，PV 是 JSON 回执。真实模式拒绝 Mock 响应/歌声资产。新自由创作沿用 mock:true，工程记录为 local-rules / mock，具体限定授权与字段见契约变更记录；不能把 fixture 记为真实 LLM 成功。
 
 ## 分支、提交与 PR
 

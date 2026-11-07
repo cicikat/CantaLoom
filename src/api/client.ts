@@ -4,6 +4,7 @@ import {melodyRequestSchema,melodyResponseSchema,type MelodyRequest} from '../..
 import type {z} from 'zod';
 import * as c from '../../shared/contracts/index.mjs';
 import {mockRequest,mockMediaUrl} from './mock';
+import {hasMockData} from './provenance';
 
 export class ApiError extends Error {
  constructor(message:string,public status=0){super(message);this.name='ApiError'}
@@ -29,8 +30,13 @@ export function createApiClient({baseUrl='',mode='real',request=fetch,timeoutMs,
  }
  async function json<T>(path:string,schema:z.ZodType<T>,body?:unknown,timeout=15000,kind?:c.GenerationTask['kind']):Promise<T>{
   const {result,publish}=await send(path,body,timeout,kind);
-  try{const parsed=schema.parse(result);if(!mock&&(parsed as {mock?:boolean})?.mock)throw new ApiError('真实模式拒绝 Mock 响应');publish('succeeded');return parsed}
-  catch{const error=new ApiError('API 响应格式无效，当前工程已保留');publish('failed',error.message);throw error}
+  try{
+   if(!mock&&hasMockData(result))throw new ApiError('真实模式拒绝 Mock 响应，当前工程已保留');
+   const parsed=schema.parse(result);
+   if(!mock&&hasMockData(parsed))throw new ApiError('真实模式拒绝 Mock 响应，当前工程已保留');
+   if(mock&&/^\/api\/(compose|melody|production)(\/|$)/.test(path)&&!(parsed as {mock?:true})?.mock)throw new ApiError('Mock 响应缺少测试标记，当前工程已保留');
+   publish('succeeded');return parsed;
+  }catch(e){const error=e instanceof ApiError?e:new ApiError('API 响应格式无效，当前工程已保留');publish('failed',error.message);throw error}
  }
  return {
   mode,mock,

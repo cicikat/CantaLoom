@@ -8,11 +8,14 @@
 
 这是 Blacktea 与 Toge 的协作项目。以下规则覆盖全局中不适用于本项目的计划目录、日志和分支约定；数据安全与明确授权要求继续遵守。
 
+- **本项目内文档使用相对路径**：本项目需要推送到 main 共同合作，所有文档只写相对路径以避免地址报错；temp 和 backup 统一使用项目根目录下的 `temp/`、`backup/`。
 - **计划采用工单模式**，唯一目录为 [CC-Tasks/](CC-Tasks)，文件名为 数字-任务简略描述.md（例如 5-toge-free-creation.md），数字在前、描述清楚。新工单使用未占用且未在历史引用中使用过的编号，不复用已关闭或缺失的旧编号；不再在 docs/plans/ 新建本项目计划。
 - **已完成工单移入 CC-Tasks/已完成/**，保留原编号和文件名，迁移时同步修正内外引用；待实施、待排期与未明确关闭的历史工单保留在根目录。
 - 每张工单写明 Owner、状态、范围、依赖、应做 checkbox、验收与交接入口；完成一项及时更新该工单，不在导航或日志复制另一套 checkbox。
 - **唯一迭代日志是 [docs/iteration-log.md](docs/iteration-log.md)**，按日期倒序，新条目写在最上方。每条必须注明对应工单与相关文档的可点击地址，并写实际结果、验证边界、未完成交接；不再分散新增 ACCEPTANCE 或版本验收报告。
 - **docs 按主题组织**，文档入口统一挂在 [README](README.md#文档与验证入口)。同类说明合入已有文档；新的模块有独立说明价值时可新增文档，并同步 README 索引。计划放 CC-Tasks，历史过程、版本交接过程、审计与验收数字归入迭代日志。
+- **跨端交接自动登记**：工作中出现需要对方接手、确认或联调的事项，Agent 必须在本轮提交前同步写入根目录 [CROSS-END-HANDOFF.md](CROSS-END-HANDOFF.md)，并在原工单留下交接 ID；完成后先记录工单与迭代日志证据，再默认删除对应条目，需短暂保留时标注已完成、日期与证据。交接条目不构成跨区授权。
+- **交接正文按需读取**：CROSS-END-HANDOFF.md 不列为启动必读，不全文自动注入 Agent 上下文，也不在 AGENTS.md 复制待办；仅当前任务涉及跨端时按工单号/接收方/模块检索相关条目。
 - Blacktea 与 Toge 的各自清单，以及共同验收，从 [README 协作工单](README.md#协作工单)进入；稳定边界/联调/Git 规则见 [TEAM_WORKFLOW](docs/TEAM_WORKFLOW.md)。工单内容不是自动跨区授权。
 - 默认使用功能分支开发，已有任务沿用原分支。任务完成修改并通过必要验证后必须及时提交。不默认推送远端，只有用户提出推送时才推送，直接更新并合并 main，无需逐次确认或另开分支。
 
@@ -21,7 +24,7 @@
 先读 [团队工作流](docs/TEAM_WORKFLOW.md)和 README 索引的本人/共同工单；当前进度只在 CC-Tasks 对应工单维护 checkbox，旧工单须看状态与日期。没有明确 Owner 时先按当前任务范围工作，不接管另一人的区域。
 
 - **Blacktea（红茶） / Backend / Music Engine**：server、引擎桥接 scripts、音乐核心计算（含 `src/melody.ts`）、音频缓存、FFmpeg、后端测试。浏览器混音与跨层适配按团队工作流共同确认。
-- **toge / Frontend / UX**：App.tsx、components、hooks、\*Panel.tsx、CSS、钢琴卷帘与调教交互、前端 Mock、前端 E2E。红茶不得顺手改这些文件，不以修构建、优化架构或完善功能为由扩大范围。
+- **toge / Frontend / UX**：App.tsx、components、hooks、\*Panel.tsx、CSS、钢琴卷帘与调教交互、前端 Mock、前端 E2E。
 - 前端 Agent 同样不得自行改真实 LLM、作曲算法、声库、推理、服务端缓存和桥接器。
 - **共享边界**：shared、src/model.ts、src/api/client.ts 及跨层业务适配。先在 shared/contracts/CHANGELOG.md 写字段、兼容性、调用点和测试说明，经双方或 toge 明确授权后再改。具体授权必须关联任务/范围；历史工单授权不自动延伸到新任务，也不授权代改另一方 UI。
 - 开始、提交、推送前检查 git status / diff；只暂存本轮拥有的文件。保留其他人的未提交改动与工单，不执行全仓 git add、reset、clean、覆盖还原或强推。

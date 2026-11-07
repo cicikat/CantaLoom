@@ -4,6 +4,104 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+<a id="cross-end-handoff"></a>
+
+## 2026-11-07 · 根目录跨端交接与按需上下文
+
+- 工单：[18 · 跨端交接文档](../CC-Tasks/已完成/18-cross-end-handoff.md)；入口：[CROSS-END-HANDOFF.md](../CROSS-END-HANDOFF.md)；规则：[AGENTS](../AGENTS.md#project-workflow)、[团队工作流](TEAM_WORKFLOW.md#跨端交接登记)。按用户要求，在发现需对方接手/确认/联调时由 Agent 随本轮工作自动登记，原工单只留 ID 和链接；完成后将正式结果写回原工单/日志，默认删除交接项，必要时短暂标记已完成并附日期、证据。
+- 上下文边界：AGENTS 只保留短规则和入口；交接正文不列为启动必读、不全文自动注入，只在当前任务相关时按工单号/接收方/模块检索。当前登记工单 15 的 P1 review、P2-A 契约、P2-B 路由交付及 P3 MixGraph 四项，注明本地分支成果未在 main 发布；未把已完成的前端 Mock 工作重新列为缺口，也未给待确认跨层代码追加授权。
+- Git 与保全：本次文档任务从核对后的 origin/main 55d5810 建 feature/backend-cross-end-handoff；已有后端提交保留在本地 feature/backend-p1-phoneme（9718420）。17 个既有未提交文件保存在本地 stash 65cc8c0dc1ad9dd80eddf85a9add6bb4deb3a11b；另将原始字节、清单与补丁保存在 Git 忽略的 backup/cross-end-handoff-2026-11-07/，17/17 SHA-256 与封存前一致。stash/backup 仅在本机，不随 PR 上传。
+- 恢复入口：确认工作区干净后切回 feature/backend-p1-phoneme，再运行 git stash apply 65cc8c0dc1ad9dd80eddf85a9add6bb4deb3a11b；apply 保留 stash，便于核对。原始字节备份可用于核对 Git 行尾规范化差异。不要在文档分支直接应用长歌草稿，不自动删除 stash 或备份。
+- 验证：仅检查本轮 Markdown 的本地链接/锚点、文档一致性、Git diff 与文档提交范围；未运行构建、前端 E2E、LLM 或真实引擎，也未重宣称此前音频验收。本次按用户要求提交文档 PR，前一轮后端成果继续留在原分支，P2-A/P3 的跨端实施与整单验收仍待对方确认。
+
+<a id="loop-prototype-wiring"></a>
+
+## 2026-11-07 · 按 LOOP! 原型重做正式首页接线
+
+- 工单：[5 · 原型接线](../CC-Tasks/5-toge-free-creation.md)；接入：[架构](ARCHITECTURE.md#prototype-frontend)，入口：[README](../README.md#launch)，后续真实验收：[工单 6](../CC-Tasks/6-joint-acceptance.md)。toge 明确要求删掉当前接线，重新接入 `03_patchlab_playful.html`。App 替换四页工作台入口，main 停用 style.css / plan.css，patchlab.css 提取原型样式并补实际控件；HTML 保留原始设计和演示交互，横幅改为正式入口说明。未清空工程、清理历史源码、改后端/共享契约/音乐算法或重启已有服务。
+- 实际结果：首屏复用 useProduction 的主题/可选 1–8 行歌词、任务阶段、取消、失败保留、单句重试；四个主题按钮填意图。积木读取实际工程音轨，格子、静音、锁定、单轨试听、重做、拖动和 ↑↓ 写回工程；TAP 记录真实时间。歌词按实际数量展示，自由作品由卡片展开对应句 PianoRoll / usePhraseEditor，逐句演唱复用 QixuanPanel。PV Canvas、播放器、WAV/PV 导出共用现有时钟与链路；字幕样式/配色、工程导入/保存实际生效；dialog 支持 Escape 和焦点返回。原型随机换词、振荡器和独立字幕计时器未进入正式页。
+- 验证：`npm run build` 通过；`node --import tsx --test tests/core.test.ts tests/phrase-edit.test.ts tests/mock-free.test.ts tests/production-page.test.ts tests/api.test.ts tests/launcher.test.mjs` **29/29**；`npm run test:e2e:mock -- --output=temp/songyu-loop-final-mock` **26/26**；`npm run test:e2e -- tests/browser/launch.spec.ts tests/browser/plan.spec.ts tests/browser/studio.spec.ts --grep-invert FFmpeg --output=temp/songyu-loop-real-page` **10/10**。页面测试按新入口迁移，保留旧断言的工程/资产保护目标，新增排序保存、导入还原、真实 TAP、PV Canvas 与工程时间对照、对应卡片选句、手机布局与弹层焦点验证。末次将导出进度与结果提示放进模态弹层后，再次构建并定向回归本地创作/导出及 TAP/PV/焦点 2/2 通过，输出在 `temp/songyu-loop-dialog`。桌面/390px 截图位于 `temp/songyu-loop-home-desktop.png`、`temp/songyu-loop-home-mobile.png`，已检查。
+- 一次测试中 Windows 对 `.crdownload` 的文件锁触发 Vite EBUSY；最终页面验证在当前命令进程设置 `CHOKIDAR_USEPOLLING=true`，未改全局或项目配置。构建仍有依赖注释与较大 bundle 提示。真实模式测试包含本地 Web Audio PCM、WAV 及明确接口夹具，未调用真实 LLM / 绮萱 / FluidSynth、未运行真实 MP4 编码；Mock PV 是 JSON 回执。视觉确认、真实制作和人工听感未提前勾选，调教/混音控件仍是工单 5 后续。本轮仅本地提交，未推送。
+
+<a id="project-local-artifacts"></a>
+
+## 2026-11-07 · 临时产物与备份归入项目目录
+
+- 工单：[17 · 项目内临时产物与备份归位](../CC-Tasks/已完成/17-project-local-artifacts.md)；规则：[AGENTS](../AGENTS.md#project-workflow)，入口：[README](../README.md#架构与数据)，验证输出约定：[ARCHITECTURE](ARCHITECTURE.md#mock)。按 toge 要求，检查 11 月 6–7 日的全局 temp / backups，将确认属于 SONGYU 的现存产物移入项目根目录 `temp/`，本机备份使用 `backup/`。目录内容由 Git 忽略，保留本机文件。
+- 实际迁移 9 项、11 个文件、1,471,034 字节：`songyu-launcher-80IGB4/`、`songyu-launcher-iIvtH4/`、`songyu-push-merge-launch/`、`songyu-push-merge-mock/`，以及 `songyu-a2-desktop.png`、`songyu-a2-mobile.png`、`songyu-c-piano-desktop.png`、`songyu-c-piano-mobile.png`、`songyu-launch-setup.png`。均为 11 月 7 日产物；全局 backups 为空，没有发现 11 月 6 日的匹配项。迁移清单及逐文件 SHA-256 保留在本机 `temp/songyu-artifact-migration-2026-11-07.json`。
+- 迁移前后逐文件 SHA-256 一致，原路径已移走，未覆盖目标或删除数据；同盘移动未释放磁盘空间。需要回退时可按清单移回原路径。两个 push-merge 输出目录仅有 `.last-run.json`，不宣称包含完整报告。此前日志提到的 A1 / A2 / C / launch 其他测试输出目录当前未找到，没有补造产物。
+- 下方历史执行命令保留当时路径与结果；已迁移的四张 A2 / C 截图现位于本项目 `temp/` 同名文件，两个 push-merge 目录也位于本项目 `temp/`。这些路径变更不代表重跑历史验收。更新架构中的后续命令、README 和忽略规则；本轮仅检查迁移完整性、文档引用、Git 忽略规则及 diff，未运行构建、浏览器、真实模型或引擎，未推送远端。
+
+<a id="prototype-direction-correction"></a>
+
+## 2026-11-07 · 纠正原型用途与前端接线方向
+
+- 工单：[5 · 原型方向更正](../CC-Tasks/5-toge-free-creation.md)、[6 · 原型真实验收](../CC-Tasks/6-joint-acceptance.md)；依据：toge 要求先更新文档，并反馈 Blacktea 喜欢、准备使用 LOOP! 原型。更正 [README](../README.md#launch)、[团队工作流](TEAM_WORKFLOW.md)、[架构边界](ARCHITECTURE.md#prototype-frontend)和[接口入口](INTERFACES.md)，以原型视觉与交互为前端接线基础，不再将另建的四页工作台视为默认替代设计。
+- 源码核对：原型有灵感、TAP、积木、歌词卡和 PV 弹层；内部仍为随机格子/换词、简单振荡器与独立字幕计时。可保留其设计并复用现有工程、hooks、Client、播放器和导出能力；技术实现需要替换不等于设计需要废弃。当前 index → main → App 仍打开 React 四页工作台，原型没有完成这些能力的接线。
+- 责任与历史边界：ca5773a 的初始 README 已将 HTML 定为视觉参考；b5e8e1a 的文档整理强化“不是当前应用入口”；2e3325a 在原型加提示并引导打开工作台。Git 署名不证明设计由署名本人提出或授权。当前可读的「查看下一步」聊天中，toge 要求接 A2/C 和方便交付，Agent 随后自行把原型保留作参考；这些要求不能作为换原型的授权。历史记录保留，在[工单 16](../CC-Tasks/已完成/16-easy-launch.md)增加更正，不改写当时测试结果。
+- 本轮仅文档更正，未改 HTML 横幅、UI、启动器、后端、共享接口或存档；工单 5 新增原型接线待办，原有 React 接线 checkbox 保留并注明范围。验证为 Markdown 链接、锚点、内容与源码核对及 git diff --check；不运行构建、模型或浏览器测试。后续须在原型接线后重新核对视觉与功能，当前不宣称原型已可真实制作音乐。
+
+<a id="frontend-main-integration"></a>
+
+## 2026-11-07 · 前端工单 5 / 16 与最新 main 整合
+
+- 工单：[5 · 自由创作页面与局部编辑](../CC-Tasks/5-toge-free-creation.md)、[16 · 日常启动入口](../CC-Tasks/已完成/16-easy-launch.md)；接口：[A1 / P0 兼容记录](../shared/contracts/CHANGELOG.md)。按 toge「推送」要求，合入远端 main 的后台与 P0 调教提交；README、架构与本日志保留双方新增内容，旋律声明同时保留 mock 标记与 Pitch 曲线导出，与已自动合并的运行时对应。未代改后端实现或扩展接口语义。
+- 远端后台已占用工单 13，前端启动工单改为检查过当前文件与 Git 历史均未使用的 16，同步 README / 架构 / 日志引用；后台工单 13 保留。
+- 合并后验证：npm run build 通过；相关边界与 P0 / 启动器单元测试 47/47；完整 Mock 页面 23/23；启动与准备状态页面 4/4。浏览器产物在仓库外 temp/songyu-push-merge-mock 与 temp/songyu-push-merge-launch；能力响应为明确夹具，没有运行真实模型、声库、MP4 或人工听感验收，工单 6 保持未验收。
+- 保留原有 AGENTS.md 未提交改动，不纳入合并提交。按当前项目规则提交合并后更新远端 main；不部署、不重启已有服务。
+
+<a id="easy-launch"></a>
+
+## 2026-11-07 · 单一双击入口与制作前准备
+
+- 工单：[16 · 方便使用的启动入口](../CC-Tasks/已完成/16-easy-launch.md)；日常使用：[README](../README.md#launch)；接线：[启动架构](ARCHITECTURE.md#launch)。toge 指出交付不应要求分辨原型和开发命令，本轮补使用入口，未修改后端、配置、共享契约或音乐算法。
+- 根目录「打开声屿.bat」仅转交既有 start.bat，保留参数/退出码，使用原依赖检查、构建、启动和自动打开页面链路。本机桌面创建「声屿.lnk」，目标与工作目录核对正确，未覆盖已有快捷方式。旧 LOOP HTML 原型完整保留，增加设计参考提示与实际入口说明。
+- 同轮收尾发现默认 3001 已有实际声屿服务运行；未关闭该进程，补充薄预检 helper，仅在 health、页面标识、资产路径与 JS 内容哈希匹配当前 dist 后复用并打开。不存在/不匹配则交回原 start.bat，check/no-open 不开浏览器。新增启动器测试 1/1 与语法检查通过，中文入口 --check 实际输出 reused current app；不再让重复打开进入端口占用错误。
+- 制作页只读检查 health / engines / qixuan 的现有状态，缺项/失联时禁用自动制作提交，显示「打开本机设置」「重新检查」和直接可用的「先玩音乐积木」，缺项详情默认折叠。检查不调用模型、安装资源或写入配置，不伪造 verified，不自动回落 Mock；原有本地创作/试听和存档保留。
+- 验证：构建通过；中文入口 `--check` 在默认真实服务链路通过，检查后正常退出。实际正式构建以临时同源 Node 服务和隔离 Chromium 完成本地灵感生成、播放状态/进度、缺项提交保护，页面错误 0，没有请求实际推理；只关闭本次验证创建的服务。`npm run test:e2e -- tests/browser/launch.spec.ts --output=D:/vibe-coding_/temp/songyu-launch-test-results` 4/4 通过（能力响应为明确测试夹具）；`npm run test:e2e:mock -- --output=D:/vibe-coding_/temp/songyu-launch-mock-regression --grep="frontend alone|A2 page makes|C targeted"` 3/3 通过，覆盖旧页、A2 与 C 代表性流程。启动器未改动，无需另造后端启动测试。
+- 当前机器实际检查 LLM / 伴奏音源 / 中文演唱声库 / FFmpeg 均未就绪；本地规则创作和浏览器合成试听已实测可用。新启动入口不代表真实 AI 制作可用，资源与正式听感仍交接 [工单 4](../CC-Tasks/4-blacktea-integration.md) / [工单 6](../CC-Tasks/6-joint-acceptance.md)。临时截图/测试输出不作为长期交付资产；正式可重复验证在上述测试文件与入口中。
+- 文档文件链接与 `git diff --check` 通过；工单 16 已完成并归档，代码/文档仅范围内本地提交，再从已提交源码执行中文入口检查。桌面快捷方式为本机交付，不纳入 Git。保留另一处已存在的 AGENTS.md 工作区改动，未混入提交；未推送、PR、合并或部署。
+
+<a id="c-piano-roll"></a>
+
+## 2026-11-07 · 工单 5 C 钢琴卷帘与局部旋律
+
+- 工单：[5 · C 前两项](../CC-Tasks/5-toge-free-creation.md)；接线与边界：[钢琴卷帘](ARCHITECTURE.md#piano-roll)；分工：[团队工作流](TEAM_WORKFLOW.md)。按 toge 本轮明确要求，只接钢琴卷帘、句锁/音符锁与指定句旋律生成；未修改共享字段、model、Client、server 或音乐算法定义。
+- 自由作品「虚拟歌姬」页新增钢琴卷帘，支持鼠标/触摸拖动、右柄改长度、方向键/Shift 组合及数值编辑；宽屏网格自适应铺开，窄屏内部滚动并提供音符下拉选择。手工编辑保持 ID、歌词原文、逐字对齐和锁定；人声显示轨只替换对应句片段，保留兄弟句显示音符 ID 与其他轨道。修复初始选择只跟随数组第一项导致重排后跳选的问题，改为一直按 ID 保持选中项。
+- 调用 melodyRequest / api.melody / applyMelodyDraft，只应用指定句；非目标句/草稿完整保留、手写词与锁定音符不变。编辑/切句/离页/停止等待后的迟到响应不应用。改动句音频按已有依赖检查标记过期，其他句与伴奏保留；实际从页面完成只重唱该句及试听。旧音频不删除，失效的演唱不再标成当前有效演唱。
+- current performance / history 的 overrides 按 note ID 重排；新生成 ID 无法承接手工或锁定控制时，原子拒绝整次结果。仅 Auto 且 origin=auto、未锁定的控制复用已有 automaticPhrase 规则重算；没有新增调教模式或混音控件。Mock 局部生成补两版固定八度变化，明确测试来源；部分音符锁定仍保留整句，不伪装真实 LLM 续写。
+- 验证：最终 `npm run build` 通过；`node --import tsx --test tests/phrase-edit.test.ts tests/production-page.test.ts tests/mock-free.test.ts tests/api.test.ts tests/free-composition.test.ts tests/melody.test.ts tests/production.test.ts` 39/39 通过。完整 `npm run test:e2e:mock -- --output=D:/vibe-coding_/temp/songyu-c-piano-test-results` 23/23 通过（原 14 项加 C 的 9 项）；末次自动控制适配后，C 页面定向回归 `--output=D:/vibe-coding_/temp/songyu-c-piano-final-check --grep="C piano|C targeted"` 9/9 再次通过。覆盖拖动/缩放/键盘、保存/刷新、重排索引、重叠拒绝、句锁/音符锁、局部重作与重唱保留兄弟资产、迟到/异常响应及 A1/A2/旧页回归。
+- 视效检查：Windows / Node 26.1.0 / Playwright Chromium headless shell，1440 像素桌面和 390 像素窄屏截图均检查、无横向溢出；`D:/vibe-coding_/temp/songyu-c-piano-desktop.png`、`D:/vibe-coding_/temp/songyu-c-piano-mobile.png`。测试夹具仍受既有音乐校验约束，没有降低断言或放宽音乐规则。构建仍有 Zod 注释与大包提示；文档文件链接与 `git diff --check` 通过。
+- C 前两项已勾选；调教模式、表达历史操作、混音控件及对应后续测试保持未完成，工单不归档。[共同验收 6](../CC-Tasks/6-joint-acceptance.md)未勾选：没有执行真实模型、真实声库/MP4、手机/Safari 或人工听感。后端现有调式/和弦约束及跨新 ID 手工控制迁移边界已写工单交接；只本地提交，未推送、PR、合并或部署。
+
+<a id="a2-free-creation-page"></a>
+
+## 2026-11-07 · 工单 5 A2 首页输入到试听
+
+- 工单：[5 · A2 最小页面与页面测试](../CC-Tasks/5-toge-free-creation.md)；调用方法：[架构与接线](ARCHITECTURE.md#production)；分工：[团队工作流](TEAM_WORKFLOW.md)。按 toge 本轮明确要求实施 A2，沿用 A1 功能分支，不改共享字段、Client、服务端或音乐算法。
+- 首页新增自由创作区域：主题、可选 1–8 行手写歌词、可选 BPM、20/25/30 秒目标；使用原有 production 创建/轮询/单句重试，显示真实返回状态或明确的 Mock 测试阶段。完整工程通过结构、来源、输入、旋律/音符及歌声引用校验后一次应用，复用底部播放器；试听有准备状态，不自动播放或宣称已导出。
+- 操作代次保护覆盖输入修改、当前工程编辑、离开输入页、停止等待、组件卸载及新旧请求交错；失败、404、超时、无效响应/工程均保留当前工程，不自动回退旧模板。缺失句重试只在整曲完成后应用。自由作品停用尚未适配的旧谱面/歌词编辑与模板重生成按钮，保留试听、静音、锁定和既有导出，C 局部编辑仍待实施。
+- 验证：`npm run build` 通过；`node --import tsx --test tests/production-page.test.ts tests/mock-free.test.ts tests/api.test.ts tests/free-composition.test.ts tests/melody.test.ts tests/production.test.ts` 32/32 通过；`npm run test:e2e:mock -- --output=D:/vibe-coding_/temp/songyu-a2-mock-test-results` 14/14 通过（包含原有 3 项和 A2 新增 11 项）。新增页面用例实际输入五行新词并保留空格，等待阶段、应用、播放进度前进、暂停、刷新恢复均通过；原真实模式存档保留，全程无真实 API 请求。失败/丢失、单句重试、四种失效场景、旧响应晚于新请求及错误工程保护通过。
+- Windows / Node 26.1.0 / Playwright Chromium headless shell。检查 1440 像素桌面和 390 像素窄屏截图，无横向溢出；截图位于 `D:/vibe-coding_/temp/songyu-a2-desktop.png`、`D:/vibe-coding_/temp/songyu-a2-mobile.png`，测试输出在上述仓库外目录。五句音频准备曾超过默认五秒断言，已增加页面准备提示，并将该试听测试等待限定为 20 秒后通过；没有降低播放进度或存档断言。构建仍有 Zod 注释/大包提示。
+- 完成后另对失败文案做定向回归：隐藏校验器内部字段，统一提示工程保留；最终构建及该页面用例通过。文档链接与 `git diff --check` 通过。A2 两项已勾选，未完成的 C 仍留原工单；未运行真实 LLM、声库、真实 MP4、手机/Safari 或人工听感，不勾选[工单 6](../CC-Tasks/6-joint-acceptance.md)。仅本地提交，未推送、PR、合并或部署。
+
+<a id="a1-free-creation-mock"></a>
+
+## 2026-11-07 · 工单 5 A1 自由创作 Mock 完成
+
+- 工单：[5 · A1](../CC-Tasks/5-toge-free-creation.md)；限定授权与兼容：[契约记录](../shared/contracts/CHANGELOG.md)；调用方法与测试限制：[架构 Mock 说明](ARCHITECTURE.md#mock)。toge 在本会话审阅提案后明确回复「可以，继续做完」，仅按列出的共享字段、来源适配与 Mock 范围实施。
+- 在现有 transport 补 compose / melody / production 创建、轮询、失败、任务丢失和单句重试。默认固定夹具不调用模型；独立测试 factory 可选择故障场景，不新增公共请求字段。保留手写词、锁定及非目标句；部分音符锁定时保留整句现有音符。测试伴奏使用原浏览器 synth，歌声为明确标记的本地 PCM 测试音。
+- 同步 FreeResult / MelodyResponse / MelodyDraft / ProductionJob 的可选 Mock 标记与声明；buildFreeScore 只传递来源，Mock 工程 planning 为 local-rules / mock，模板词为 local-template。Client 在解析前后拒绝真实模式收到的已知嵌套 Mock 数据；工程导入及启动恢复沿用同一检查，保留被拒绝的原存档并禁止自动覆盖。未修改真实 LLM、音乐算法、引擎桥接或混音实现。
+- 验证：`npm run build` 通过；`node --import tsx --test tests/mock-free.test.ts tests/api.test.ts tests/free-composition.test.ts tests/melody.test.ts tests/production.test.ts` 30/30 通过；`npm run test:e2e:mock -- --output=D:/vibe-coding_/temp/songyu-a1-mock-test-results` 3/3 通过。新增浏览器用例验证新 Mock API 的制作、存档/导入恢复与非静音混音，全程零真实 API 请求；原页面锁定、歌声、播放、保存和导出回归通过。定向测试含失败、404、单句/多句重试保留兄弟资产、手写/锁定保护、旧真实响应兼容和 Mock 来源拒收。
+- 环境与限制：Node 26.1.0 / Windows，按 lockfile 安装依赖及当前 Playwright Chromium headless shell 后执行；初次因缺依赖/测试浏览器无法启动。一次浏览器下载临时文件触发 Vite Windows EBUSY 退出，改用仓库外测试输出后通过；新增测试曾误拦截 src/api 模块请求，已将拦截范围限定为 URL 的 /api/ 前缀并通过。构建仍提示 Zod 注释和大包。`git diff --check` 与文档文件链接通过。
+- A1 两项已勾选，A2 / C 及[共同验收 6](../CC-Tasks/6-joint-acceptance.md)保持未完成；本次没有正式新页面输入入口、真实 LLM/声库调用、真实 MP4、手机/Safari 或人工听感验收。测试 PCM 非静音不代表中文演唱。代码和文档仅本地提交，未推送、创建 PR 或部署。
+
+## 2026-11-07 · 工单 5 A1 Mock 来源提案
+
+- 工单：[5 · 自由创作 A1](../CC-Tasks/5-toge-free-creation.md)；提案：[契约变更记录](../shared/contracts/CHANGELOG.md)；确认规则：[团队工作流](TEAM_WORKFLOW.md#接口先行与-mock-交接)。
+- 对照实际代码确认：新三类响应未声明 Mock 标记，`buildFreeScore` 当前直接记录 LLM 来源。提出沿用 `mock:true`、工程记录为本地测试来源、真实模式检查嵌套标记的限定方案；列明共享字段、来源适配及测试范围，待 toge 确认后实施。
+- 本轮仅准备提案并更新任务状态，不勾选 A1 完成；未改 Mock、Schema、Client、工程或引擎运行时代码，未运行构建、模型或音频测试。文档相对链接、来源描述与 `git diff --check` 已核对。
+- `git fetch origin` 遇 TLS EOF，未能确认远端实时更新；工作区原为干净状态，本地 HEAD 与已缓存 origin/main 一致，本次功能分支从该基线创建。未推送、创建 PR 或部署。
 
 ## 2026-11-07 · 工单 15 P2-B 后端任务路由；整单等待跨层确认
 

@@ -8,9 +8,9 @@ export interface ExpressionCurve {abbr:ExpressionAbbr;points:CurvePoint[]}
 export interface Performance {mode?:'auto'|'manual';energy?:number;locked?:boolean;overrides?:({index:number;origin?:'auto'|'manual';locked?:boolean;pitch?:PitchPoint[];phonemes?:PhonemeEdit[];vibratoLength?:number;vibratoPeriod?:number;vibratoIn?:number;vibratoOut?:number;vibratoDrift?:number;vibratoVolLink?:number}&Omit<Performance,'overrides'|'mode'|'energy'|'preset'|'dynCurve'|'curves'>)[];dynCurve?:CurvePoint[];curves?:ExpressionCurve[];preset:'natural'|'soft'|'strong';transitionMs?:number;vibratoDepth?:number;dynamics?:number;consonantMs?:number}
 export interface MelodyNote {id:string;beat:number;duration:number;midi:number;velocity:number;syllable:string;locked?:boolean}
 export interface PhrasePlan {id:string;text:string;start:number;end:number;notes:MelodyNote[];motif:string;variationOf?:string;locked?:boolean;performance?:Performance}
-export interface MelodyDraft {version:1;source:'llm'|'local-rules';phrases:PhrasePlan[]}
+export interface MelodyDraft {mock?:true;version:1;source:'llm'|'local-rules';phrases:PhrasePlan[]}
 export interface MelodyRequest {intent:string;bpm:number;songPlan:SongPlan;phrases:{id:string;text:string;start:number;end:number;notes:MelodyNote[];locked?:boolean;performance?:Performance}[];targetIds?:string[];source?:'llm'|'local-rules'}
-export interface MelodyResponse {draft:MelodyDraft;model?:string;metrics?:{milliseconds:number;promptTokens:number;completionTokens:number}}
+export interface MelodyResponse {mock?:true;draft:MelodyDraft;model?:string;metrics?:{milliseconds:number;promptTokens:number;completionTokens:number}}
 export const pitchPointSchema:z.ZodType<PitchPoint>;
 export const pitchCurveSchema:z.ZodType<PitchPoint[]>;
 export const phonemeEditSchema:z.ZodType<PhonemeEdit>;
