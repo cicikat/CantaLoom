@@ -1,0 +1,202 @@
+/* Three visual chapters on one scrolling page:
+   1 hero with a rhythmic entrance · 2 "Music Blocks" bridge + workbench · 3 MV theatre. */
+
+:root{--bounce:cubic-bezier(.34,1.56,.64,1);--mv-bg:#1d1b26;--mv-panel:#28253a;--mv-line:#4a4562;--mv-text:#c9c3dc}
+.nav-links button{white-space:nowrap}
+
+/* ---------- Chapter 1 · hero ---------- */
+.hero{--beat:.14s;position:relative;min-height:calc(100vh - 76px);min-height:calc(100svh - 76px);align-items:center;padding:56px clamp(20px,4.2vw,72px) 64px;gap:clamp(28px,4vw,72px)}
+.hero-copy{min-width:0;max-width:660px}
+.hero h1{position:relative;font-size:clamp(52px,6.2vw,100px);margin:24px 0 22px}
+.hero .intro{font-size:15px;max-width:520px;margin-bottom:26px}
+.hero .quick{margin-top:18px}
+.hero-right{min-height:440px}
+.hero .bigcard{height:min(400px,29vw);width:min(450px,33vw)}
+.voicecard .tag{font-size:10px;font-weight:900;letter-spacing:1px}
+
+.h1-tap{display:inline-block;color:var(--ink);transform-origin:50% 85%}
+.h1-pop{position:relative;display:inline-block;isolation:isolate;white-space:nowrap}
+.h1-pop::after{content:"";position:absolute;z-index:-1;left:.02em;right:.14em;bottom:-.04em;height:.075em;min-height:5px;border-radius:99px;background:#e7caff;transform-origin:0 50%}
+.pop-char{position:relative;display:inline-block}
+.pop-glyph{position:relative;z-index:1;display:inline-block}
+.pop-star{position:absolute;z-index:0;left:50%;top:50%;width:1.1em;height:1.1em;margin:-.55em 0 0 -.55em;overflow:visible;fill:#ffd95a;stroke:var(--ink);stroke-width:2.5px;stroke-linejoin:round;opacity:0;pointer-events:none}
+.pop-star path{vector-effect:non-scaling-stroke}
+.pop-bits{position:absolute;left:80%;top:44%;width:0;height:0;pointer-events:none}
+.pop-bits i{position:absolute;left:0;top:0;width:.17em;height:.17em;min-width:7px;min-height:7px;border:2px solid var(--ink);border-radius:3px;opacity:0}
+.pop-bits i:nth-child(1){--dx:.7em;--dy:-.48em;background:#ffd95a}
+.pop-bits i:nth-child(2){--dx:.95em;--dy:.02em;background:var(--orange);border-radius:50%}
+.pop-bits i:nth-child(3){--dx:.62em;--dy:.46em;background:var(--blue)}
+
+/* Entrance: left and right pieces take turns on a steady beat; the title letters land one per beat. */
+@media (prefers-reduced-motion:no-preference){
+ .nav{animation:nav-drop .5s cubic-bezier(.2,.9,.3,1.2) backwards}
+ .hero .eyebrow{animation:beat-pop .5s var(--bounce) calc(var(--beat)*1) backwards}
+ .hero .sticker.top{animation:sticker-slap .5s var(--bounce) calc(var(--beat)*2) backwards}
+ .h1-tap{animation:tap-stamp .55s cubic-bezier(.2,.8,.3,1.25) calc(var(--beat)*3) backwards}
+ .hero .bigcard{animation:card-swing .8s cubic-bezier(.25,1.3,.5,1) calc(var(--beat)*4) backwards}
+ .pop-glyph,.pop-star,.pop-bits i{animation-duration:.8s;animation-fill-mode:backwards;animation-delay:calc(var(--beat)*(5 + var(--i)))}
+ .pop-glyph{animation-name:glyph-pop;animation-timing-function:ease-out}
+ .pop-star{animation-name:star-spin;animation-timing-function:linear}
+ .pop-bits i{animation-name:bit-splash;animation-timing-function:cubic-bezier(.2,.7,.3,1)}
+ .hero .spark{animation:spark-pop .55s var(--bounce) calc(var(--beat)*6.5) backwards}
+ .hero .starburst{animation:burst-spin .7s var(--bounce) calc(var(--beat)*8.5) backwards}
+ .h1-pop::after{animation:line-draw .45s cubic-bezier(.2,.8,.2,1) calc(var(--beat)*12.8) backwards}
+ .hero .intro{animation:beat-rise .55s var(--bounce) calc(var(--beat)*13.5) backwards}
+ .hero .sticker.bottom{animation:sticker-slap .5s var(--bounce) calc(var(--beat)*14.5) backwards}
+ .hero .patchlab-creation{animation:beat-rise .6s var(--bounce) calc(var(--beat)*15.5) backwards}
+ .hero .quick button{animation:beat-pop .45s var(--bounce) calc(var(--beat)*16.5) backwards}
+ .hero .quick button:nth-child(2){animation-delay:calc(var(--beat)*17)}
+ .hero .quick button:nth-child(3){animation-delay:calc(var(--beat)*17.5)}
+ .hero .quick button:nth-child(4){animation-delay:calc(var(--beat)*18)}
+ .hero .boat{animation:boat-bob 2.6s ease-in-out calc(var(--beat)*10) infinite}
+}
+@keyframes nav-drop{from{opacity:0;translate:0 -100%}}
+@keyframes beat-pop{0%{opacity:0;scale:.55;translate:0 12px}60%{opacity:1;scale:1.08;translate:0 -2px}100%{opacity:1;scale:1;translate:0 0}}
+@keyframes beat-rise{0%{opacity:0;translate:0 26px}100%{opacity:1;translate:0 0}}
+@keyframes sticker-slap{0%{opacity:0;scale:1.8}55%{opacity:1;scale:.88}100%{opacity:1;scale:1}}
+@keyframes tap-stamp{0%{opacity:0;translate:0 -.4em;scale:1.3;rotate:-5deg}45%{opacity:1;translate:0 0;scale:1.1 .82;rotate:0deg}68%{scale:.96 1.06}100%{opacity:1;translate:0 0;scale:1;rotate:0deg}}
+@keyframes card-swing{0%{opacity:0;translate:70px 30px;rotate:14deg;scale:.85}55%{opacity:1;translate:-4px 0;rotate:-5deg;scale:1.03}78%{translate:0 0;rotate:2deg;scale:.99}100%{opacity:1;translate:0 0;rotate:0deg;scale:1}}
+@keyframes glyph-pop{0%,24%{opacity:0;translate:0 .08em;scale:.15;rotate:-25deg}44%{opacity:1;translate:.1em -.04em;scale:1.3 1.12;rotate:7deg}60%{translate:.03em 0;scale:.9 1.06;rotate:-3deg}76%{translate:-.015em 0;scale:1.05 .97;rotate:1deg}100%{opacity:1;translate:0 0;scale:1;rotate:0deg}}
+@keyframes star-spin{0%{opacity:0;scale:0;rotate:-60deg}16%{opacity:1;scale:1.12;rotate:80deg}38%{opacity:1;scale:1;rotate:230deg}62%{opacity:.9;scale:.45;rotate:360deg}100%{opacity:0;scale:0;rotate:460deg}}
+@keyframes bit-splash{0%,38%{opacity:0;translate:0 0;scale:.3;rotate:0deg}48%{opacity:1;translate:calc(var(--dx)*.45) calc(var(--dy)*.45);scale:1;rotate:45deg}82%{opacity:0;translate:var(--dx) var(--dy);scale:.4;rotate:160deg}100%{opacity:0;translate:var(--dx) var(--dy)}}
+@keyframes line-draw{from{scale:0 1}}
+@keyframes spark-pop{0%{opacity:0;scale:0;rotate:-120deg}70%{opacity:1;scale:1.2;rotate:10deg}100%{opacity:1;scale:1;rotate:0deg}}
+@keyframes burst-spin{0%{opacity:0;scale:.2;rotate:-200deg}100%{opacity:1;scale:1;rotate:0deg}}
+@keyframes boat-bob{0%,100%{translate:0 0;rotate:0deg}50%{translate:0 -6px;rotate:-3deg}}
+
+/* ---------- Chapter 2 · bridge ---------- */
+/* The tall block overlaps the last screen of the hero so the rings rise over it while scrolling. */
+.chapter-bridge{position:relative;z-index:30;height:280vh;height:280svh;margin-top:-100vh;margin-top:-100svh;pointer-events:none}
+.bridge-stage{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden}
+.chapter-bridge.is-filled .bridge-stage{background:var(--violet)}
+.chapter-bridge.is-filled .bridge-ring{visibility:hidden}
+/* Radius ≥ 0.6 × screen height keeps the far edge of the last ring off-screen on tall phones. */
+.bridge-ring{--s:calc(var(--i)*.06);--e:clamp(0,(var(--p,0) - var(--s))/.24,1);--R:calc(max(100vw,85dvh)*.75);position:absolute;left:50%;top:100%;width:calc(var(--R)*2);height:calc(var(--R)*2);margin-left:calc(var(--R)*-1);border:3px solid var(--ink);border-radius:50%;background:var(--c);transform-origin:50% 0;transform:translateY(calc(var(--e)*(-100dvh - 15%))) scale(calc(.55 + .45*var(--e)));pointer-events:auto;will-change:transform}
+.bridge-title{--x:clamp(0,(var(--p,0) - .84)/.16,1);position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px;text-align:center;translate:0 calc(var(--x)*-10vh);scale:calc(1 - var(--x)*.08)}
+.bridge-kicker{margin:0;font-size:12px;font-weight:900;letter-spacing:2px;color:var(--off);background:var(--ink);padding:8px 14px;border-radius:6px}
+.bridge-word{margin:0;display:flex;flex-direction:column;align-items:center;gap:.1em;font-size:clamp(68px,11.5vw,176px);font-weight:1000;font-style:italic;line-height:.95;letter-spacing:-.04em}
+.bridge-music{display:flex;color:var(--off);-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:.045em .045em 0 var(--ink)}
+.bridge-music span{display:inline-block}
+.bridge-blocks{display:flex;gap:.1em;font-size:.6em}
+.bridge-blocks span{display:grid;place-items:center;width:1em;height:1em;border:3px solid var(--ink);border-radius:.16em;background:var(--c);box-shadow:.08em .08em 0 var(--ink);color:var(--ink);font-style:normal;letter-spacing:0;rotate:var(--r)}
+.bridge-word span span,.bridge-kicker,.bridge-steps,.bridge-hint{opacity:0;translate:0 .5em;scale:.5;transition:opacity .2s,translate .25s,scale .25s}
+.bridge-kicker,.bridge-steps,.bridge-hint{translate:0 14px;scale:1}
+.is-titled .bridge-word span span{opacity:1;translate:0 0;scale:1;transition:opacity .2s calc(var(--j)*45ms),translate .55s var(--bounce) calc(var(--j)*45ms),scale .55s var(--bounce) calc(var(--j)*45ms)}
+.is-titled .bridge-kicker,.is-titled .bridge-steps,.is-titled .bridge-hint{opacity:1;translate:0 0;transition:opacity .3s .25s,translate .5s var(--bounce) .25s}
+.bridge-steps{display:flex;gap:7px}
+.bridge-steps i{width:18px;height:18px;border:2px solid var(--ink);border-radius:4px;background:var(--off)}
+.is-titled .bridge-steps i{animation:step-light 1.2s steps(1) infinite;animation-delay:calc(var(--k)*150ms)}
+.bridge-hint{margin:0;font-size:13px;font-weight:800;color:#2c2540}
+@keyframes step-light{0%{background:var(--yellow);translate:0 -3px}12.5%,100%{background:var(--off);translate:0 0}}
+
+/* ---------- Chapter 2 · workbench ---------- */
+.chapter-blocks{background-color:var(--violet);background-image:radial-gradient(#a28ae6 1.3px,transparent 1.5px);background-size:24px 24px;padding-bottom:88px;border-bottom:2px solid var(--stroke)}
+.chapter-blocks .sections{padding:72px clamp(16px,3.6vw,56px) 0}
+.chapter-blocks .stepheader small{color:#352c4d}
+.chapter-blocks .layout{gap:28px;margin-top:26px}
+.chapter-blocks .studio-side{gap:20px}
+.chapter-blocks .lyrics-section{margin-top:40px;padding-bottom:0}
+.chapter-blocks .lyricrows{gap:16px;margin-top:22px}
+.chapter-blocks .singing-details{background:var(--off);box-shadow:4px 4px 0 var(--stroke)}
+.chapter-blocks .mix-panel{box-shadow:4px 4px 0 var(--stroke)}
+
+/* ---------- Chapter 3 · MV theatre ---------- */
+.chapter-mv{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;min-height:100vh;min-height:100svh;background:var(--mv-bg);color:var(--off);padding:0 0 88px}
+.chapter-mv .mv-marquee{flex-shrink:0}
+.mv-inner{flex:1;width:100%}
+.mv-marquee{width:112%;margin:34px 0 0 -6%;rotate:-1.5deg;background:var(--yellow);color:var(--ink);border-block:3px solid var(--off);overflow:hidden;font-size:13px;font-weight:900;letter-spacing:2px;white-space:nowrap}
+.mv-marquee>div{display:flex;width:max-content;padding:10px 0}
+.mv-marquee span{padding-right:.5em}
+.mv-inner{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(0,1.75fr);grid-template-areas:"head stage" "options stage";align-content:center;column-gap:clamp(28px,4vw,64px);row-gap:28px;max-width:1500px;margin:0 auto;padding:72px clamp(16px,4vw,64px) 0}
+.mv-head{grid-area:head;align-self:end}
+.mv-kicker{display:inline-block;font-size:11px;font-weight:900;letter-spacing:2px;color:var(--ink);background:var(--yellow);border:2px solid var(--off);border-radius:20px;padding:8px 12px;box-shadow:3px 3px 0 var(--orange)}
+.mv-head h2{font-size:clamp(34px,4vw,60px);font-weight:1000;letter-spacing:-.04em;line-height:1.12;margin:22px 0 14px}
+.mv-head h2 em{font-style:normal;color:var(--yellow)}
+.mv-head p{margin:0;color:var(--mv-text);font-size:14px;line-height:1.8}
+.mv-stage{grid-area:stage;min-width:0}
+.mv-film{position:relative;padding:26px 18px;border:3px solid var(--off);border-radius:20px;box-shadow:10px 10px 0 var(--violet);background:repeating-linear-gradient(90deg,#d9d2ef 0 12px,transparent 12px 28px) left 14px top 8px/calc(100% - 28px) 9px no-repeat,repeating-linear-gradient(90deg,#d9d2ef 0 12px,transparent 12px 28px) left 14px bottom 8px/calc(100% - 28px) 9px no-repeat,#111018}
+.mv-screen{position:relative;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#263e80}
+.mv-screen canvas{display:block;width:100%;height:100%}
+.mv-sticker{position:absolute;z-index:2;top:-16px;right:24px;rotate:6deg;font-size:11px;font-weight:900;letter-spacing:1px;color:var(--ink);background:var(--off);border:2px solid var(--ink);border-radius:30px;padding:6px 11px;box-shadow:3px 3px 0 var(--orange)}
+.mv-bar{display:flex;align-items:center;gap:16px;margin-top:24px}
+.mv-play{flex-shrink:0;background:var(--yellow);color:var(--ink);border:2px solid var(--off);border-radius:10px;padding:12px 16px;font-size:13px;font-weight:900;box-shadow:4px 4px 0 var(--orange);transition:translate .15s,box-shadow .15s}
+.mv-play:active{translate:3px 3px;box-shadow:1px 1px 0 var(--orange)}
+.mv-time{flex-shrink:0;font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--mv-text)}
+.mv-bar input{flex:1;min-width:60px;accent-color:var(--yellow)}
+.mv-options{grid-area:options;align-self:start;padding:20px;border:2px solid var(--mv-line);border-radius:16px;background:var(--mv-panel);font-size:12px}
+.mv-options-title{margin:0 0 14px;font-size:11px;font-weight:900;letter-spacing:1px;color:var(--mv-text)}
+.mv-option-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.mv-options label{display:flex;align-items:center;gap:8px;font-weight:700}
+.mv-options select{padding:7px;border:1.5px solid var(--off);border-radius:7px;background:var(--off);color:var(--ink);font:inherit}
+.mv-options .minibtn{color:var(--ink)}
+.mv-export{display:block;width:100%;margin-top:16px;padding:13px 15px;font-size:13px;color:var(--ink)}
+.mv-options .export-status{margin-top:12px;color:var(--mv-text)}
+.footer{background:#15141b;color:#8e89a3;border-top:2px solid #2c2a38}
+
+/* Workbench and theatre pieces rise in as they scroll into view (only where scroll timelines exist). */
+@supports (animation-timeline:view()){
+ @media (prefers-reduced-motion:no-preference){
+  .chapter-blocks .stepheader,.chapter-blocks .board,.chapter-blocks .studio-side>section,.chapter-blocks .lyric,.mv-head,.mv-stage,.mv-options{animation:chapter-rise linear both;animation-timeline:view();animation-range:entry 0% entry 60%}
+ }
+}
+@media (prefers-reduced-motion:no-preference){.mv-marquee>div{animation:marquee 26s linear infinite}}
+@keyframes chapter-rise{from{opacity:0;translate:0 48px}to{opacity:1;translate:0 0}}
+@keyframes marquee{to{translate:-50% 0}}
+
+/* ---------- Narrow and portrait screens ---------- */
+@media (max-width:1100px){
+ .hero{grid-template-columns:minmax(0,1fr) 360px}
+ .hero .bigcard{width:min(340px,40vw);height:min(310px,36vw)}
+ .mv-inner{grid-template-columns:minmax(0,1fr);grid-template-areas:"head" "stage" "options";padding-top:56px}
+ .mv-head{align-self:auto}
+ .mv-options{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 20px;align-items:center}
+ .mv-options-title,.mv-options .export-status{grid-column:1/-1;margin:0}
+ .mv-export{width:auto;margin:0}
+}
+@media (max-width:900px){
+ .hero{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:28px}
+ .hero-copy{max-width:none}
+ .hero h1{font-size:clamp(48px,9vw,80px)}
+ .hero-right{min-height:340px;width:min(100%,480px);align-self:center}
+ .hero .bigcard{width:min(340px,80vw);height:min(310px,72vw)}
+}
+@media (max-width:700px){
+ .logo small{display:none}
+ .nav-links button{font-size:11px;padding:9px 11px}
+ .hero{min-height:calc(100vh - 65px);min-height:calc(100svh - 65px);padding:30px 18px 40px;gap:22px}
+ .hero h1{font-size:clamp(40px,12.5vw,60px);letter-spacing:-3px;margin:20px 0 16px}
+ .hero .intro{font-size:13px;margin-bottom:20px}
+ .hero-right{min-height:300px}
+ .hero .bigcard{width:min(300px,78vw);height:min(270px,70vw)}
+ .bridge-word{font-size:clamp(56px,17vw,96px)}
+ .bridge-music{-webkit-text-stroke:2px var(--ink)}
+ .bridge-blocks span{border-width:2px}
+ .chapter-blocks{padding-bottom:56px}
+ .chapter-blocks .sections{padding:52px 14px 0}
+ .chapter-blocks .lyrics-section{margin-top:28px}
+ .chapter-blocks .layout{gap:16px}
+ .chapter-blocks .studio-side{gap:16px}
+ .boardtop{flex-wrap:wrap}
+ .mv-marquee{margin-top:24px;font-size:11px}
+ .mv-inner{padding:44px 14px 0;row-gap:22px}
+ .mv-film{padding:20px 10px;border-radius:14px;box-shadow:6px 6px 0 var(--violet);background-size:calc(100% - 20px) 7px,calc(100% - 20px) 7px,auto;background-position:left 10px top 6px,left 10px bottom 6px,0 0}
+ .mv-sticker{right:14px;top:-14px}
+ .mv-bar{flex-wrap:wrap;gap:12px}
+ .mv-play{flex:1 1 100%}
+ .mv-options{display:block;padding:16px}
+ .mv-export{width:100%;margin-top:14px}
+ .footer{flex-direction:column;gap:4px}
+}
+@media (max-width:560px){
+ .lyricrows{grid-template-columns:minmax(0,1fr)}
+ .lyric{min-height:0}
+}
+
+/* Reduced motion: no overlay or scroll choreography, just the solid title page. */
+@media (prefers-reduced-motion:reduce){
+ .chapter-bridge{height:auto;margin-top:0;pointer-events:auto}
+ .bridge-stage{position:relative;height:auto;min-height:70vh;background:var(--violet)}
+ .bridge-ring{display:none}
+ .bridge-title{position:relative;inset:auto;min-height:70vh;translate:none;scale:none}
+ .bridge-word span span,.bridge-kicker,.bridge-steps,.bridge-hint{opacity:1;translate:none;scale:none}
+}
