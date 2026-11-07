@@ -40,7 +40,9 @@
 - **生成状态台**：本进程最近 100 个请求，包含 LLM、FluidSynth、DiffSinger、WAV 导入、PV；自动制作任务作为额外来源接入。显示运行、成功、失败、连接中断、HTTP 结果和耗时。不记录歌词请求体、密钥或上游原始错误。无伪造百分比；连接中断不代表外部进程已取消。
 - **资源管理台**：扫描引擎、音源、声库、缓存、导出目录，显示文件数、大小、修改时间与缓存 WAV 试听。忽略 `.git`、`.venv`、符号链接；每组扫描上限 10000 文件、显示上限 100 文件。统计不包含虚拟环境占用。不会删除缓存、模型或工程。
 - **声库注册**：表单维护 `external/voicebanks/voices.json`，包括 ID、版本、名称、variance/acoustic 实验目录名。注册只针对已授权且已安装的原生 DiffSinger checkpoints；ONNX 声库不能直接交给 Python infer.py。更新注册不下载文件、不代表权重已验收。
-- **能力与待办**：在页面中展示当前功能、真实验证缺口和后续后台需求，避免将尚未实现的功能做成可点击的假按钮。
+- **导航**：左侧总览与制作链路栏目，右侧显示当前内容；窄屏通过左上角菜单呼出抽屉，支持遮罩、关闭按钮、Esc 与选中栏目后收起；资源与任务单独查看，声库注册位于 WAV 栏目。
+- **链路测试**：`/admin#test` 固定歌词「这是歌词」，固定 96 BPM 或随机 80–120 BPM、目标 20 秒。依次实际调用 `/api/compose`，用既有 `buildFreeScore` 生成本地音符，渲染 FluidSynth 伴奏与绮萱 CPU 人声，复用工作台 `renderAudio` / `wavBlob` 混音，再用既有 `drawPV` 和 `/api/export` 生成歌词 MP4。逐阶段显示状态、耗时和失败原因；成功后在混音/PV 栏目试听下载。不会写入工作台 localStorage 或修改后台配置；切栏目继续，关闭/刷新页面会丢失浏览器测试状态。
+- **维护测试入口**：`scripts/admin-pipeline.ts` 是浏览器诊断源，`node scripts/build-admin.mjs` 使用现有 Vite 工具链的 esbuild 生成已提交的 `server/public/admin-pipeline.js`；更改其导入的音乐/混音模块后应重新生成。真实诊断执行 `node scripts/verify-admin-pipeline.mjs`，需先启动本地 3001 后端；`ADMIN_VERIFY_OUTPUT` 指定输出目录，默认外部根目录的 `runtime/exports/admin-pipeline-日期`。可用 `--layout-only` 仅检查页面与失败夹具。脚本先验证导航、390px 抽屉布局与明确的失败夹具，再执行真实链路并保存 WAV/MP4/截图。
 
 ### 本机安全与生命周期
 

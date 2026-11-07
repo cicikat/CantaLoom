@@ -4,6 +4,16 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+## 2026-11-07 · 后台双栏、窄屏抽屉与真实链路测试
+
+- 工单：[13 · 后台制作链路](../CC-Tasks/已完成/13-admin-pipeline.md)；使用与构建：[引擎与后台](ENGINES.md#admin)。Owner：Blacktea。仅修改后端管理静态页面、资源路由、诊断脚本和后端测试；未改正式创作 UI、Mock、共享字段或引擎算法。
+- 参考 Emerald-presence 侧栏 / 内容双栏，按总览、灵感、LLM、音符、WAV、混音、PV、测试、任务、资源分组。收起重复说明；窄屏默认隐藏侧栏，左上角菜单呼出，支持关闭按钮、遮罩、Esc、焦点循环、选中后收起。
+- 固定歌词「这是歌词」，96 BPM 或随机 80–120 BPM，目标 20 秒；调用既有真实 compose、FluidSynth、绮萱 CPU，浏览器复用 buildFreeScore / renderAudio / drawPV，导出同一混音的 WAV 和字幕 MP4。显示阶段耗时、SongPlan、轨道音符数、分轨 WAV 与混音 / PV 播放下载。生成浏览器 bundle 使用 `node scripts/build-admin.mjs`，产物随仓库提交。
+- Windows 本机真实测试通过：96 BPM，20.00 秒；LLM 83.3 秒，器乐 / 人声 61.0 秒，混音 1.0 秒，PV 1.7 秒；混音峰值 0.303、RMS 0.0519；WAV 1,920,044 字节、MP4 604,578 字节，浏览器实际播放与下载通过。17 条器乐轨，部分缓存命中；非首次无缓存性能基准。产物与截图：外部根目录 `runtime/exports/admin-pipeline-20261107/`；report.json 保存参数和阶段耗时。
+- 首轮真实生成成功后发现原 CSP 不允许 Blob 媒体，已仅对 media-src 增加 blob:，复测播放通过；script-src、Host / Origin / CSRF 与 DPAPI 保持原约束。新增后端测试覆盖资源白名单及 CSP。
+- `npm run build` 通过（保留既有 Zod 注释和 bundle 大小警告）；单元 / 接口 49/49 通过；`node scripts/verify-admin-pipeline.mjs --layout-only` 通过导航、390px 抽屉与三种关闭方式、明确失败夹具、重试解锁、SongPlan / 音符显示；完整诊断真实运行通过。
+- 边界：未做人工歌声听评、真实手机 / Safari；这不是正式新创作页面验收。Toge 的 `tests/browser/admin.spec.ts` 仍使用旧标题与单页可见性选择器，需按新导航更新；本轮未代改前端 E2E，使用独立后端诊断脚本验证。无推送。
+
 <a id="module-documentation-policy"></a>
 
 ## 2026-11-06 · 文档按模块扩展
