@@ -14,6 +14,15 @@
 - 恢复入口：确认工作区干净后切回 feature/backend-p1-phoneme，再运行 git stash apply 65cc8c0dc1ad9dd80eddf85a9add6bb4deb3a11b；apply 保留 stash，便于核对。原始字节备份可用于核对 Git 行尾规范化差异。不要在文档分支直接应用长歌草稿，不自动删除 stash 或备份。
 - 验证：仅检查本轮 Markdown 的本地链接/锚点、文档一致性、Git diff 与文档提交范围；未运行构建、前端 E2E、LLM 或真实引擎，也未重宣称此前音频验收。本次按用户要求提交文档 PR，前一轮后端成果继续留在原分支，P2-A/P3 的跨端实施与整单验收仍待对方确认。
 
+<a id="loop-layout-restoration"></a>
+
+## 2026-11-07 · 撤回接线时擅自增加的默认页面内容
+
+- 工单：[5 · 原型接线](../CC-Tasks/5-toge-free-creation.md)，依据：toge 反馈接线改动了原交互并增加说明，使原本版式臃肿。入口：[README](../README.md#launch)，接入边界：[架构](ARCHITECTURE.md#prototype-frontend)。前一条接线虽然功能通过，但没有守住原稿的默认排版；本轮直接按原 HTML 对照收简，视觉仍待 toge 实际确认。
+- 实际修改：去掉默认 Mock 横幅、制作便签/准备/来源说明、作品信息栏、额外段落栏、常驻配方/引擎/演唱折叠区，以及全宽底部悬浮播放器。输入框左侧原铅笔位置打开歌词/制作设置，初始主题沿用当前工程；右上角保存/导出菜单（手机 ⋯）承载保存、导出、引擎与方案。段落选择放在积木标题内，进度放在原积木底栏；单轨试听使用音轨图标。歌词卡片恢复正文加一个主按钮，单句试听/锁定收至角落；卷帘、重唱仍按需展开，实际制作状态仅在任务后出现。未改原始 HTML、后端、公开契约、音乐算法或导出实现，未清除工程或重启已有服务。
+- 验证：`npm run build` 和 `node --import tsx --test tests/production-page.test.ts` **2/2** 通过；`CHOKIDAR_USEPOLLING=true` 下完整 Mock 页面 **26/26**，输出 `temp/songyu-loop-slim-mock`；launch / plan / studio（排除 FFmpeg）真实模式本地页面 **10/10**，最终输出 `temp/songyu-loop-slim-final-real`。两个播放断言首次在原 5 秒等待内未通过；定向诊断中浏览器音频恢复约 20ms、离线准备约 1.2–1.8 秒，未复现卡住，移除诊断并将断言改为按实际播放状态等待（上限 20 秒），最后完整 10 项通过；没有改音频算法，不能把一次失败归为已确认的性能根因。测试继续覆盖本地 PCM / WAV、Mock 制作和回执、失败保留、锁定、排序、导入、卷帘与局部重唱。
+- 原稿对照：页面测试在同一 1440px 视口读取原 HTML（仅在测试 DOM 移去入口提示），首屏高度、积木起点差异 ≤2px，歌词卡片高度不超过原稿 +8px。390px 无横向溢出；原稿与收简后的截图分别为 `temp/songyu-loop-original-layout.png`、`temp/songyu-loop-restored-desktop.png`、`temp/songyu-loop-restored-mobile.png`，已检查。实际工程保留六类音轨，较原稿五条演示轨多出真实和弦轨，没有用隐藏工程数据来压缩页面。真实 LLM、声库与 MP4 编码未运行，人工视觉/听感不提前验收；本轮仅本地提交，未推送。
+
 <a id="loop-prototype-wiring"></a>
 
 ## 2026-11-07 · 按 LOOP! 原型重做正式首页接线
