@@ -12,10 +12,10 @@ test('real page explains missing setup before production and keeps local creatio
  await page.goto('/');const setup=page.getByLabel('制作前准备');await expect(setup).toContainText('AI 作曲服务尚未配置');await expect(setup).toContainText('中文演唱声库尚未准备好');
  await expect(setup.getByRole('link',{name:'打开本机设置'})).toHaveAttribute('href','http://127.0.0.1:3001/admin');
  await page.getByLabel('自由创作主题',{exact:true}).fill('现在还不能自动制作');await expect(page.getByRole('button',{name:'制作新作品',exact:true})).toBeDisabled();
- await page.locator('.free-creation form').evaluate((form:HTMLFormElement)=>form.requestSubmit());expect(calls).toBe(0);
- await page.getByLabel('一句话灵感',{exact:true}).fill('孤独、安静，旋律下行');await page.getByRole('button',{name:'让灵感发芽',exact:true}).click();
- await expect(page.locator('.recipe-tags')).toContainText('A 小调');expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('songyu-project-v1')!).planning.source)).toBe('local-rules');
- await page.screenshot({path:'D:/vibe-coding_/temp/songyu-launch-setup.png',fullPage:true});expect(calls).toBe(0);await setup.getByRole('button',{name:'先玩音乐积木',exact:true}).click();await expect(page.getByRole('heading',{name:/好听，一块一块搭起来/})).toBeVisible();
+ await page.locator('.patchlab-creation form').evaluate((form:HTMLFormElement)=>form.requestSubmit());expect(calls).toBe(0);
+ await page.getByLabel('自由创作主题',{exact:true}).fill('孤独、安静，旋律下行');await page.getByRole('button',{name:'本地搭建积木',exact:true}).click();
+ await expect(page.locator('.workspace-meta')).toContainText('A 小调');expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('songyu-project-v1')!).planning.source)).toBe('local-rules');
+ await page.screenshot({path:'temp/songyu-loop-launch-setup.png',fullPage:true});expect(calls).toBe(0);await setup.getByRole('button',{name:'先玩音乐积木',exact:true}).click();await expect(page.getByRole('heading',{name:/你的音乐积木/})).toBeVisible();
 });
 
 test('rechecking configured capability fixtures enables production without claiming an LLM call succeeded',async({page})=>{
@@ -30,6 +30,6 @@ test('unavailable services show a recoverable connection state while the current
  const before=await page.evaluate(()=>localStorage.getItem('songyu-project-v1'));await page.getByRole('button',{name:'重新检查',exact:true}).click();await expect(page.getByLabel('制作前准备')).toContainText('无法连接本机创作服务');expect(await page.evaluate(()=>localStorage.getItem('songyu-project-v1'))).toBe(before);
 });
 
-test('old design page explicitly points to the desktop launcher',async({page})=>{
- await page.goto('/03_patchlab_playful.html');await expect(page).toHaveTitle(/设计参考原型/);await expect(page.getByLabel('设计原型说明')).toContainText('双击桌面「声屿」');
+test('original sample links to the wired LOOP homepage',async({page})=>{
+ await page.goto('/03_patchlab_playful.html');await expect(page).toHaveTitle(/原始静态样稿/);await expect(page.getByLabel('原始样稿说明')).toContainText('实际创作已接入正式首页');
 });

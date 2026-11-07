@@ -1,6 +1,6 @@
 # 工单 6：Blacktea × Toge · 原型接线后的真实闭环与听感验收
 
-Owner：Blacktea、Toge。状态：等待前置任务。2026-11-07 更正：正式前端以 LOOP! 原型的视觉与交互为基础；原“新页面”措辞不构成另造原型的要求。当前 React 工作台结果保留，不能代替原型接线验收，见[架构边界](../docs/ARCHITECTURE.md#prototype-frontend)。
+Owner：Blacktea、Toge。状态：工单 5 的 LOOP! 页面接线与 Mock / 本地页面验证已完成，等待工单 4 的真实环境与双方现场验收；本轮未勾选下列真实验收。2026-11-07 更正：正式前端以 LOOP! 原型的视觉与交互为基础；原“新页面”措辞不构成另造原型的要求。当前 React 工作台结果保留，不能代替原型接线验收，见[架构边界](../docs/ARCHITECTURE.md#prototype-frontend)。
 来源：2026-11-06 原自由创作接入计划 D。
 依赖：[工单 4](4-blacktea-integration.md)的接口/环境和 [工单 5](5-toge-free-creation.md)的原型接线最小流程就绪后先验最小流程，C 完成后再验局部编辑；不要求一次验完全部阶段。
 

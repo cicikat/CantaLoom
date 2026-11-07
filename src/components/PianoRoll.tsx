@@ -19,8 +19,9 @@ function NoteForm({note,line,locked,onEdit}:{note:Note;line:Lyric;locked:boolean
   <button type="button" className="text-button" disabled={locked} onClick={()=>onEdit({locked:!note.locked})}>{note.locked?<LockKeyhole size={14}/>:<Unlock size={14}/>} {note.locked?'解锁这个音符':'锁定这个音符'}</button>
  </form>;
 }
-export function PianoRoll({project:p,onChange,onPreview,busy}:{project:SongProject;onChange:(p:SongProject)=>void;onPreview:(id:string)=>void;busy:boolean}){
+export function PianoRoll({project:p,onChange,onPreview,busy,selectedLineId}:{project:SongProject;onChange:(p:SongProject)=>void;onPreview:(id:string)=>void;busy:boolean;selectedLineId?:string}){
  const editor=usePhraseEditor(p,onChange),line=editor.line,note=editor.note;
+ useEffect(()=>{if(selectedLineId)editor.selectLine(selectedLineId)},[selectedLineId]);
  const drag=useRef<{id:string;x:number;y:number;beat:number;midi:number;duration:number;resize:boolean;pointerId:number;scale:number}|undefined>(undefined);
  const [ghost,setGhost]=useState<{id:string;beat:number;midi:number;duration:number}>();
  const grid=useRef<HTMLDivElement>(null),[available,setAvailable]=useState(0);

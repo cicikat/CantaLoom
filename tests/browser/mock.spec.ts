@@ -33,7 +33,7 @@ async function openPiano(page:import('@playwright/test').Page,withOverrides=fals
   if(withOverrides){p.lyrics[0].performance.overrides=[{index:0,dynamics:8,origin:'manual'}];p.performanceHistory={[p.lyrics[0].id]:[{preset:'soft',overrides:[{index:0,dynamics:2}]}]}}
   localStorage.setItem('songyu-mock-project-v1',JSON.stringify(p));
  },withOverrides);
- await page.reload();await page.getByRole('navigation').getByRole('button',{name:/虚拟歌姬/}).click();await expect(page.getByRole('region',{name:'单句钢琴卷帘'})).toBeVisible();
+ await page.reload();await page.getByRole('button',{name:'编辑第1句旋律',exact:true}).click();await expect(page.getByRole('region',{name:'单句钢琴卷帘'})).toBeVisible();
  return mockStored(page);
 }
 
@@ -41,12 +41,12 @@ test('frontend alone supports planning, locks, singing, sibling cache, playback,
  const requests:string[]=[],errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/api/**',route=>{if(!new URL(route.request().url()).pathname.startsWith('/api/'))return route.continue();requests.push(route.request().url());return route.abort()});
  await page.goto('/');await expect(page.getByRole('note')).toContainText('MOCK 开发模式');await expect(page.locator('.honesty')).toContainText('未调用 LLM');
- await page.getByRole('button',{name:'让灵感发芽'}).click();await expect(page.locator('.workspace-meta')).toContainText('MOCK 固定测试作品');
+ await page.getByRole('button',{name:'本地搭建积木',exact:true}).click();await expect(page.locator('.workspace-meta')).toContainText('把夏天唱成一座岛');
  const stored=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('songyu-mock-project-v1')!));
- expect((await stored()).planning.mock).toBe(true);expect(await page.evaluate(()=>localStorage.getItem('songyu-project-v1'))).toBeNull();
+ expect((await stored()).planning.source).toBe('local-rules');expect(await page.evaluate(()=>localStorage.getItem('songyu-project-v1'))).toBeNull();
  await page.getByRole('navigation').getByRole('button',{name:/音乐积木/}).click();await page.getByRole('button',{name:'锁定吉他',exact:true}).click();const locked=(await stored()).tracks.filter((t:any)=>t.locked);
  await page.getByRole('button',{name:'重做未锁定积木'}).click();expect((await stored()).tracks.filter((t:any)=>t.locked)).toEqual(locked);
- await page.getByRole('navigation').getByRole('button',{name:/虚拟歌姬/}).click();const rows=page.locator('.qixuan-line');
+ await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();const rows=page.locator('.qixuan-line');
  await expect(page.locator('.qixuan-controls')).toContainText('MOCK 测试声库');await rows.nth(0).getByRole('button',{name:'绮萱演唱',exact:true}).click();await expect(rows.nth(0)).toContainText('MOCK 测试音已就绪');
  const first=(await stored()).vocalAssets;await page.getByLabel('第2句歌词',{exact:true}).fill('修改第二句的歌词');await rows.nth(1).getByRole('button',{name:'绮萱演唱',exact:true}).click();await expect(rows.nth(1)).toContainText('MOCK 测试音已就绪');
  expect((await stored()).vocalAssets[(await stored()).lyrics[0].id]).toEqual(first[(await stored()).lyrics[0].id]);
@@ -57,7 +57,7 @@ test('frontend alone supports planning, locks, singing, sibling cache, playback,
  await page.reload();await expect(page.getByRole('note')).toBeVisible();
  await page.getByRole('button',{name:'导出作品',exact:true}).click();const wav=page.waitForEvent('download');await page.getByRole('button',{name:/混音音频/}).click();expect((await wav).suggestedFilename()).toContain('.mock.wav');
  const project=page.waitForEvent('download');await page.getByRole('button',{name:/完整工程/}).click();expect((await project).suggestedFilename()).toContain('.mock.songyu.json');
- await page.getByRole('button',{name:'关闭导出',exact:true}).click();await page.getByRole('navigation').getByRole('button',{name:/歌词 PV/}).click();await expect(page.locator('.export-status')).toContainText('未运行 FFmpeg');const exported=page.waitForEvent('download');await page.getByRole('button',{name:'模拟导出 MP4',exact:true}).click();expect((await exported).suggestedFilename()).toContain('.mock-export.json');await expect(page.getByRole('status').filter({hasText:'未生成 MP4'})).toBeVisible();
+ await page.getByRole('button',{name:'关闭导出',exact:true}).click();await page.getByRole('navigation').getByRole('button',{name:'PV ✦',exact:true}).click();await expect(page.locator('.export-status')).toContainText('未运行 FFmpeg');const exported=page.waitForEvent('download');await page.getByRole('button',{name:'模拟导出 MP4',exact:true}).click();expect((await exported).suggestedFilename()).toContain('.mock-export.json');await expect(page.getByRole('status').filter({hasText:'未生成 MP4'})).toBeVisible();
  expect(requests).toEqual([]);expect(errors).toEqual([]);await page.screenshot({path:'mock-test-results/frontend.png',fullPage:true});
 });
 
@@ -93,6 +93,7 @@ test('A2 page makes a new five-line song, reports fixture stages, plays and rest
  await page.route('**/api/**',route=>{if(!new URL(route.request().url()).pathname.startsWith('/api/'))return route.continue();requests.push(route.request().url());return route.abort()});
  await page.goto('/');const before=await mockStored(page);
  await page.evaluate(before=>localStorage.setItem('songyu-project-v1',JSON.stringify(before)),before);
+ await page.locator('.creation-options summary').click();
  const lyrics=['  风吹过小岛  ','灯照着海岸','雨停在窗边','我走向明天','把心事放下'];
  await page.getByLabel('自由创作主题',{exact:true}).fill('雨后释然，前半段安静，后半段明亮');
  await page.getByLabel('自由创作歌词',{exact:true}).fill(lyrics.join('\n'));
@@ -105,9 +106,9 @@ test('A2 page makes a new five-line song, reports fixture stages, plays and rest
  await page.getByRole('button',{name:'试听这首作品',exact:true}).click();await expect(page.getByRole('button',{name:'暂停这首作品',exact:true})).toBeVisible({timeout:20000});
  await expect.poll(async()=>Number(await page.getByRole('slider',{name:'播放进度'}).inputValue())).toBeGreaterThan(.1);
  await page.getByRole('button',{name:'暂停这首作品',exact:true}).click();
- await page.screenshot({path:'D:/vibe-coding_/temp/songyu-a2-desktop.png',fullPage:true});
+ await page.screenshot({path:'temp/songyu-loop-a2-desktop.png',fullPage:true});
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
- await page.screenshot({path:'D:/vibe-coding_/temp/songyu-a2-mobile.png',fullPage:true});
+ await page.screenshot({path:'temp/songyu-loop-a2-mobile.png',fullPage:true});
  await page.reload();expect((await mockStored(page)).id).toBe(p.id);await page.getByRole('button',{name:'播放全曲',exact:true}).click();await expect(page.getByRole('button',{name:'暂停全曲',exact:true})).toBeVisible({timeout:20000});
  expect(requests).toEqual([]);expect(errors).toEqual([]);
 });
@@ -131,14 +132,14 @@ for(const edit of ['input','project','navigate','cancel'])test(`A2 page discards
  await page.goto('/');await holdProduction(page);const before=await mockStored(page);
  await page.getByLabel('自由创作主题',{exact:true}).fill('迟到结果测试');await page.getByRole('button',{name:'制作新作品',exact:true}).click();
  await expect.poll(()=>page.evaluate(()=>typeof (window as any).releaseProduction)).toBe('function');
- if(edit==='input')await page.getByLabel('自由创作歌词',{exact:true}).fill('这句是我刚改的词');
+ if(edit==='input'){await page.locator('.creation-options summary').click();await page.getByLabel('自由创作歌词',{exact:true}).fill('这句是我刚改的词')}
  if(edit==='project'){await page.locator('.engine-panel summary').click();await page.getByLabel('bass GM',{exact:true}).fill('34')}
  if(edit==='navigate')await page.getByRole('navigation').getByRole('button',{name:/音乐积木/}).click();
  if(edit==='cancel')await page.getByRole('button',{name:'停止等待，保留当前工程',exact:true}).click();
  const expected=await mockStored(page);await page.evaluate(()=>(window as any).releaseProduction());
  await expect.poll(()=>page.evaluate(()=>(window as any).productionDelivered)).toBe(true);
  expect(await mockStored(page)).toEqual(expected);expect((await mockStored(page)).id).toBe(before.id);
- if(edit==='navigate')await page.getByRole('navigation').getByRole('button',{name:/灵感空间/}).click();
+ if(edit==='navigate')await page.getByRole('navigation').getByRole('button',{name:'创作',exact:true}).click();
  await expect(page.getByLabel('制作状态')).toContainText(/不会|已改变/);await expect(page.getByRole('button',{name:'试听这首作品',exact:true})).toHaveCount(0);
 });
 
@@ -187,8 +188,8 @@ test('C piano editor saves pitch/length, honors locks and persists edits without
  await roll.getByRole('button',{name:'锁定这个音符',exact:true}).click();await expect(roll.getByLabel('选中音符音高',{exact:true})).toBeDisabled();
  await roll.getByRole('button',{name:'解锁这个音符',exact:true}).click();await roll.getByRole('button',{name:'锁定这一句',exact:true}).click();await expect(roll.getByLabel('选中音符音高',{exact:true})).toBeDisabled();
  await roll.getByRole('button',{name:'解锁这一句',exact:true}).click();
- await page.screenshot({path:'D:/vibe-coding_/temp/songyu-c-piano-desktop.png',fullPage:true});
- await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);await page.screenshot({path:'D:/vibe-coding_/temp/songyu-c-piano-mobile.png',fullPage:true});
+ await page.screenshot({path:'temp/songyu-loop-c-piano-desktop.png',fullPage:true});
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);await page.screenshot({path:'temp/songyu-loop-c-piano-mobile.png',fullPage:true});
  await page.reload();expect((await mockStored(page)).lyrics[0].notes[0].midi).toBe(72);
 });
 
@@ -246,4 +247,35 @@ test('C piano editor rejects a response that changes a sibling and preserves the
   api.melody=async(input:unknown)=>{const result=await original(input);result.draft.phrases[1].notes[0].midi++;return result};
  });
  await roll.getByLabel('局部旋律要求',{exact:true}).fill('错误响应测试');await roll.getByRole('button',{name:'只重作这一句',exact:true}).click();await expect(roll.locator('.phrase-status')).toContainText('原工程已保留');expect(await mockStored(page)).toEqual(before);
+});
+
+test('LOOP board edits real steps, preserves locks, persists drag order and imports the same project',async({page})=>{
+ await page.goto('/');const before=await mockStored(page),sectionId=before.sections[1].id;
+ const rows=page.locator('#tracks .track');await expect(rows).toHaveCount(before.tracks.filter((t:any)=>t.sectionId===sectionId).length);
+ const step=page.getByRole('button',{name:'吉他 第2格',exact:true}),wasOn=await step.getAttribute('aria-pressed');await step.click();await expect(step).toHaveAttribute('aria-pressed',wasOn==='true'?'false':'true');
+ const edited=await mockStored(page),guitar=edited.tracks.find((t:any)=>t.sectionId===sectionId&&t.kind==='guitar');expect(guitar.manuallyEdited).toBe(true);expect(guitar.notes).not.toEqual(before.tracks.find((t:any)=>t.id===guitar.id).notes);
+ await page.getByRole('button',{name:'锁定吉他',exact:true}).click();const locked=(await mockStored(page)).tracks.find((t:any)=>t.id===guitar.id);await expect(step).toBeDisabled();await page.getByRole('button',{name:'重做未锁定积木',exact:true}).click();expect((await mockStored(page)).tracks.find((t:any)=>t.id===guitar.id)).toEqual(locked);
+ const order=await rows.evaluateAll(elements=>elements.map(el=>el.getAttribute('data-track')));await rows.nth(0).dragTo(rows.nth(2));await expect.poll(()=>rows.evaluateAll(elements=>elements.map(el=>el.getAttribute('data-track')))).toEqual([order[1],order[2],order[0],...order.slice(3)]);
+ await page.getByRole('button',{name:'上移鼓点',exact:true}).click();const saved=await mockStored(page),expected=saved.tracks.filter((t:any)=>t.sectionId===sectionId).map((t:any)=>t.id);await page.reload();expect(await rows.evaluateAll(elements=>elements.map(el=>el.getAttribute('data-track')))).toEqual(expected);
+ await page.locator('input[accept=".json"]').setInputFiles({name:'restored.mock.songyu.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(saved))});await expect(page.getByRole('status').filter({hasText:'工程已恢复'})).toBeVisible();expect(await mockStored(page)).toEqual(saved);
+});
+
+test('LOOP tap uses recorded timing; PV canvas uses the project clock and dialogs return focus',async({page})=>{
+ await page.goto('/');const pad=page.getByRole('button',{name:'敲击节奏',exact:true});for(let i=0;i<5;i++){await pad.click();if(i<4)await page.waitForTimeout(500)}
+ await page.getByRole('button',{name:/变成鼓点/}).click();const p=await mockStored(page);expect(p.tapTimes).toHaveLength(5);expect(p.bpm).toBeGreaterThan(90);expect(p.bpm).toBeLessThan(130);
+ await page.getByRole('slider',{name:'播放进度',exact:true}).fill('10');await page.getByRole('navigation').getByRole('button',{name:'PV ✦',exact:true}).click();const pv=page.getByRole('dialog',{name:'歌词 PV',exact:true});await expect(pv).toBeVisible();await expect(pv.locator('.pvfoot')).toContainText('00:10');
+ const matches=await pv.locator('canvas').evaluate(async canvas=>{
+  // @ts-expect-error Vite browser module
+  const {drawPV}=await import('/src/visual.ts');const project=JSON.parse(localStorage.getItem('songyu-mock-project-v1')!),expected=document.createElement('canvas');expected.width=1280;expected.height=720;drawPV(expected,project,10);return (canvas as HTMLCanvasElement).toDataURL()===expected.toDataURL();
+ });expect(matches).toBe(true);
+ await page.getByLabel('字幕样式',{exact:true}).selectOption('poster');expect((await mockStored(page)).subtitleStyle).toBe('poster');await page.keyboard.press('Escape');await expect(pv).not.toBeVisible();await expect(page.getByRole('navigation').getByRole('button',{name:'PV ✦',exact:true})).toBeFocused();
+ await page.getByRole('button',{name:'导出作品',exact:true}).click();await expect(page.getByRole('dialog',{name:'导出作品',exact:true})).toBeVisible();await page.keyboard.press('Escape');await expect(page.getByRole('button',{name:'导出作品',exact:true})).toBeFocused();
+});
+
+test('LOOP retains prototype layout on desktop and phone and opens the selected lyric card',async({page})=>{
+ await page.goto('/');await expect(page.getByRole('heading',{name:/敲一下.*变成一首歌/})).toBeVisible();await expect(page.locator('.hero .bigcard')).toBeVisible();await expect(page.locator('.creation-options')).not.toHaveAttribute('open');
+ await page.screenshot({path:'temp/songyu-loop-home-desktop.png',fullPage:true});
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'temp/songyu-loop-home-mobile.png',fullPage:true});
+ const p=await openPiano(page);await page.getByRole('button',{name:'编辑第2句旋律',exact:true}).click();await expect(page.getByRole('region',{name:'单句钢琴卷帘'}).locator('.phrase-toolbar>b')).toHaveText(p.lyrics[1].text);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });

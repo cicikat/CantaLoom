@@ -4,6 +4,15 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+<a id="loop-prototype-wiring"></a>
+
+## 2026-11-07 · 按 LOOP! 原型重做正式首页接线
+
+- 工单：[5 · 原型接线](../CC-Tasks/5-toge-free-creation.md)；接入：[架构](ARCHITECTURE.md#prototype-frontend)，入口：[README](../README.md#launch)，后续真实验收：[工单 6](../CC-Tasks/6-joint-acceptance.md)。toge 明确要求删掉当前接线，重新接入 `03_patchlab_playful.html`。App 替换四页工作台入口，main 停用 style.css / plan.css，patchlab.css 提取原型样式并补实际控件；HTML 保留原始设计和演示交互，横幅改为正式入口说明。未清空工程、清理历史源码、改后端/共享契约/音乐算法或重启已有服务。
+- 实际结果：首屏复用 useProduction 的主题/可选 1–8 行歌词、任务阶段、取消、失败保留、单句重试；四个主题按钮填意图。积木读取实际工程音轨，格子、静音、锁定、单轨试听、重做、拖动和 ↑↓ 写回工程；TAP 记录真实时间。歌词按实际数量展示，自由作品由卡片展开对应句 PianoRoll / usePhraseEditor，逐句演唱复用 QixuanPanel。PV Canvas、播放器、WAV/PV 导出共用现有时钟与链路；字幕样式/配色、工程导入/保存实际生效；dialog 支持 Escape 和焦点返回。原型随机换词、振荡器和独立字幕计时器未进入正式页。
+- 验证：`npm run build` 通过；`node --import tsx --test tests/core.test.ts tests/phrase-edit.test.ts tests/mock-free.test.ts tests/production-page.test.ts tests/api.test.ts tests/launcher.test.mjs` **29/29**；`npm run test:e2e:mock -- --output=temp/songyu-loop-final-mock` **26/26**；`npm run test:e2e -- tests/browser/launch.spec.ts tests/browser/plan.spec.ts tests/browser/studio.spec.ts --grep-invert FFmpeg --output=temp/songyu-loop-real-page` **10/10**。页面测试按新入口迁移，保留旧断言的工程/资产保护目标，新增排序保存、导入还原、真实 TAP、PV Canvas 与工程时间对照、对应卡片选句、手机布局与弹层焦点验证。末次将导出进度与结果提示放进模态弹层后，再次构建并定向回归本地创作/导出及 TAP/PV/焦点 2/2 通过，输出在 `temp/songyu-loop-dialog`。桌面/390px 截图位于 `temp/songyu-loop-home-desktop.png`、`temp/songyu-loop-home-mobile.png`，已检查。
+- 一次测试中 Windows 对 `.crdownload` 的文件锁触发 Vite EBUSY；最终页面验证在当前命令进程设置 `CHOKIDAR_USEPOLLING=true`，未改全局或项目配置。构建仍有依赖注释与较大 bundle 提示。真实模式测试包含本地 Web Audio PCM、WAV 及明确接口夹具，未调用真实 LLM / 绮萱 / FluidSynth、未运行真实 MP4 编码；Mock PV 是 JSON 回执。视觉确认、真实制作和人工听感未提前勾选，调教/混音控件仍是工单 5 后续。本轮仅本地提交，未推送。
+
 <a id="project-local-artifacts"></a>
 
 ## 2026-11-07 · 临时产物与备份归入项目目录

@@ -30,34 +30,33 @@
 | docs/ | 协作流程、架构与接口、引擎与后台、迭代日志 |
 | CC-Tasks/数字-任务简述.md | 本项目计划/工单，含清单、Owner、依赖、验收和 checkbox；旧工单标明历史范围 |
 | `.github/`、根目录配置 | CI、npm 命令、Vite/TS/Playwright 配置与环境示例 |
-| `03_patchlab_playful.html` | LOOP! 前端视觉与交互基础；现为独立演示，尚未接入实际工程/API；当前启动器仍打开 React 工作台 |
+| `03_patchlab_playful.html` | LOOP! 布局、样式与交互的设计源；正式接线在 App / PatchlabCreation / patchlab.css；文件自身保留原始演示 |
 | `dist/`、`node_modules/`、测试输出 | 可生成的本机产物，忽略提交；不自行清理他人文件 |
 
 <a id="prototype-frontend"></a>
 
 ## LOOP! 原型作为前端的接线边界
 
-2026-11-07，toge 要求纠正文档，并反馈 Blacktea 喜欢、准备使用原型。前端方向以 `03_patchlab_playful.html` 的布局和交互为基础；此前“只作视觉参考”是实现过程中的分类，不能视为双方同意弃用原型。当前源码仍由 `index.html` → `src/main.tsx` → `App.tsx` 加载另建的 React 四页工作台；本轮文档更正没有改变运行入口。
+2026-11-07，toge 明确要求删掉当前接线、重新接入 `03_patchlab_playful.html`。`index.html` → `src/main.tsx` → `App.tsx` 现在加载 LOOP! 单页，停止挂载原四页工作台及 style.css / plan.css。`src/patchlab.css` 提取原型样式并补实际控件；保留船、日落、贴纸、主题按钮、TAP、积木、歌词与 PV 区域。旧样式和可复用模块留在仓库，旧四页 App 可从 Git 历史查询，存档没有迁移或清除。
 
-原型已有完整 HTML/CSS、响应式规则、灵感输入、分轨格子、锁定/静音/重生、TAP、歌词卡片和 PV 弹层，能够作为实际前端的视觉与交互基础。可将这些结构和样式接入现有 React 工程，复用 hooks、组件和统一 Client；不要求继续使用原型的演示脚本，也不要求因此换成四页布局。是否保留单文件源码不是产品外观的前提。
-
-| 原型区域 | 实际接线要求与已有能力 |
+| 原型区域 | 当前实际接线 |
 |---|---|
-| 灵感输入与一键开工 | 复用 useProduction / Client 的输入、任务状态、完整结果应用与失败保留；在原型内安置可选 1–8 行歌词及状态，不照搬固定四句限制 |
-| 音乐积木与 TAP | 使用 SongProject 的真实音轨/音符、锁定、静音与节奏数据；原型当前为五条演示轨，不能硬编码为实际工程轨道数量；自由作品沿用现有编辑保护 |
-| 歌词卡片与歌姬 | 展示真实逐句歌词、音符及资产状态；复用局部编辑/重唱能力；现有钢琴卷帘如何融入原型需先给 toge 看具体位置，不能自行另造主页面 |
-| 播放与 PV | 使用现有统一音频时钟、renderAudio / 播放器和字幕/导出链路；替换原型振荡器、随机格子与独立字幕计时，不重写稳定导出链路 |
-| 音色与状态文案 | 按实际支持的引擎和资产显示；演示音色不冒充中文演唱，原型“AGENT IS READY”等静态提示不作为服务状态 |
+| 灵感输入与一键开工 | PatchlabCreation → useProduction → 统一 Client；主题 1–500 字，可折叠输入 1–8 行歌词、速度与时长；真实阶段、取消等待、失败保留、缺失句重试、完整校验后一次应用；四个主题按钮填写意图，不伪造新模式的曲风字段 |
+| 音乐积木与 TAP | 由 SongProject 当前段落实际音轨生成，六类音轨不固定为原型五条演示轨；16 格为四拍概览；锁定、静音、单轨试听、独立重做、手改格子、拖动及 ↑↓ 顺序均写回工程。自由作品保留格子编辑与整轨重做限制，使用逐句卷帘 |
+| 本地规则与方案 | 「本地搭建积木」无需模型；「创作配方」显示有效计划与保护决策，可使用既有 api.plan 更新旧模式积木方案。自由作品不套用旧模板 |
+| 歌词卡片与歌姬 | 按实际歌词数量展示，旧模式可编辑文本；自由模式保留原词，卡片下的「编辑旋律」展开同页 PianoRoll 并选中对应句。复用音符/句锁、局部重作与代次保护；折叠区复用 QixuanPanel 逐句演唱与重唱 |
+| 播放与 PV | 同一个 usePlayer / AudioEngine 时钟，Landscape / drawPV 读取实际工程和 time；WAV / PV / 工程仍走原导出链路，字幕样式和换色实际持久化。弹层用原生 dialog，支持 Escape、焦点返回与模态键盘操作 |
+| 音色与状态文案 | 元音演示和外部歌声分开显示；Mock 明确标记；静态 AGENT IS READY 改为配置或本地可用状态。音源、MIDI、USTX、文件交换仍可在底部引擎折叠区访问 |
 
-当前原型的随机格子、简单振荡器、随机换词和独立字幕定时器只能证明演示交互，尚不能承担真实工程保存、制作任务或同步导出；这是内部逻辑的接线缺口，不是弃用设计的理由。真实能力经统一 Client 和现有业务逻辑进入 UI，不在页面复制 fetch、算法或缓存校验，不改后端或共享契约来迁就布局。现有工作台与工程存档保留，后续以原型接线后的页面分别验证 Mock、真实引擎和人工体验。执行与验收见[工单 5](../CC-Tasks/5-toge-free-creation.md)、[工单 6](../CC-Tasks/6-joint-acceptance.md)。
+正式首页不再运行原型的随机格子、随机换词、独立振荡器或字幕定时器。原 HTML 文件保留原始演示，并提供正式入口说明，不能用 file:// 单文件代替 Node / Vite 应用。未改后端、公开契约、模型、混音或导出算法；UI 继续经既有 hooks、Client 和导出用例接入。原型重接后的构建、29 项相关单元测试、26 项 Mock 页面测试及 10 项真实模式页面/接口夹具已通过，详见[本轮记录](iteration-log.md#loop-prototype-wiring)。真实模型、绮萱、MP4 编码与人工听感仍按[工单 6](../CC-Tasks/6-joint-acceptance.md)验收。
 
 <a id="launch"></a>
 
 ## 日常启动与制作准备
 
-「打开声屿.bat」是面向使用者的入口，本机桌面「声屿」指向它。scripts/reuse-studio.mjs 先检查当前端口的 health、页面标识、与本地 dist 相同的资产路径和 JS 内容哈希；匹配则直接打开正在运行的当前版本，--check / --no-open 不开浏览器，也不停止已有进程。未匹配或服务未运行时，原样传递参数给现有 start.bat；没有第二套构建/服务启动逻辑，也不处理、停止或抢占其他程序。既有启动器负责环境/端口检查、按 lockfile 补依赖、构建、启动同源服务、确认页面与资产后打开浏览器。`--check` 不打开浏览器并在检查后退出，`--no-open` 保持服务但不打开浏览器。此前启动任务在原型加了“设计参考”提示；该提示仍存在于 HTML，但不再作为设计方向依据，待原型接线时纠正，见[原型边界](#prototype-frontend)。
+「打开声屿.bat」是面向使用者的入口，本机桌面「声屿」指向它。scripts/reuse-studio.mjs 先检查当前端口的 health、页面标识、与本地 dist 相同的资产路径和 JS 内容哈希；匹配则直接打开正在运行的当前版本，--check / --no-open 不开浏览器，也不停止已有进程。未匹配或服务未运行时，原样传递参数给现有 start.bat；没有第二套构建/服务启动逻辑，也不处理、停止或抢占其他程序。既有启动器负责环境/端口检查、按 lockfile 补依赖、构建、启动同源服务、确认页面与资产后打开浏览器。`--check` 不打开浏览器并在检查后退出，`--no-open` 保持服务但不打开浏览器。双击入口的启动逻辑未变，App 已切换为 LOOP! 接线；原 HTML 提示已改为实际首页入口说明，见[原型边界](#prototype-frontend)。
 
-useProductionReadiness 通过既有 health / engines / qixuan Client 只读检查本机配置与资源；在进入页面、回到窗口及点击「重新检查」时刷新，使用代次保护丢弃过期检查结果。它接管原 useStudio 的 health 刷新，不新增 API 或改服务端设置。当前 production 服务要求 LLM、伴奏音源、歌声服务和 FFmpeg；缺项/未连接时前端禁用自动制作提交，给出本机设置入口及可立即进入的本地积木。详情默认折叠，不要求使用者分辨开发模式或输入命令。
+useProductionReadiness 通过既有 health / engines / qixuan Client 只读检查本机配置与资源；在进入页面、回到窗口及点击「重新检查」时刷新，使用代次保护丢弃过期检查结果。它接管原 useStudio 的 health 刷新，不新增 API 或改服务端设置。当前 production 服务要求 LLM、伴奏音源、歌声服务和 FFmpeg；缺项/未连接时前端禁用自动制作提交，给出本机设置入口及可立即进入的本地积木。缺项直接列出，不要求使用者分辨开发模式或输入命令。
 
 正式构建使用同源 `/admin`，开发联调沿用原有后端 loopback 管理地址；管理限制不变。前置检查不调用 LLM、渲染器或下载资源；llmStatus 继续来自真实 health，资源就绪不记为实际上游调用成功。Mock 仍为显式测试数据，真实模式没有自动回落 Mock。已有后台受理的任务、当前工程与存档不因准备状态刷新被改写。
 
@@ -199,7 +198,7 @@ production 串联规划、旋律、器乐与歌声。stage 契约枚举为 queue
 
 #### 当前页面接线（工单 5 C 前两项）
 
-自由作品生成或导入后，在「虚拟歌姬」页使用 PianoRoll；旧模板作品保持原交互。PianoRoll / usePhraseEditor / hooks/phrase-edit.ts 为本轮前端接线，复用既有 Schema、Client、melodyRequest / applyMelodyDraft 与自动表达纯函数；没有修改 shared、model、Client、服务或音乐算法定义。
+自由作品生成或导入后，点击 LOOP! 歌词卡片下的「编辑旋律」，在同页展开 PianoRoll 并选择对应句；旧模板作品保持文本与单句重写交互。PianoRoll / usePhraseEditor / hooks/phrase-edit.ts 为本轮前端接线，复用既有 Schema、Client、melodyRequest / applyMelodyDraft 与自动表达纯函数；没有修改 shared、model、Client、服务或音乐算法定义。
 
 - 按句选择、点音符或下拉选择音符；拖动改变音高和位置，右侧小柄改变长度。方向键改音高/位置，Shift＋左右改长度；拖动/键盘以 1/8 拍微调，精确数值也可直接填写，保留原有小数时间。音高范围沿用 MIDI 48–84，长度至少 1/8 拍，不允许重叠、越过句界或断开的 + 延音。
 - 手工编辑保留 note ID；按时间排序后，为非 + 音符重新按原歌词字符对齐。若排序会改变锁定音符的歌词则拒绝整次修改；不增删音符、不改歌词原文。编辑器始终按稳定 ID 保持选中项。
@@ -216,7 +215,7 @@ production 串联规划、旋律、器乐与歌声。stage 契约枚举为 queue
 - 旧 plan 生成标题、氛围、四句歌词与 SongPlan，本地规则生成具体音符；允许明确标注的本地模式。
 - 新 compose 以一次事务生成宏观规划与 MelodyDraft；production 再协调器乐和歌声。真实 LLM 历史调用已有记录，不再写作“尚无真实密钥验证”；是否配置、调用成功、作品主观质量仍须区分。
 - 音符数据通过共享 Schema 与音乐约束校验；LLM 不直接输出最终音频。手写歌词、锁定与局部编辑保护不能被生成覆盖。
-- 画面为原创程序化 Canvas；VisualPlanner 的关键词与配色是本地规则，无 AI 生图调用。LOOP! 原始 HTML 是后续前端接线的视觉与交互基础，当前仍使用演示逻辑，见[原型边界](#prototype-frontend)。
+- 画面为原创程序化 Canvas；VisualPlanner 的关键词与配色是本地规则，无 AI 生图调用。LOOP! 正式首页已复用工程、播放时钟及该 Canvas；原始 HTML 自身保留演示逻辑，见[原型边界](#prototype-frontend)。
 - 正式新自由入口、Mock 与人工听感的缺口统一见[Toge 工单](../CC-Tasks/5-toge-free-creation.md)，不在本文件复制待办。
 
 <a id="production"></a>
@@ -225,7 +224,7 @@ production 串联规划、旋律、器乐与歌声。stage 契约枚举为 queue
 
 ### 首页最小创作流程（A2）
 
-首页 `FreeCreation` 负责主题、可选手写歌词、可选 BPM 和目标时长；沿用积木工作台的视觉及底部播放器。`useProduction` 通过既有 Client 的 `startProduction` / `production` / `retryProduction` 协调请求，不在组件内新增 fetch，不改公开契约、服务或音乐算法。Owner 为 toge，调用原有 validateProject / validateMelody / currentVocalAsset 进行只读校验。
+首页 `PatchlabCreation` 在原型首屏负责主题、可选手写歌词、可选 BPM 和目标时长；底部播放器继续复用 useStudio / usePlayer。原 FreeCreation 组件不再挂载。`useProduction` 通过既有 Client 的 `startProduction` / `production` / `retryProduction` 协调请求，不在组件内新增 fetch，不改公开契约、服务或音乐算法。Owner 为 toge，调用原有 validateProject / validateMelody / currentVocalAsset 进行只读校验。
 
 - 先按 freeInputSchema 校验输入；空行忽略，非空手写行保留原字词与空格，支持 1–8 行、每行最多 100 字。未填写歌词时由对应真实服务或明确 Mock 夹具提供；不调用旧 composeFromIdea。
 - 以约一秒间隔依次查询任务，展示返回的 state/stage 和已完成句数，不假定能观察到全部阶段，不显示百分比。Mock 显示“测试阶段”。

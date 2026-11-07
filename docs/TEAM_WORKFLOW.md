@@ -25,7 +25,7 @@ Mock 已覆盖旧工作台及 compose / melody / production 的 API 夹具、任
 
 以 `03_patchlab_playful.html` 的 LOOP! 视觉与交互为前端接线基础，保留原型的版式、积木操作、歌词卡片和 PV 入口。现有 React 四页工作台有可复用的工程、播放和 API 接线，但其存在或测试通过不构成替换原型设计的授权。技术框架和演示脚本需要调整，不等于需要重做视觉；涉及布局、导航或主流程替换时先向 toge 说明具体变化并确认，不能由 Agent 自行把原型降为参考、废弃或历史页面。
 
-当前入口与目标尚未一致，见[原型接线边界](ARCHITECTURE.md#prototype-frontend)和[工单 5](../CC-Tasks/5-toge-free-creation.md)。历史“新页面”指当时 React 接线记录，不作为另造原型的要求；原型接入后须重新验收，不沿用四页工作台的测试作为完成证明。
+当前入口已按 toge 本轮明确要求改为 LOOP! 单页并重新接线，见[原型接线边界](ARCHITECTURE.md#prototype-frontend)和[工单 5](../CC-Tasks/5-toge-free-creation.md)。历史“新页面”指当时四页接线；本轮已在 LOOP! 重跑 Mock、本地创作及失败保护，真实制作和人工听感仍须工单 6 验收。
 
 ## 文件所有权
 
