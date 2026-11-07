@@ -4,6 +4,11 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+## 2026-11-07 · 接口与可调数据清单文档
+
+- 工单：支撑 [4 · 接口交接](../CC-Tasks/4-blacktea-integration.md)、[15 · P0 交接](../CC-Tasks/后端/15-p0.md)与 [5 · Toge 接入](../CC-Tasks/5-toge-free-creation.md)。新增 [INTERFACES.md](INTERFACES.md)：按原型接线视角汇总后端/音乐核心真实存在且设计上可调的数据（创作输入、Performance 与 v0.3.3 Pitch 曲线、旋律/歌词编辑函数、绮萱 runner/take、器乐 program/soundfont、mixSettings 与 stem、制作任务状态、导出署名），并列出不存在或不应暴露的开关与 Mock 缺口；README 与 ARCHITECTURE 同步索引。
+- 纯文档任务：逐字段核对 shared/contracts、shared/performance.mjs、src/audio-mix.ts、src/model.ts、src/api/client.ts 与 CHANGELOG v0.3.3 的取值一致性；未修改任何 Schema 或源码，未运行构建/引擎测试。
+
 ## 2026-11-07 · P0 精细调声与单句重唱（真实引擎验收）
 
 - 工单：[15 · 后端音乐制作升级 P0](../CC-Tasks/后端/15-p0.md)；契约变更：[CHANGELOG v0.3.3](../shared/contracts/CHANGELOG.md)；接入方法：[单句编辑](ARCHITECTURE.md#composition)与[演唱调教](ARCHITECTURE.md#performance)。Owner：Blacktea，分支 `feature/backend-p0-fine-tuning`，仅本地提交。

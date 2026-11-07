@@ -92,6 +92,7 @@ npm start
 | Agent 长期规则 | [AGENTS.md](AGENTS.md) |
 | 分工、联调、Git 与验证规则 | [TEAM_WORKFLOW.md](docs/TEAM_WORKFLOW.md) |
 | 系统目录、工程数据、API 与页面接入 | [ARCHITECTURE.md](docs/ARCHITECTURE.md)；字段提案在[契约变更记录](shared/contracts/CHANGELOG.md) |
+| 原型接线的可调数据与开关清单 | [INTERFACES.md](docs/INTERFACES.md)：真实存在且可调的数据、不存在的开关、Mock 缺口 |
 | 引擎、后台配置、资源与许可 | [ENGINES.md](docs/ENGINES.md) |
 | 当前任务与各自清单 | 上方[协作工单](#协作工单) |
 | 完成记录、历史过程与验收证据 | [iteration-log.md](docs/iteration-log.md)，日期倒序 |

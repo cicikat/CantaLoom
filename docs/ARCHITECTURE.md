@@ -87,7 +87,7 @@ SongProject 保存稳定 ID、版本、音符、歌词来源、锁定/静音和�
 
 ## 公共 HTTP 接口与统一 Client
 
-基础契约在 `shared/contracts/index.mjs`，自由作曲/旋律/制作分别在同目录 `free-composition.mjs`、`melody.mjs`、`production.mjs`，TypeScript 声明在相邻 `.d.mts`。SongPlan 只使用 `shared/song-plan.mjs`。业务 JSON 请求统一 `Content-Type: application/json`，HTTP 错误为非 2xx + `{error:string}`；已受理的制作任务也可能在后续 200 响应中返回 state=failed。契约只含公共音乐数据，不含后台设置或密钥。接口存在不代表新页面/Mock已接通，进度见[Toge 工单](../CC-Tasks/5-toge-free-creation.md)。
+基础契约在 `shared/contracts/index.mjs`，自由作曲/旋律/制作分别在同目录 `free-composition.mjs`、`melody.mjs`、`production.mjs`，TypeScript 声明在相邻 `.d.mts`。SongPlan 只使用 `shared/song-plan.mjs`。业务 JSON 请求统一 `Content-Type: application/json`，HTTP 错误为非 2xx + `{error:string}`；已受理的制作任务也可能在后续 200 响应中返回 state=failed。契约只含公共音乐数据，不含后台设置或密钥。接口存在不代表新页面/Mock已接通，进度见[Toge 工单](../CC-Tasks/5-toge-free-creation.md)。面向原型接线的可调数据与开关速查见 [INTERFACES](INTERFACES.md)。
 
 | 方法 / 路径 | 请求 | 成功响应 / 契约 | 客户端超时 |
 |---|---|---|---|
