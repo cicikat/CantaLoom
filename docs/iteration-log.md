@@ -8,7 +8,7 @@
 
 ## 2026-11-07 · 首页三个视觉章节、入场动效与竖屏版式
 
-- 工单：[19 · 首页三个视觉章节与竖屏版式](../CC-Tasks/19-three-chapter-page.md)；说明：[原型接线边界](ARCHITECTURE.md#prototype-frontend)。toge 明确要求把单页重构为三个可连续滚动的视觉章节并顺带调整竖屏与紧凑区域。分支 `feature/frontend-three-chapters` 从 `feature/frontend-free-creation-mock`（14c965a，LOOP! 前端尚未进 main）开出。仅改前端页面、样式、页面测试与文档；未改后端、音乐算法、共享契约、Client、`src/visual.ts` 或导出链路。
+- 工单：[23 · 首页三个视觉章节与竖屏版式](../CC-Tasks/23-three-chapter-page.md)；说明：[原型接线边界](ARCHITECTURE.md#prototype-frontend)。toge 明确要求把单页重构为三个可连续滚动的视觉章节并顺带调整竖屏与紧凑区域。分支 `feature/frontend-three-chapters` 从 `feature/frontend-free-creation-mock`（14c965a，LOOP! 前端尚未进 main）开出。仅改前端页面、样式、页面测试与文档；未改后端、音乐算法、共享契约、Client、`src/visual.ts` 或导出链路。
 - 第一章：首屏至少占满一屏，内容垂直居中、标题与插图加大。`HeroTitle` 给读屏一份完整标题，动画字母对读屏隐藏；`src/chapters.css` 以 `--beat: .14s` 让左右元素交替入场（眼眉贴纸 → 右上贴纸 → 「敲一下。」敲章式落下 → 插图摆入 → 逐字 → 圆点/星芒穿插 → 下划线 → 说明 → 输入 → 主题按钮），「变成一首歌！」每个字由旋转的黄色十字星星弹出、向右溅出三片碎片后回稳，约 2.2 秒后输入框就位。
 - 第二章：`ChapterBridge` 是首屏后的 280svh 滚动区，向上叠住首屏最后一屏，内部画面粘在视口；滚动进度写入 `--p`，五个彩色大圆依次向上升起盖住首屏，最后一圈淡紫色铺满后显示 `Music Blocks`（白描字 + 六块彩色积木字母 + 八格步进灯），停留约一屏滚动距离，再接同色的工作台。过渡层 `aria-hidden`、不接收点击；`.page` 改用 `overflow: clip` 以保证粘性定位。工作台（积木、TAP、歌姬、歌词、混音）改在淡紫点阵背景上，加大章节留白，卡片在支持滚动时间线的浏览器里随滚动升起。
 - 第三章：原 PV 弹层改为页面内深色章节 `#pv`（区域名「歌词 PV」）：走马灯、胶片框画面、播放按钮与时间、独立「PV 进度」条、字幕样式/换色/导出 MP4 与说明；导航「PV ✦」滚动到该章，导出状态改由全局提示条显示。原结尾横幅并入本章标题，弹层与横幅的旧样式已删除；导出作品弹层不变。

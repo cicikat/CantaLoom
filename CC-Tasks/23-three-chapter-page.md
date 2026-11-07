@@ -1,4 +1,4 @@
-# 工单 19：首页三个视觉章节与竖屏版式
+# 工单 23：首页三个视觉章节与竖屏版式
 
 Owner：Toge（toge / Frontend / UX）。状态：页面实现与 Mock 回归完成，待 toge 肉眼/真机核对（2026-11-07）。
 范围：`src/App.tsx`、`src/components/HeroTitle.tsx`、`src/components/ChapterBridge.tsx`、`src/chapters.css`、`src/patchlab.css` 中被替换的 PV 弹层/结尾横幅样式，以及受影响的前端页面测试。
