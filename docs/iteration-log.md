@@ -4,6 +4,15 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+## 2026-11-07 · 后台测试页直接播放与内置浏览器 PV 兼容
+
+- 工单：[13 · 后台制作链路追加修正](../CC-Tasks/已完成/13-admin-pipeline.md)；说明：[引擎与后台](ENGINES.md#admin)。Owner：Blacktea，延续本地后端分支。
+- 窄屏抽屉隐藏滚动条，保留滚动；链路测试页直接显示混音试听、PV 播放器与 WAV / MP4 下载，省去切换栏目提示。原混音、PV 栏目也保留结果。
+- 原 MP4 经 ffprobe 确认含 H.264 High / yuv420p 1280×720 视频及 AAC 音频。增加仅限本机同源、CSRF 保护的管理预览接口，FFmpeg 转为 960×540 VP9 / Opus WebM 用于浏览器预览，下载仍是原 MP4。限制输入体积、单并发、35 秒与 file/pipe 协议，临时目录 finally 清理；未修改原 WAV / MP4 导出编码链路或公开契约。
+- `npm test` 50/50；页面导航 / 窄屏 / 失败夹具通过。`node scripts/verify-admin-media.mjs` 使用既有真实产物作明确重放夹具，通过真实 FFmpeg 转码；播放器解码 32 帧、295 种画面像素颜色、960×540，测试页播放器与下载控件可见，scrollbar-width:none 且 overflow:auto。
+- 在用户当前内置浏览器实际重新执行完整链路：96 BPM、20.00 秒，LLM 43.6 秒、器乐/人声 54.2 秒、混音 1.2 秒、PV 含兼容预览 3.0 秒；峰值 0.289、RMS 0.0516。实际播放已看到帆船与「这是歌词」字幕，截图在外部根目录 `runtime/exports/admin-pipeline-20261107/media-regression/in-app-pv.png`。不是只验证视频时长或声音。
+- 未新增正式创作页面、Mock或共享字段；未做人工音乐质量验收或真实手机测试。仅本地提交，不推送。
+
 ## 2026-11-07 · 后台双栏、窄屏抽屉与真实链路测试
 
 - 工单：[13 · 后台制作链路](../CC-Tasks/已完成/13-admin-pipeline.md)；使用与构建：[引擎与后台](ENGINES.md#admin)。Owner：Blacktea。仅修改后端管理静态页面、资源路由、诊断脚本和后端测试；未改正式创作 UI、Mock、共享字段或引擎算法。

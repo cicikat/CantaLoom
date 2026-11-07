@@ -34,3 +34,13 @@ test('admin serves the browser diagnostic bundle and allows local media blobs wh
  assert.equal((await fetch(base+'/admin-assets/admin-config.mjs')).status,404);
  }finally{await new Promise(r=>server.close(r))}
 });
+
+test('admin preview requires CSRF, validates MP4 and returns a video response',async()=>{
+ let calls=0;const app=express();app.use(express.json());mountAdmin(app,{store:{snapshot:()=>({})},jobs:createJobs(),root:process.cwd(),publicDirectory:path.resolve('server/public'),previewVideo:async bytes=>{calls++;assert.equal(bytes.subarray(4,8).toString(),'ftyp');return Buffer.from('webm-fixture')}});
+ const server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base=`http://127.0.0.1:${server.address().port}`;
+ try{const {csrf}=await (await fetch(base+'/api/admin/state')).json();const headers={'Content-Type':'application/json','X-SONGYU-CSRF':csrf};
+ assert.equal((await fetch(base+'/api/admin/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).status,403);
+ assert.equal((await fetch(base+'/api/admin/preview',{method:'POST',headers,body:JSON.stringify({mp4:Buffer.from('invalid video').toString('base64')})})).status,400);assert.equal(calls,0);
+ const response=await fetch(base+'/api/admin/preview',{method:'POST',headers,body:JSON.stringify({mp4:Buffer.from('0000ftypmp42').toString('base64')})});assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/video\/webm/);assert.equal(await response.text(),'webm-fixture');assert.equal(calls,1);
+ }finally{await new Promise(r=>server.close(r))}
+});

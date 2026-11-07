@@ -14,6 +14,6 @@
 <section id="pv"><h2>歌词 PV</h2><p>统一混音配合四段程序化画面与歌词时间轴，由 FFmpeg 编码 MP4。</p><div id="pv-output">运行测试后可播放和下载歌词 PV。</div></section>
 <section id="test"><div class="section-title"><h2>整条链路测试</h2><span>实际调用已配置的 LLM 与本地引擎</span></div>
 <p>歌词：<b>这是歌词</b> · 目标时长 20 秒 · CPU 演唱</p><label>参数模式<select id="test-mode"><option value="fixed">固定 · 96 BPM</option><option value="random">随机 · 80–120 BPM</option></select></label>
-<div class="actions"><button id="run-pipeline" class="primary">运行整条链路</button></div><p class="muted">测试会调用模型服务并生成本地音频与视频。切换栏目后测试继续运行。</p><p id="test-input"></p><ol id="pipeline-steps"></ol><div id="test-result" role="status" aria-live="polite"></div></section>
+<div class="actions"><button id="run-pipeline" class="primary">运行整条链路</button></div><p class="muted">测试会调用模型服务并生成本地音频与视频。切换栏目后测试继续运行。</p><p id="test-input"></p><ol id="pipeline-steps"></ol><div id="test-result" role="status" aria-live="polite"></div><div id="test-mix-output" class="test-media"></div><div id="test-pv-output" class="test-media"></div></section>
 <section id="operations" data-page="overview"><details><summary>操作记录与存储信息</summary><ul id="audit"></ul><p id="storage" class="muted"></p></details></section>
 </main></body></html>
