@@ -1,6 +1,10 @@
 import {test,expect} from '@playwright/test';
 import {writeFile,mkdir} from 'node:fs/promises';
-const output='D:/ai/hacson/external/runtime/exports/p0-resing';
+import path from 'node:path';
+// @ts-expect-error backend module; resolves SONGYU_EXTERNAL_ROOT with the server default
+import {externalRoot} from '../../server/services/instruments.mjs';
+// Configurable via SONGYU_EXTERNAL_ROOT, same convention as scripts/verify-engines.ts.
+const output=path.join(externalRoot,'runtime/exports/p0-resing');
 // P0 acceptance on the real engine: edit phrase 2 (lyrics keeping the melody, note pitch, custom pitch curve),
 // re-sing only that phrase, and verify it blends back into the full mix while siblings, instrument assets and old takes stay intact.
 test('P0 fine tuning: re-sing one edited phrase, blends into mix, siblings/instruments stable, old takes restorable',async({page,request})=>{

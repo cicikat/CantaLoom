@@ -30,15 +30,20 @@ export function applyMelodyDraft(p:SongProject,request:MelodyRequest,draft:Melod
 export function setPhrasePerformance(p:SongProject,id:string,input:Performance){const performance=performanceSchema.parse(input),line=p.lyrics.find(l=>l.id===id);if(!line||line.locked||line.performance?.locked||p.tracks.some(t=>t.kind==='vocal'&&t.sectionId===line.sectionId&&t.locked))throw Error('乐句已锁定');const next=structuredClone(p);if(line.performance)next.performanceHistory={...next.performanceHistory,[id]:[line.performance,...(next.performanceHistory?.[id]||[])].slice(0,3)};next.lyrics.find(l=>l.id===id)!.performance=performance;return record(next,'只调整单句演唱表现')}
 
 const phraseEditable=(p:SongProject,id:string)=>{const line=p.lyrics.find(l=>l.id===id);if(!line)throw Error('乐句不存在');if(line.locked||p.tracks.some(t=>t.kind==='vocal'&&t.sectionId===line.sectionId&&t.locked))throw Error('乐句已锁定');return line};
-// Edit one line's text. keepMelody reassigns the new characters onto the existing notes (same sung-note count required); otherwise notes are cleared so the caller can request a fresh melody with targetIds=[id].
+// Edit one line's text. keepMelody reassigns the new characters onto the existing notes (same sung-note count required); otherwise notes are cleared so the caller can request a fresh melody with targetIds=[id]. Locked notes are never modified or cleared: keepMelody rejects when a locked note's character would change, and recomposition rejects whenever the line holds any locked note.
 export function setLyricText(p:SongProject,id:string,text:string,options:{keepMelody:boolean}){
  const line=phraseEditable(p,id);if(typeof text!=='string'||text.length>100)throw Error('单句歌词最多 100 字');
  const chars=lyricChars(text),next=structuredClone(p),l=next.lyrics.find(l=>l.id===id)!;
  if(options.keepMelody){
   const sung=[...line.notes].sort((a,b)=>a.beat-b.beat).filter(n=>n.syllable!=='+');
   if(sung.length!==chars.length)throw Error(`新歌词为 ${chars.length} 个唱字，现有旋律为 ${sung.length} 个唱词音符；保留旋律要求字数一致，否则请选择重新作曲`);
-  let i=0;l.notes=[...l.notes].sort((a,b)=>a.beat-b.beat).map(n=>n.syllable==='+'?n:{...n,syllable:chars[i++]});
- }else{l.notes=[];if(l.performance?.overrides)l.performance={...l.performance,overrides:[]}}
+  let i=0;const remapped=[...line.notes].sort((a,b)=>a.beat-b.beat).map(n=>n.syllable==='+'?n:{...n,syllable:chars[i++]});
+  for(const old of line.notes)if(old.locked&&remapped.find(n=>n.id===old.id)!.syllable!==(old.syllable??'+'))throw Error('乐句含锁定音符，新歌词会改写其唱字；请先解锁或选择不改该字');
+  l.notes=remapped;
+ }else{
+  if(line.notes.some(n=>n.locked))throw Error('乐句含锁定音符，重新作曲会清除锁定音符；请先解锁');
+  l.notes=[];if(l.performance?.overrides)l.performance={...l.performance,overrides:[]}
+ }
  l.text=text;l.source='manual';l.version++;syncVocal(next,l.sectionId);
  return validateProject(record(next,options.keepMelody?'修改单句歌词，保留原旋律':'修改单句歌词，旋律待重新作曲'));
 }

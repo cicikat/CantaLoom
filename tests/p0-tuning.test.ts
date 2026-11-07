@@ -60,6 +60,28 @@ test('lyric edit can keep the melody with same character count or clear notes fo
  const locked=structuredClone(p);locked.lyrics[1].locked=true;assert.throws(()=>setLyricText(locked,l.id,replacement,{keepMelody:true}));
 });
 
+test('lyric editing never modifies or clears locked notes; failures leave the project intact',()=>{
+ const p=createProject(),l=p.lyrics[1],sung=l.notes.filter(n=>n.syllable!=='+').length;
+ const locked=structuredClone(p);locked.lyrics[1].notes[0].locked=true;const lockedBefore=JSON.stringify(locked);
+ // 保留旋律：新词改写锁定音符的唱字 → 明确拒绝
+ assert.throws(()=>setLyricText(locked,l.id,'改'+`词保留旋律不变测试新词`.slice(0,sung-1),{keepMelody:true}),/锁定音符/);
+ // 重新作曲：清除全部音符含锁定音符 → 明确拒绝
+ assert.throws(()=>setLyricText(locked,l.id,'完全不同的新歌词',{keepMelody:false}),/锁定音符/);
+ assert.equal(JSON.stringify(locked),lockedBefore,'两次失败都不修改原工程');
+ // 锁定音符唱字不变时允许改词，锁定音符逐字段保留
+ const kept=setLyricText(locked,l.id,l.notes[0].syllable+`改词保留旋律不变测试新词`.slice(0,sung-1),{keepMelody:true});
+ assert.deepEqual(kept.lyrics[1].notes[0],locked.lyrics[1].notes[0]);assert.notEqual(kept.lyrics[1].notes[1].syllable,l.notes[1].syllable);
+ // 整句锁定与人声音轨锁定：两条路径都拒绝且不修改工程
+ const lineLocked=structuredClone(p);lineLocked.lyrics[1].locked=true;const lineLockedBefore=JSON.stringify(lineLocked);
+ assert.throws(()=>setLyricText(lineLocked,l.id,'保留旋律的新词',{keepMelody:true}),/锁定/);assert.throws(()=>setLyricText(lineLocked,l.id,'重新作曲的新词',{keepMelody:false}),/锁定/);
+ const trackLocked=structuredClone(p);trackLocked.tracks.find(t=>t.kind==='vocal'&&t.sectionId===l.sectionId)!.locked=true;const trackLockedBefore=JSON.stringify(trackLocked);
+ assert.throws(()=>setLyricText(trackLocked,l.id,'保留旋律的新词',{keepMelody:true}),/锁定/);assert.throws(()=>setLyricText(trackLocked,l.id,'重新作曲的新词',{keepMelody:false}),/锁定/);
+ assert.equal(JSON.stringify(lineLocked),lineLockedBefore);assert.equal(JSON.stringify(trackLocked),trackLockedBefore);
+ // 正常未锁定歌词编辑：两条路径都可用
+ const normal=setLyricText(p,l.id,`改词保留旋律不变测试新词`.slice(0,sung),{keepMelody:true});assert.equal(normal.lyrics[1].notes.length,l.notes.length);
+ assert.equal(setLyricText(p,l.id,'清空后重新作曲',{keepMelody:false}).lyrics[1].notes.length,0);
+});
+
 test('note editing validates pitch, timing, locks and preserves alignment and siblings',()=>{
  const p=createProject(),l=p.lyrics[1],siblingDependency=singingDependency(p,p.lyrics[0],voice);
  const raised=l.notes.map((n,i)=>i===0?{...n,midi:n.midi+2}:n);

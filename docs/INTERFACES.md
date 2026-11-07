@@ -46,7 +46,7 @@
 | 局部重作曲 | `melodyRequest` → `api.melody` → `applyMelodyDraft` | targetIds ≤16；非目标句逐字段保留；锁定句/音符冻结 |
 | 音符锁 / 乐句锁 | `note.locked` / `lyric.locked` | 服务端校验锁定内容逐字段不变 |
 | 编辑音高/起点/长度（P0） | `editPhraseNotes(project,lineId,notes)` | 等数量、同 ID、同顺序、同音节；全校验后原子替换 |
-| 改词（P0） | `setLyricText(project,lineId,text,{keepMelody})` | keepMelody 要求唱字数一致；否则清空音符与旧索引 overrides 后重新作曲 |
+| 改词（P0） | `setLyricText(project,lineId,text,{keepMelody})` | keepMelody 要求唱字数一致；否则清空音符与旧索引 overrides 后重新作曲。锁定音符不被修改或清除：keepMelody 会改到锁定音符唱字时报错，重新作曲在句内含锁定音符时直接拒绝 |
 
 音符契约：beat 0–256、duration 0.125–16、midi 48–84、velocity 0.1–1、syllable 1–4 字（`+` 为连音）。乐句时间轴约束：句尾 ≤30 秒（`end*60/bpm≤30`）。
 

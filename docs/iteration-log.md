@@ -9,6 +9,14 @@
 - 工单：支撑 [4 · 接口交接](../CC-Tasks/4-blacktea-integration.md)、[15 · P0 交接](../CC-Tasks/后端/15-p0.md)与 [5 · Toge 接入](../CC-Tasks/5-toge-free-creation.md)。新增 [INTERFACES.md](INTERFACES.md)：按原型接线视角汇总后端/音乐核心真实存在且设计上可调的数据（创作输入、Performance 与 v0.3.3 Pitch 曲线、旋律/歌词编辑函数、绮萱 runner/take、器乐 program/soundfont、mixSettings 与 stem、制作任务状态、导出署名），并列出不存在或不应暴露的开关与 Mock 缺口；README 与 ARCHITECTURE 同步索引。
 - 纯文档任务：逐字段核对 shared/contracts、shared/performance.mjs、src/audio-mix.ts、src/model.ts、src/api/client.ts 与 CHANGELOG v0.3.3 的取值一致性；未修改任何 Schema 或源码，未运行构建/引擎测试。
 
+## 2026-11-07 · P0 修复：setLyricText 锁定边界与测试产物路径
+
+- 工单：[15 · 后端音乐制作升级 P0](../CC-Tasks/后端/15-p0.md)；同分支 `feature/backend-p0-fine-tuning` 最小修复，不扩展功能。
+- 修复 `setLyricText` 锁定边界：保留旋律路径会改写锁定音符唱字时明确拒绝；重新作曲路径在句内含任何锁定音符时明确拒绝，不再静默清除；两条路径失败均不修改工程。语义同步到 [ARCHITECTURE](ARCHITECTURE.md#composition) 与 [INTERFACES](INTERFACES.md)。
+- 新增回归测试 `tests/p0-tuning.test.ts`「lyric editing never modifies or clears locked notes」：锁定音符（改写拒绝/唱字不变放行且逐字段保留）、整句锁定与人声音轨锁定（两条路径均拒绝）、失败工程逐字节不变、正常未锁定改词两条路径可用。
+- `tests/browser/p0-resing.spec.ts` 产物路径改为 `externalRoot`（`SONGYU_EXTERNAL_ROOT` 可配置，与 scripts/verify-engines.ts 同款约定），移除机器专属绝对路径，真实测试逻辑不变。
+- 验证：`npx tsc -b` 与 `npm run build` 通过；`npm test` 58/58（含新回归与真实引擎回归 `tests/qixuan-real.test.mjs` 1/1，约 44 秒，未跳过）；`tests/browser/p0-resing.spec.ts` 1/1 通过（缓存命中 7.7 秒），产物写入默认可配置路径。无失败、无跳过项；未改 Toge UI/Mock、其他阶段或音频算法。
+
 ## 2026-11-07 · P0 精细调声与单句重唱（真实引擎验收）
 
 - 工单：[15 · 后端音乐制作升级 P0](../CC-Tasks/后端/15-p0.md)；契约变更：[CHANGELOG v0.3.3](../shared/contracts/CHANGELOG.md)；接入方法：[单句编辑](ARCHITECTURE.md#composition)与[演唱调教](ARCHITECTURE.md#performance)。Owner：Blacktea，分支 `feature/backend-p0-fine-tuning`，仅本地提交。

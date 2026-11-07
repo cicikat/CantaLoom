@@ -161,7 +161,7 @@ production 串联规划、旋律、器乐与歌声。stage 契约枚举为 queue
 2. 音符锁：写 `lyric.notes[].locked`；乐句锁写 `lyric.locked`，沿用人声轨锁定。服务校验锁定音符逐字段不变，非目标句不变。
 3. 只调教：`setPhrasePerformance(project,lineId,{preset:'soft',...})`，保留全部音符，然后仅调用当前句重唱。复用已有 generateQixuan / applyVocalResult / 历史版本处理。
 4. 编辑音符后更新该段 vocal 混音轨（syncVocal），不要重建所有句ID。编辑第二句时不要清空 vocalAssets；依赖校验会自然标记第二句过期，第一句缓存继续有效。
-5. 改词：`setLyricText(project,lineId,text,{keepMelody})`。`keepMelody:true` 要求新歌词唱字数（`\p{L}\p{N}`）与现有唱词音符数一致，按时间顺序重挂音节、保留全部音高与时值；不一致则报错，不擅自增减音符。`keepMelody:false` 清空本句音符与按旧音符索引的 performance overrides，随后用 melodyRequest + `targetIds=[lineId]` 重新作曲（沿用第 1 条事务）。两条路径都同步 syncVocal、递增 version，只使本句演唱依赖失效。
+5. 改词：`setLyricText(project,lineId,text,{keepMelody})`。`keepMelody:true` 要求新歌词唱字数（`\p{L}\p{N}`）与现有唱词音符数一致，按时间顺序重挂音节、保留全部音高与时值；不一致则报错，不擅自增减音符；会改写锁定音符唱字时明确拒绝。`keepMelody:false` 清空本句音符与按旧音符索引的 performance overrides，随后用 melodyRequest + `targetIds=[lineId]` 重新作曲（沿用第 1 条事务）；句内含锁定音符时明确拒绝，不静默清除。两条路径都同步 syncVocal、递增 version，只使本句演唱依赖失效，失败不修改工程。
 6. 编辑音高/起点/长度：`editPhraseNotes(project,lineId,notes)` 接受等数量、同 ID、同时间顺序、同音节的音符数组，逐音符经 melodyNoteSchema 校验并检查越界/重叠；锁定音符逐字段不变。不满足「只改音高、起点、长度」的编辑（数量、顺序、音节变化）明确拒绝，改用重新作曲或歌词编辑。音符数量不变时按索引的 performance overrides 保持有效。
 7. 重唱与版本：单句重唱复用 `POST /api/singing/qixuan/render`（take 递增），旧版本自动进入 vocalHistory（最多 3 版）。`restoreVocalAsset(project,lineId,index)` 仅在该历史版本的 dependency 与当前歌词/音符/调教一致且 runner 匹配时恢复为当前演唱，被替换版本轮换入历史；歌词或音符已改的旧版本明确拒绝恢复，不制造词音错位。渲染失败不调用 applyVocalResult，旧资产保留。
 
