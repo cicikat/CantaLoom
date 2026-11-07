@@ -4,6 +4,12 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+## 2026-11-07 · 协作入口分开与交接地址补齐
+
+- 关联工单：[4 · 红茶](../CC-Tasks/4-blacktea-integration.md)、[5 · toge 收到的交接](../CC-Tasks/5-toge-free-creation.md#incoming-handoffs)、[15 · P0 材料](../CC-Tasks/后端/15-p0.md#p0-交接-toge接口schema示例与语义)；规则：[工单交接与地址](TEAM_WORKFLOW.md#task-handoff)。README 顶部增加两人清单与共同验收直达，协作区按接手人拆开，历史与已完成工单改为目录/日志入口，原工单不移动、不删除。
+- 工单 5 增加收到材料的固定入口，链接红茶 P0 与联调准备；核对 `250ede3` 已在当前分支历史中。更正工单 2/3 尚不存在的过时描述。规定以后交接同时提供材料章节、分支、commit / PR 和接收方下一步，并登记到接收人的工单；没有增加自动通知、同步或新的实现授权。
+- 纯文档变更：核对本轮相对链接、章节锚点与 `git diff --check`；未运行构建、模型或音频测试。前端调教/混音、真实闭环与人工听感仍按工单 5 / 6 跟踪；仅本地提交，未推送。
+
 <a id="loop-prototype-wiring"></a>
 
 ## 2026-11-07 · 按 LOOP! 原型重做正式首页接线

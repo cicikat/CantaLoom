@@ -53,6 +53,19 @@ Mock 已覆盖旧工作台及 compose / melody / production 的 API 夹具、任
 
 Mock 为浏览器内部 transport，不回落真实后端。测试音显式 isDemo/mock，任务状态不伪造真实推理；存档用 `songyu-mock-project-v1`，真实用 `songyu-project-v1`，Mock 工程/WAV 文件名带 .mock，PV 是 JSON 回执。真实模式拒绝 Mock 响应/歌声资产。新自由创作沿用 mock:true，工程记录为 local-rules / mock，具体限定授权与字段见契约变更记录；不能把 fixture 记为真实 LLM 成功。
 
+<a id="task-handoff"></a>
+
+## 工单交接与地址
+
+两人的固定入口在 [README · toge](../README.md#toge-tasks)与 [README · 红茶](../README.md#blacktea-tasks)。给对方交任务或材料时，交付方负责让接收方从自己的清单找到它：
+
+1. 在来源工单写清接收人、交付范围、接口/示例与验证边界；在接收人的现有工单登记可点击的来源章节链接，不复制另一套 checkbox。当前交给 toge 的材料登记到[工单 5 · 收到的交接](../CC-Tasks/5-toge-free-creation.md#incoming-handoffs)。需要独立实施的新范围另建未用编号的工单，并在接收入口链接它，不直接扩张旧工单范围。
+2. 交接消息必须附「接收人、工单相对路径及章节链接、所在分支、commit / PR、请对方做什么」。仓库内用相对链接；聊天中提供接收人能打开的仓库文件或 PR 链接，注明链接对应的分支。不能只说“工单写好了”，也不能只给自己电脑的绝对路径。
+3. 仅存在本机、未提交或未推送的材料须标明“对方暂不可访问”；请求协作交付时再按当前授权同步。发出地址、登记入口和 Git 同步是不同动作，Markdown 不会自动通知或同步到另一台电脑，不因整理地址擅自推送。
+4. 接收方 review 后在自己的工单确认接入范围；接口交付、Mock、页面和真实验收分别记录。收到链接不等于批准跨区修改或所有后续阶段。
+
+例如本轮材料是[工单 15 · P0 交接](../CC-Tasks/后端/15-p0.md#p0-交接-toge接口schema示例与语义)，接收人为 toge；应说明需要 review 接口与 Mock 缺口，页面接入仍由[工单 5](../CC-Tasks/5-toge-free-creation.md)跟踪。
+
 ## 分支、提交与 PR
 
 - 本仓库采用功能分支 + PR，这是针对本仓库的协作安排。两人默认各自独立 clone；不要求每项任务另建 worktree。
@@ -95,7 +108,7 @@ E2E 自动启动隔离服务，不必预先启动 dev；默认真实前端 5183�
 
 | 入口 | 维护内容 |
 |---|---|
-| README | 当前能力、启动与工单/文档索引 |
+| README | 当前能力、启动、按接手人分开的当前工单入口；历史只提供目录/日志入口，不逐项混入当前清单 |
 | AGENTS / TEAM_WORKFLOW | Agent 规则、职责、接口协作、分支和验证流程 |
 | ARCHITECTURE | 系统目录、工程/音乐数据、HTTP 契约、页面接线、调教与混音 |
 | ENGINES | 无窗口引擎、后台配置、安全、资源与许可 |

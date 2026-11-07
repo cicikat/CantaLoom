@@ -6,6 +6,19 @@ Owner：Toge（toge / Frontend / UX）。状态：A1 / A2 和 C 的钢琴卷帘�
 
 2026-11-07：toge 已要求先做 A1；已核对现有 Mock / Client / 工程来源，具体字段、兼容、文件范围与验证要求见[Mock 来源提案](../shared/contracts/CHANGELOG.md)。toge 随后回复「可以，继续做完」，已按提案实施并验证 A1；随后明确要求继续 A2，现已完成首页输入到试听与失败保护。本轮 toge 继续明确要求优先完成 C 的钢琴卷帘与局部旋律，现已勾选前两项；调教、混音及相应后续测试仍待实施，真实验收未提前勾选。
 
+<a id="incoming-handoffs"></a>
+
+## 收到的交接
+
+这是 toge 接收材料的固定入口，只登记来源与接入位置；具体应做项仍在本工单 A / C，真实共同验收在工单 6。
+
+| 交接来源 | 材料地址与阅读位置 | 接入位置与边界 |
+|---|---|---|
+| 红茶 · 工单 15 P0 | [P0 接口、Schema、示例与语义](后端/15-p0.md#p0-交接-toge接口schema示例与语义)；代码提交 `250ede3` 已在当前分支历史中 | 调教与历史恢复参考本工单 C；先 review 已支持的能力及 Mock 缺口。后端验收记录不代表前端已接通，也不自动启动 Pitch 编辑等新增 UI 范围 |
+| 红茶 · 工单 4 B1–B3 | [接口示例、跨电脑复现与联调环境](4-blacktea-integration.md) | 仍按来源工单状态等待材料，真实联调转[工单 6](6-joint-acceptance.md) |
+
+以后红茶有新材料，先把可点击地址、分支和 commit / PR 登记到这里，再按[交接格式](../docs/TEAM_WORKFLOW.md#task-handoff)告知 toge；目录本身不会自动发通知。
+
 ## 原型方向更正与后续接线（2026-11-07）
 
 此前授权为文档更正：toge 反馈 Blacktea 喜欢并准备使用 `03_patchlab_playful.html`，要求先更新文档。以 LOOP! 原型的视觉、布局和交互为接线基础；不能把“继续 A2/C”或“方便使用”解释为同意另造原型。A1/A2/C 已完成标记保留，准确范围仅为现有 React 四页工作台，其历史测试不代表原型接线已完成。
@@ -26,7 +39,7 @@ Owner：Toge（toge / Frontend / UX）。状态：A1 / A2 和 C 的钢琴卷帘�
 - compose、melody、production API 及统一 Client 已在代码中；`src/melody.ts` 有结果应用、局部旋律、调教和历史逻辑，`src/audio.ts` 有统一分轨渲染。
 - 旧入口仍使用 `composeFromIdea`；首页新自由创作区域通过 `useProduction` 使用 `startProduction` / 轮询 / 单句重试，成功后完整校验并一次应用。A1 已补齐 Mock，未知路径返回 404。
 - [v0.3.2 后端报告](../docs/iteration-log.md#v032)记录真实后端制作、浏览器加载工程试听/导出；正式新页面从输入开始的流程和人工听感未验收。
-- A1 / A2 / C 本次验证 build、定向测试与 Mock 浏览器流程，未检查外部模型/音频产物，不把历史报告当成本机真实引擎状态。历史工单 2/3 不在本仓库，不补造其内容或复用编号；后续按本工单与现存交接执行。
+- A1 / A2 / C 本次验证 build、定向测试与 Mock 浏览器流程，未检查外部模型/音频产物，不把历史报告当成本机真实引擎状态。历史工单 [2](2-free-composition-original.md) / [3](3-auto-performance-original.md) 原文已恢复，仅供追溯；后续按本工单与现存交接执行，不复用旧编号。
 
 ## A：Mock 与最小页面流程
 
