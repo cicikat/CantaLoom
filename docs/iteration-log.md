@@ -4,6 +4,11 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+## 2026-11-07 · 对齐标题排版与状态卡顶线
+
+- 工单：[14 · 后台视觉](../CC-Tasks/已完成/14-admin-themes.md)。按用户截图调整紫色大写眉题、标题字重/字距与字号，加入星形装饰及参考副标题；为三张彩色状态卡添加粉、绿、蓝的深色顶线，纯黑模式使用灰色线。
+- `node scripts/verify-admin-themes.mjs` 通过日夜切换、持久化、布局一致、320/390px 检查，已核对日间截图。未改引擎或业务流程。
+
 ## 2026-11-07 · 主题简化为糖果日间与纯黑夜间
 
 - 工单：[14 · 主题切换](../CC-Tasks/已完成/14-admin-themes.md)；说明：[后台](ENGINES.md#admin)。按用户新要求删除极光/贴纸主题及选择框，改为右上角月亮/太阳图标按钮，有标题、可访问名称和按下状态。
