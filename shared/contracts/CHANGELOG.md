@@ -46,7 +46,7 @@
 
 ## v0.4.0 逐音素与高级人声表现（工单 15 P1）
 
-- 状态：工单授权范围内实施，后端已本地提交（分支 `feature/backend-p1-phoneme`，待推送合并 main）。
+- 状态：工单授权范围内实施，后端已推送，交付见 [PR #9](https://github.com/cicikat/CantaLoom/pull/9)（分支 `feature/backend-p1-phoneme`）；用户本轮明确要求直接合并，Toge 页面/Mock 接入另行 review。
 - 关联计划/任务与 Owner：[15 · 后端音乐制作升级 P1](../../CC-Tasks/后端/15-p0.md)，Owner Blacktea。工单交付清单明确「音素编辑：新增 PhonemeEdit 契约及能力查询」「调声/Pitch 编辑：扩展 Performance、Note 契约及应用函数」。
 - Frontend reviewer：toge（待 PR）；Backend reviewer：Blacktea。
 - 路径/Schema/字段：
@@ -57,7 +57,7 @@
 - 受影响的 UI / 服务 / Mock：`notePerformance` / `performanceCurves`（shared/performance.mjs）映射新参数；`server/services/qixuan.mjs` 解析声库能力、音素预校验与 USTX 描述符；无新 HTTP 端点。Mock 不返回 capabilities/phonemes/新调教字段，扩展归 toge。
 - Mock 示例提供人 / 实现人 / 待接入 PR：本任务提供真实请求/响应示例（见工单 P1 交接节）；Mock 与页面接入待 toge PR。
 - 契约与回归测试：`tests/p1-phoneme.test.ts`（Schema、USTX 映射、精准失效、能力解析）、`tests/qixuan-p1-real.test.mjs`（真实引擎十组参数 WAV 对照、非法音素拒绝）；既有 `tests/p0-tuning.test.ts` 与 `tests/qixuan-real.test.mjs` 保持通过。
-- 关联 PR：本地分支 `feature/backend-p1-phoneme`（未推送）；P0（v0.3.3）已随 `ed3c652` 快进合并 main。
+- 关联 PR：[PR #9](https://github.com/cicikat/CantaLoom/pull/9)，分支 `feature/backend-p1-phoneme` 已推送；P0（v0.3.3）已随 `ed3c652` 快进合并 main。
 
 ## v0.3.3 可编辑 Pitch 曲线（工单 15-p0）
 
