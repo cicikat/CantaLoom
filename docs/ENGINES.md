@@ -102,7 +102,9 @@ dotnet build scripts/openutau-bridge/SongyuBridge.csproj -p:OpenUtauDirectory="$
 
 「重新演唱」增加 take，实际重新调用推理；历史保留最多三版，可单独试听。锁定句或锁定人声音轨不覆盖。生成期间编辑歌词、改变设备或锁定时，结果会留在磁盘，但不覆盖已变化的工程。
 
-缓存包含歌词、音符与时值、绝对起止点、BPM、声库 ID / 版本、官方 Core 与桥接器指纹、CPU / DirectML、steps=20、depth=0.6、take。仅改第二句不影响第一句。引擎指纹不符会要求重唱；本机固定声库版本，不支持在同一版本目录偷偷替换权重。
+缓存包含歌词、音符与时值、绝对起止点、BPM、声库 ID / 版本、官方 Core 与桥接器指纹、CPU / DirectML、steps=20、depth=0.6、take；v0.3.3 起 Performance 中的自定义 Pitch 曲线随表达依赖自然纳入。仅改第二句不影响第一句。引擎指纹不符会要求重唱；本机固定声库版本，不支持在同一版本目录偷偷替换权重。
+
+渲染先写 `key.pending.wav`，完成时长 / 音量 / 削波校验后原子改名为正式缓存与元数据；推理失败或超时只留下 pending 残留并被下一次渲染清理，不污染既有缓存，旧 take 文件保留。真实引擎回归 `tests/qixuan-real.test.mjs`（渲染、缓存命中与失效、PCM 差异、无 pending 残留）在本机有引擎时随 `npm test` 自动运行，可用 `SONGYU_REAL_TESTS=0` 关闭。
 
 渲染 WAV 保留前后各 0.2 秒余量，startSeconds 对应其真实时间轴起点，单句试听也包含辅音预发声。浏览器统一重采样到 24000 Hz；试听 / WAV / PV 共用 `renderAudio`。MP4 与预览展示「AI 合成内容 / 歌声合成：绮萱 / 合成技术：DiffSinger」，背景为 SONGYU 自有程序化画面。
 

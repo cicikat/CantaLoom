@@ -4,6 +4,17 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+## 2026-11-07 · P0 精细调声与单句重唱（真实引擎验收）
+
+- 工单：[15 · 后端音乐制作升级 P0](../CC-Tasks/后端/15-p0.md)；契约变更：[CHANGELOG v0.3.3](../shared/contracts/CHANGELOG.md)；接入方法：[单句编辑](ARCHITECTURE.md#composition)与[演唱调教](ARCHITECTURE.md#performance)。Owner：Blacktea，分支 `feature/backend-p0-fine-tuning`，仅本地提交。
+- 依赖审查结论：演唱依赖＝本句歌词/音符/BPM/起止/Performance（resolvePerformance）/声库与引擎版本/runner，逐句独立；器乐按轨道独立缓存；服务端缓存键另含 take 与渲染修订，既有设计已是逐句精准失效。本轮让自定义 Pitch 随 Performance 依赖自然纳入。
+- 新增可保存 Pitch 曲线：`Performance.overrides[].pitch`（x=毫秒、y=十分之一半音整数、shape=io/i/o/l，2–64 个严格递增点），仅替换该音符自动过渡点进入 USTX；旧工程、旧请求与旧缓存不受影响，无新 HTTP 端点。
+- 新增 `setLyricText`（保留旋律需唱字数一致并重挂音节；否则清空音符与旧索引 overrides，走 targetIds 重新作曲）、`editPhraseNotes`（等数量/同 ID/同顺序/同音节的音高、起点、长度编辑，锁定音符逐字段保护）、`restoreVocalAsset`（依赖与 runner 匹配才可恢复，被替换版本轮换入历史；词音已改的旧版本明确拒绝）。
+- 服务端绮萱渲染改为 pending 文件 + 校验后原子改名，失败不留半成品、不污染既有缓存；浏览器 `renderAudio` 对单句 WAV 施加 padding 内 50/150 ms 微淡入淡出（拼接处理，演唱主体不触碰），干声与处理分轨一致。
+- 验证：`npm run build` 通过；`npm test` 57/57（含新 `tests/p0-tuning.test.ts` 6 项，及真实引擎回归 `tests/qixuan-real.test.mjs`：真实推理、缓存命中/失效、新旧 WAV PCM 差异、无 pending 残留，约 45 秒）；`npm run test:e2e:mock` 2/2；`start.bat --check`（PORT=3102）通过。
+- 真实浏览器验收 `tests/browser/p0-resing.spec.ts` 通过（本机绮萱 CPU runner，1.1 分钟）：第二句改词（保留旋律）+ 首音升 2 半音 + 自定义 Pitch 后仅重唱第二句；第一句演唱资产与器乐 FluidSynth 缓存键不变，旧版本恢复成功、过期恢复被拒、旧 WAV 仍可试听。全曲 24.0 s 时长不变（无时间偏移），第一句区域逐样本一致，第二句 RMS 0.069 / 差异 6694（真实新音频），干声峰值 0.299、零削波样本，处理后混音峰值 0.704，接缝 edgeIn 0.049 / edgeOut 0（无爆点）。产物：外部根目录 `runtime/exports/p0-resing/`（p0-resung-mix.wav、p0-acceptance.json）。
+- 边界与交接：未改 Toge 页面 / Hook / Mock；跨层触碰 `src/audio.ts`、`src/audio-mix.ts`、`src/features/singing/qixuan.ts`（工单 15 范围），PR 需 toge review。Pitch 曲线 UI、P1 音素编辑与 Mock 扩展未接入；真实验收在本机 CPU runner 完成，DirectML 未重跑；未做人工听感评审，客观指标不代替听感验收。
+
 ## 2026-11-07 · 夜间表面层次与低饱和色彩
 
 - 工单：[14 · 后台视觉](../CC-Tasks/已完成/14-admin-themes.md)；按用户最新反馈改善黑白夜间层次。保留 #000 页面底，侧栏 / 面板 / 控件分层，添加克制的紫色主色，三张状态卡使用暗粉、暗绿、暗蓝底与深色顶线；日间与布局不变。

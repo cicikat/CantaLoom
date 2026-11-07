@@ -109,7 +109,7 @@ SongProject 保存稳定 ID、版本、音符、歌词来源、锁定/静音和�
 
 既有原生 `/api/singing/voices` 和 `/api/singing/render` 文件交换接口保留，当前 React 工作台不直接调用；继续由 `server/singing.mjs` 校验 DS 与授权声库注册，不扩大这轮迁移范围。`/api/admin/*` 是独立的本机安全接口，不属于前端公开 Client/Mock，不得为跨设备联调解除其限制。
 
-音符单位始终为 beat；返回音频 startSeconds/durationSeconds 为秒。器乐从全曲零点开始，歌声包含本句休止及原有尾音。绮萱缓存依赖、take 规则、OpenUtau 参数和混音算法保持原实现。客户端为单句计算 dependency，再依据**最新工程**核对歌词、音符、runner、锁定后原子应用；生成期间用户编辑不能被覆盖。
+音符单位始终为 beat；返回音频 startSeconds/durationSeconds 为秒。器乐从全曲零点开始，歌声包含本句休止及原有尾音。绮萱缓存依赖、take 规则、OpenUtau 参数和混音算法保持原实现；v0.3.3 起渲染先写 pending 文件、校验后原子改名入缓存，单句 WAV 拼接加 padding 内微淡入淡出（见[演唱调教与分轨混音](#performance)）。客户端为单句计算 dependency，再依据**最新工程**核对歌词、音符、runner、锁定后原子应用；生成期间用户编辑不能被覆盖。
 
 `src/api/client.ts` 统一 base URL、JSON 编码、超时（含读 body）、错误解析、响应 Zod 校验与二进制类型校验。默认同源路径，经 Vite 代理；`VITE_API_BASE_URL` 可显式覆盖公共地址。未配置 CORS 的后端应继续使用代理，而非直接跨域。
 
@@ -161,6 +161,9 @@ production 串联规划、旋律、器乐与歌声。stage 契约枚举为 queue
 2. 音符锁：写 `lyric.notes[].locked`；乐句锁写 `lyric.locked`，沿用人声轨锁定。服务校验锁定音符逐字段不变，非目标句不变。
 3. 只调教：`setPhrasePerformance(project,lineId,{preset:'soft',...})`，保留全部音符，然后仅调用当前句重唱。复用已有 generateQixuan / applyVocalResult / 历史版本处理。
 4. 编辑音符后更新该段 vocal 混音轨（syncVocal），不要重建所有句ID。编辑第二句时不要清空 vocalAssets；依赖校验会自然标记第二句过期，第一句缓存继续有效。
+5. 改词：`setLyricText(project,lineId,text,{keepMelody})`。`keepMelody:true` 要求新歌词唱字数（`\p{L}\p{N}`）与现有唱词音符数一致，按时间顺序重挂音节、保留全部音高与时值；不一致则报错，不擅自增减音符。`keepMelody:false` 清空本句音符与按旧音符索引的 performance overrides，随后用 melodyRequest + `targetIds=[lineId]` 重新作曲（沿用第 1 条事务）。两条路径都同步 syncVocal、递增 version，只使本句演唱依赖失效。
+6. 编辑音高/起点/长度：`editPhraseNotes(project,lineId,notes)` 接受等数量、同 ID、同时间顺序、同音节的音符数组，逐音符经 melodyNoteSchema 校验并检查越界/重叠；锁定音符逐字段不变。不满足「只改音高、起点、长度」的编辑（数量、顺序、音节变化）明确拒绝，改用重新作曲或歌词编辑。音符数量不变时按索引的 performance overrides 保持有效。
+7. 重唱与版本：单句重唱复用 `POST /api/singing/qixuan/render`（take 递增），旧版本自动进入 vocalHistory（最多 3 版）。`restoreVocalAsset(project,lineId,index)` 仅在该历史版本的 dependency 与当前歌词/音符/调教一致且 runner 匹配时恢复为当前演唱，被替换版本轮换入历史；歌词或音符已改的旧版本明确拒绝恢复，不制造词音错位。渲染失败不调用 applyVocalResult，旧资产保留。
 
 ### 来源与画面边界
 
@@ -193,6 +196,7 @@ Performance 可选 mode=auto/manual、energy、locked、overrides。旧 JSON 无
 - `setPhrasePerformance`：手动字段优先，记录最多3版历史。
 - `restorePerformance`：恢复上一版；表达锁定后禁止自动覆盖。
 - overrides 用当前句的音符 index 指定参数；UI 调整音符顺序后须核对这些索引，不要把旧索引悄悄套到另一音符。
+- overrides[].pitch 是可保存、可编辑的单音符 Pitch 曲线（v0.3.3）：x=相对音符毫秒、y=十分之一半音、shape=io/i/o/l，2–64 个严格递增点；提供时替换该音符自动过渡点（snap_first=false），经 notePerformance 进入 USTX 与演唱依赖。清除曲线即恢复自动过渡。契约与兼容记录见 [CHANGELOG v0.3.3](../shared/contracts/CHANGELOG.md)。
 - 每次仅改变表达后只重唱该句，沿用现有 generateQixuan / applyVocalResult；不得重生成歌词/旋律。缓存含歌词、音符、表达解析版本与渲染修订。
 - `performancePlan(project)` 可导出实际逐音符规划和 DYN 曲线。此为确定性分析结果；工程持久化的是每句 Performance 与人工 overrides/history。
 
@@ -202,6 +206,7 @@ Performance 可选 mode=auto/manual、energy、locked、overrides。旧 JSON 无
 
 `renderAudio(project,{stem:'vocal-dry'|'vocal-processed'|'instrumental'|'mix'})`，同一渲染入口服务于试听、WAV、PV。
 
+- 单句拼接：外部歌声 WAV 以 startSeconds 精确落位；v0.3.3 起对每个单句 WAV 在引擎 padding 内施加 50 ms 淡入 / 150 ms 淡出（`phraseEdgeFades`，演唱主体不触碰），避免拼接爆点并自然保留混响尾音。这是拼接处理而非效果，对 vocal-dry 与处理后分轨一致生效。
 - vocal-dry：当前歌声按时间轴拼接、无增益/EQ/压缩/混响；缓存中的原始44100Hz单句 WAV 不修改。浏览器导出为24000Hz立体声时间轴，不是原始文件的逐字节拷贝。
 - vocal-processed：人声低切、自适应高频收敛/压缩、轻房间混响。
 - instrumental：伴奏平衡与声像。

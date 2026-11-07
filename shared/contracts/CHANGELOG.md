@@ -2,6 +2,19 @@
 
 2026-11-06 文档说明：下文 v0.3–v0.3.2 的授权是对应历史任务记录，不适用于新字段或新任务；本次只整理说明，未修改任何 Schema、类型、Client 或 Mock。现行流程见[团队工作流](../../docs/TEAM_WORKFLOW.md)，当前缺口见[Toge 工单](../../CC-Tasks/5-toge-free-creation.md)。
 
+## v0.3.3 可编辑 Pitch 曲线（工单 15-p0）
+
+- 状态：工单授权范围内实施，后端已本地提交，待 toge PR review 确认。
+- 关联计划/任务与 Owner：[15 · 后端音乐制作升级 P0](../../CC-Tasks/后端/15-p0.md)，Owner Blacktea。工单交付清单明确「调声/Pitch 编辑：扩展 Performance、Note 契约及应用函数」。
+- Frontend reviewer：toge（待 PR）；Backend reviewer：Blacktea。
+- 路径/Schema/字段：`shared/contracts/melody.mjs` 的 `performanceSchema.overrides[]` 新增可选 `pitch`；新增 `pitchPointSchema` / `pitchCurveSchema`；相邻 `.d.mts` 新增 `PitchPoint` 类型与两个常量声明。
+- 新增、删除或语义变更：仅新增可选字段。`pitch` 为单音符 Pitch 曲线：x=相对音符的毫秒（-500–30000）、y=十分之一半音整数（±1200）、shape=io/i/o/l，2–64 个按 x 严格递增的点；提供时替换该音符的自动过渡点并以 snap_first=false 进入 USTX，不影响其他音符、DYN 曲线与颤音。
+- 旧工程与旧调用方兼容方式：字段可选，旧 JSON 无需迁移；不含 pitch 的演唱依赖串、缓存键与渲染结果保持原值。
+- 受影响的 UI / 服务 / Mock：USTX 渲染（`notePerformance` → server 绮萱与 `openUtauProject` 导出）、演唱依赖（`resolvePerformance` 自动包含 pitch）；无新 HTTP 端点，单句重唱复用 `POST /api/singing/qixuan/render`。Mock 当前不返回 pitch，扩展归 toge。
+- Mock 示例提供人 / 实现人 / 待接入 PR：本任务提供真实请求/响应示例（见工单交接节）；Mock 与页面接入待 toge PR。
+- 契约与回归测试：`tests/p0-tuning.test.ts`（Schema、USTX 映射、精准失效）、`tests/qixuan-real.test.mjs`（真实引擎缓存/PCM 差异）、`tests/browser/p0-resing.spec.ts`（真实混音验收）。
+- 关联 PR：本地分支 `feature/backend-p0-fine-tuning`（未推送）。
+
 ## v0.2.1
 
 - 汇总已有 health、器乐、绮萱、音频文件、导出、引擎/词典/导入契约；SongPlan 复用原 Schema。
