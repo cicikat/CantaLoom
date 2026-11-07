@@ -156,3 +156,13 @@ dotnet build scripts/openutau-bridge/SongyuBridge.csproj -p:OpenUtauDirectory="$
 `keyRef` 只保存环境变量名称，不接受内嵌 apiKey/key/secret 等未知字段。默认 LLM_API_KEY 继续使用既有 Windows DPAPI 加密存储；其他命名密钥由进程环境配置，当前后台不能写入它们。任务路由自身不保存密钥值。URL 只接受无用户名、密码、查询串、片段的 HTTPS，或 loopback HTTP。错误配置原子拒绝，保留旧文件和旧环境。
 
 `GET /api/admin/llm` 查看路由、keyConfigured 与脱敏调用追溯；未配置单价时 cost/costCurrency 为 null。请求信封为 `{ "LLM_ROUTES": "{...}" }`；成功响应仍为既有配置快照（values/keyConfigured/keyMask/revision 等），非法字段、密钥内嵌或 URL 返回 400，配置写入期间有运行任务返回 409。后台现有连通检查检查 lyrics_planning 的有效模型与密钥引用；它只证明最小聊天调用可达，不表示三个任务已通过完整 Schema 校验。没有新增后台页面控件，Toge 可通过上述 API 接入；前端绝不能读取密钥引用对应的值。
+
+## 管理调试启动与路由
+
+双击根目录 `start-admin.bat` 构建并启动本地服务，自动打开 `/admin`。支持 `--no-open`；关闭窗口前使用 Ctrl+C。端口占用时不会关闭已有进程。
+
+在连接与密钥页为歌词规划、旋律作曲、演唱表现分别启用路由，填写服务商、OpenAI 兼容 Base URL、模型 ID 与 API Key，然后保存。接口追加 `/chat/completions`。独立密钥以 Windows DPAPI 保存，留空保留；未设置独立密钥的新路由使用默认密钥。关闭覆盖恢复默认连接。连接检查目前只测试歌词规划路由，不代表三个任务都已通过真实调用。
+
+管理启动器遇到同一项目的现有服务时，核对管理状态中的项目根目录后直接打开现有后台，不重复启动。其他进程占用仍报错。复用不会加载新后端代码，更新后须在原服务窗口 Ctrl+C 并重新启动。`--check` 始终验证独立启动，不复用服务。
+
+模型连接和三任务路由统一在资源管理台。填写 URL 和 API Key 后点击“获取模型列表”，选择模型并保存；通过服务端请求兼容的 `/models`，不向浏览器返回密钥。厂商不支持此接口时可手填模型 ID。顶部列出已保存的有效路由；表单修改保存后生效。
