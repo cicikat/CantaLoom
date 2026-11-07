@@ -1,5 +1,18 @@
 # SONGYU 迭代日志
 
+<a id="quality-interface-delivery"></a>
+
+## 2026-11-07 · 工单 19/20 接口标注与协作交付
+
+关联：[工单 19](../CC-Tasks/后端/19-render-quality-and-artifacts.md)、[工单 20](../CC-Tasks/后端/20-groove-and-humanization.md)、[接口清单](INTERFACES.md)、[契约记录](../shared/contracts/CHANGELOG.md)。
+
+按用户要求在 INTERFACES 明确标注「新增」：artifact 下载与分轨 loudness 端点、48kHz 响应、MP4 X-Songyu-Loudness 头、groove 字段及保护标记；列出默认值、错误码、种子/缓存语义、示例和当前 Client/Mock/UI 接线边界。同步纠正 P1 已合并和已有 compose/melody/production Mock 的过期表述；用户不可调 LUFS 目标与服务端固定归一区分说明。
+
+工作区原有唯一未提交代码为 src/api/mock.ts 的 sampleRate 24000→48000 单行修改，本轮按用户「确保工作区干净后 push 并合并」的交付范围纳入提交，仅与工单 19 的响应契约保持兼容，不扩展前端功能。此前后端核心全量 98/99（1 项真实 LLM 跳过）、最终定向 30/30、真实 FluidSynth/Chromium WAV/MP4 结果见上两条记录。当前 main 分支保护查询返回 Branch not protected（404），不据此跳过 CI。本轮 Mock 浏览器回归 26/26 通过（1.9 分钟），INTERFACES 本地链接目标检查和 git diff --check 通过。
+
+本轮授权推送 feature/backend-music-quality-tickets 并经 PR 合并 main；远端 PR/检查/合并结果在交付后补录。人工听评、DAW 抽验和可选 groove 页面接线仍未完成，原工单与交接保留。
+
+
 <a id="groove-humanization-20"></a>
 
 ## 2026-11-07 · 工单 20 鼓组与确定性律动

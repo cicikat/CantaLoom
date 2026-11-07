@@ -15,7 +15,7 @@
 - Owner Blacktea；按工单 19 明确范围实施，不修改 Client/UI/Mock。
 - GET `/api/artifacts/:file`：64 位小写十六进制 key + mid/ustx/wav；逐轨下载，无 zip 依赖。GET `/api/artifacts/:file/loudness` 仅接受 WAV，返回 ebur128 的 integratedLufs / truePeakDbtp；静音值为 null。缺失 404，测量不可用 503。
 - `/api/export` 保持 MP4 二进制响应，新增 `X-Songyu-Loudness` JSON 头（input/output/target）；output 为编码后 AAC 的实测值，允许编码误差，不伪称达标。
-- InstrumentResult.sampleRate 从 24000 升级 48000；声明同步，缓存 revision=2；旧工程不重写。现有 Mock 的采样率调整由其 Owner 保留，后端不代改。
+- InstrumentResult.sampleRate 从 24000 升级 48000；声明同步，48kHz 缓存 revision=2（工单 20 后为 3）；旧工程不重写。后续用户明确要求工作区干净后推送合并，本次纳入已存在的 Mock sampleRate 单行兼容修正，仅对齐响应契约、不扩展 Mock 音频能力。
 - 测试：下载字节/路径隔离、真实渲染 WAV、FFmpeg 响度与 MP4；页面接入和人工听感另验。
 
 
