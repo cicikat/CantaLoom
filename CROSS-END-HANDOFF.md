@@ -16,11 +16,13 @@
 
 | ID | 来源 | 发起方 → 接收方 | 状态 |
 |---|---|---|---|
+| [20-groove-render](#20-groove-render) | 工单 20 | Blacktea → Toge | 核心/API 已实现；页面与人工听评待安排 |
 | [15-P1-review](#15-p1-review) | 工单 15 P1 | Blacktea → Toge | 后端已推送；等待接口接入 review |
 | [15-P2A-contracts](#15-p2a-contracts) | 工单 15 P2-A | Blacktea → Toge | 等待本任务共享范围确认 |
 | [15-P2B-routing](#15-p2b-routing) | 工单 15 P2-B | Blacktea → Toge | 后端已推送；等待接入 review 与安排 |
 | [5-browser-timing](#5-browser-timing) | 工单 5 页面回归 | Blacktea → Toge | 待核对高负载下的测试时序稳定性 |
 | [15-P3-mixgraph](#15-p3-mixgraph) | 工单 15 P3 | Blacktea → Toge | 等待共享契约及渲染归属确认 |
+| [21-harmony-contracts](#21-harmony-contracts) | 工单 21 | Blacktea → Toge | 等待和声/拍号契约提案评审 |
 
 以下后端分支与提交已推送，main 的交付范围以对应 PR 合并结果为准；待确认的 P2-A/P3 仍不构成实施授权。当前 main 的前端 Mock/局部编辑进度以[工单 5](CC-Tasks/5-toge-free-creation.md)为准。
 
@@ -60,6 +62,15 @@
 - 验收与回执：确认记录进入契约变更记录后再实施；补保存恢复、试听/离线一致性、真实分轨导出、LUFS 与 True Peak 的达标或无法达标报告。仅后端能力或现有 Web Audio 参数不能提前标作 P3 完成。
 
 
+<a id="21-harmony-contracts"></a>
+
+### 21-harmony-contracts · 和声/拍号契约提案评审
+
+- 更新：2026-11-07；来源：[工单 21](CC-Tasks/后端/21-harmony-voice-leading-form.md)；Blacktea → Toge；状态：等待提案评审，未授权实施。
+- 已交付：工单 21 的音乐性契约提案（每小节 1–2 和弦与 7/9/sus/add/转位/副属、弱拍经过音放行、voice leading、贝斯织体分档、3/4 与 6/8 拍号及分段 tempo map），仅文档，无代码改动。
+- 对方下一步：与 [15-P2A-contracts](#15-p2a-contracts) 一并评审对 SongPlan 字段与旧工程兼容的影响（chordProgression 结构变化、validateMelody 弱拍放宽、三处 4/4 硬编码统一）；确认后先在 shared/contracts/CHANGELOG.md 写清关联工单与授权范围，再由 Owner 实施。
+- 验收与回执：见工单 21 验收节；本条目不构成跨区授权，工单 15/19/20/22 的实施也不以本条为前置。
+
 <a id="5-browser-timing"></a>
 
 ### 5-browser-timing · 页面测试的高负载时序稳定性
@@ -68,3 +79,22 @@
 - 证据：本轮真实音频与页面并行回归时，Mock 的 LOOP tap 检查期望 BPM >90，实际 76；未改动的 main 7bee0eb 同一检查也失败（89）。低负载串行重跑该用例 1/1 通过。无 API 播放检查首跑在 5 秒内未见暂停按钮，main 基线及本分支串行重跑均通过。
 - 对方下一步：核对浏览器测试对真实墙钟点击间隔和异步离线混音的依赖；区分机器负载影响与产品行为，评估可重复的节奏输入/播放器就绪等待策略，不靠放宽断言掩盖节奏错误。涉及 tests/browser/mock.spec.ts 与 tests/browser/plan.spec.ts，本轮后端交付未改这些文件。
 - 验收与回执：在工单 5 记录测试环境、复现和稳定性验证，完整功能断言仍需保留；完成后按维护规则清除此条及索引。原始日志保存在本机 temp/backend-p1-p2b-mock.log、temp/backend-p1-p2b-http.log、temp/baseline-loop-tap.log 及对应 retry 日志。
+
+
+<a id="19-artifact-report"></a>
+
+### 19-artifact-report · 产物与响度接入
+
+- 更新：2026-11-07；来源：[工单 19](CC-Tasks/后端/19-render-quality-and-artifacts.md)；Blacktea → Toge；状态：后端已实现，页面展示待安排。
+- 交付：`feature/backend-music-quality-tickets` 的只读 artifact 下载/分轨 ebur128 接口、MP4 `X-Songyu-Loudness` 报告，详见[架构说明](docs/ARCHITECTURE.md#创作产物与响度报告工单-19)，交付 [PR #10](https://github.com/cicikat/CantaLoom/pull/10)。UI 不在本轮范围；后续交付仅纳入已存在的 Mock 采样率单行兼容修改。
+- 对方下一步：按需接下载/报告入口；确认 DAW 导入 MIDI 与实际作品听感。后端真实渲染/浏览器混音证据见工单与迭代日志，不代替人耳和设备验收。
+
+
+<a id="20-groove-render"></a>
+
+### 20-groove-render · 可选器乐渲染律动
+
+- 更新：2026-11-07；来源：[工单 20](CC-Tasks/后端/20-groove-and-humanization.md)；Blacktea → Toge；状态：音乐核心/API 已实现，页面/Mock 与人工听评待安排。
+- 已交付：自由模式新鼓组、TAP 保护、可选 groove 和保护标记契约；分支 feature/backend-music-quality-tickets，交付 [PR #10](https://github.com/cicikat/CantaLoom/pull/10)。本轮未修改 UI/Client/Mock/SongPlan/工程 Schema；字段与兼容边界见[契约记录](shared/contracts/CHANGELOG.md)及[接入说明](docs/ARCHITECTURE.md#groove-render)。
+- 对方下一步：需要开放 swing/人性化时，先确认保存/Client/Mock/production/浏览器预览与导出的统一参数来源和保护状态；不能只给服务端一次性参数，使浏览器重新渲染时丢失。按项目 ID、轨道 ID、版本构造稳定种子，不使用时间戳。
+- 验收/回执：本机对照音在 temp/task20/，工单与迭代日志有客观验证；人工抽听 backbeat 与段落推进尚未执行。本条不构成代改前端的授权。

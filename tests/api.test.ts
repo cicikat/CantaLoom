@@ -28,7 +28,7 @@ test('project import preserves legacy JSON and prevents Mock files entering the 
 test('client applies base URL, rejects invalid responses and centralizes task success/failure',async()=>{
  const tasks:GenerationTask[]=[];let mode='valid',seen='';const client=createApiClient({baseUrl:'http://fixture.local/',onTask:t=>tasks.push(t),request:async(url)=>{
   seen=String(url);if(mode==='http')return Response.json({error:'fixture failure'},{status:503});if(mode==='invalid')return Response.json({audioUrl:'https://foreign.invalid/x.wav'});
-  return Response.json({audioUrl:`/api/audio/${'a'.repeat(64)}.wav`,key:'a'.repeat(64),providerId:'fluidsynth',soundfont:'fixture.sf2',sampleRate:24000,startSeconds:0,cached:false});
+   return Response.json({audioUrl:`/api/audio/${'a'.repeat(64)}.wav`,key:'a'.repeat(64),providerId:'fluidsynth',soundfont:'fixture.sf2',sampleRate:48000,startSeconds:0,cached:false});
  }});
  const input={bpm:120,kind:'keys' as const,notes:[],endBeat:16};
  await client.instruments(input);assert.equal(seen,'http://fixture.local/api/instruments/render');assert.deepEqual(tasks.map(t=>t.state),['running','succeeded']);

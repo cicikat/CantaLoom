@@ -1,8 +1,60 @@
 # SONGYU 迭代日志
 
+<a id="quality-interface-delivery"></a>
+
+## 2026-11-07 · 工单 19/20 接口标注与协作交付
+
+关联：[工单 19](../CC-Tasks/后端/19-render-quality-and-artifacts.md)、[工单 20](../CC-Tasks/后端/20-groove-and-humanization.md)、[接口清单](INTERFACES.md)、[契约记录](../shared/contracts/CHANGELOG.md)。
+
+按用户要求在 INTERFACES 明确标注「新增」：artifact 下载与分轨 loudness 端点、48kHz 响应、MP4 X-Songyu-Loudness 头、groove 字段及保护标记；列出默认值、错误码、种子/缓存语义、示例和当前 Client/Mock/UI 接线边界。同步纠正 P1 已合并和已有 compose/melody/production Mock 的过期表述；用户不可调 LUFS 目标与服务端固定归一区分说明。
+
+工作区原有唯一未提交代码为 src/api/mock.ts 的 sampleRate 24000→48000 单行修改，本轮按用户「确保工作区干净后 push 并合并」的交付范围纳入提交，仅与工单 19 的响应契约保持兼容，不扩展前端功能。此前后端核心全量 98/99（1 项真实 LLM 跳过）、最终定向 30/30、真实 FluidSynth/Chromium WAV/MP4 结果见上两条记录。当前 main 分支保护查询返回 Branch not protected（404），不据此跳过 CI。本轮 Mock 浏览器回归 26/26 通过（1.9 分钟），INTERFACES 本地链接目标检查和 git diff --check 通过。
+
+本轮授权推送 feature/backend-music-quality-tickets 并经 [PR #10](https://github.com/cicikat/CantaLoom/pull/10) 合并 main；分支已推送，提交时工作区干净。CI 与最终合并记录以该 PR 的 Checks/合并事件为准（GitHub 连接器写入返回 403，改用本机已认证 CLI 创建 PR）。人工听评、DAW 抽验和可选 groove 页面接线仍未完成，原工单与交接保留。
+
+
+<a id="groove-humanization-20"></a>
+
+## 2026-11-07 · 工单 20 鼓组与确定性律动
+
+关联：[工单 20](../CC-Tasks/后端/20-groove-and-humanization.md)、[律动接入](ARCHITECTURE.md#groove-render)、[契约变更](../shared/contracts/CHANGELOG.md)、[交接 20-groove-render](../CROSS-END-HANDOFF.md#20-groove-render)。
+
+自由模式新增 2/4 backbeat、energy 三档鼓型/末小节 fill、强弱踩镲，去掉原统一 `.5+energy*.5` 映射，保留 TAP kick 与关闭补全。可选器乐 groove 用工程 ID / 轨道 ID / version / 参数种子，只在 MIDI tick 层施加 swing 与非鼓 timing/velocity 抖动；整数/幅度约束经 Zod 校验、声明同步，参数进入缓存 hash，revision=3。锁定/手写/单音符锁定整轨旁路，hash 前去掉 groove，实际保护轨缓存键不随开关变化。旧模式已有 backbeat/TAP，决定不重构；未修改 UI/Mock/Client/工程 Schema/SongPlan。
+
+本机 Windows 真实 FluidSynth/现有 SoundFont：新增定向测试 4/4 通过，无跳过；独立解码 MIDI 事件断言 swingTicks=60 后 onset 为 0/300/480/780/960/1260/1440/1740，同输入字节一致；保护、TAP 补全关闭、energy 事件差异、真实 PCM 差异/缓存命中均通过。对照音保留 `temp/task20/variant-0..3.wav`，分别为直拍器乐、律动器乐、低能量鼓与高能量鼓，不提交音频。
+
+build 通过（保留既有 Zod 注释/bundle 体积提示）；npm test 99 项，98 通过、0 失败、1 跳过（未启用真实 LLM 路由）。其后补齐受保护轨 hash 归一，并重跑包含真实保护轨缓存的定向测试通过；最终核心/API/自由作曲/production/计划保护共 30 项定向回归全部通过。`node scripts/verify-render-quality.mjs --free` 以本地规则生成自由编曲，通过 Chromium 的现有 renderAudio/wavBlob、真实 FluidSynth 与 MP4 链路；混音 RMS 0.034584、24kHz，输入 -25.7 LUFS / -9.5 dBTP，最终 AAC -13.6 LUFS / -1.4 dBTP，沿用工单 19 的如实报告目标差距。输出/报告与日志均在 `temp/task20/` 或 `temp/task20-*.log`；git diff --check 通过。
+
+本轮没有真实 LLM 新创作、人工抽听、正式 UI 律动开关或手机/Safari 验收。自由鼓组/energy 默认进入现有核心；可选 groove 尚未由浏览器/production 默认携带，统一保存/预览/导出来源交给 Toge 确认后接线，未将 API 完成称为页面完成。工单实施项完成，人工听感待验，保留原位。沿用 feature/backend-music-quality-tickets，本轮本地提交，不推送；已有 src/api/mock.ts 改动保留、不暂存。
+
+
+<a id="render-quality-19"></a>
+
+## 2026-11-07 · 工单 19 渲染与产物后端交付
+
+关联：[工单 19](../CC-Tasks/后端/19-render-quality-and-artifacts.md)、[接入说明](ARCHITECTURE.md#创作产物与响度报告工单-19)、[契约](../shared/contracts/CHANGELOG.md)、[交接 19-artifact-report](../CROSS-END-HANDOFF.md#19-artifact-report)。
+
+本轮接续工作区已有 48kHz/产物端点修改，完成 PCM s16/revision=2、MIDI/USTX/WAV 原字节下载与非法路径拒绝、只读分轨 ebur128 测量、MP4 loudnorm 和最终 AAC 测量报告；保留 MP4 二进制响应，新增 X-Songyu-Loudness 头。逐轨下载零依赖，决定暂不提供 zip。s24 缺少跨浏览器证据，按工单保留 s16。未代改 UI/Client/Mock。
+
+Windows 本机真实 FluidSynth、现有 SoundFont、FFmpeg（本机配置）和 Chromium：新增 3 项回归全部通过，无跳过；build 通过（保留 Zod 注释及 bundle 体积提示）；npm test 共 95 项，94 通过、0 失败、1 跳过（真实 LLM 路由未启用）。包含既有人声真实引擎回归，但不表示本轮重新验收模型/页面创作。git diff --check 通过。
+
+合成正弦夹具 -41.7 → -14.0 LUFS，最终 AAC TP -10.2 dBTP。`node scripts/verify-render-quality.mjs` 另以真实 FluidSynth 源文件经 Chromium 原有 renderAudio/wavBlob 全曲混音、WAV 和 MP4 导出通过；RMS 0.031404，浏览器混音仍 24kHz。最终 MP4 输入 -26.4 LUFS / -13.0 dBTP，输出 -13.6 LUFS / -1.3 dBTP，距 -14 / -1.5 目标分别 +0.4 LU / +0.2 dB，未宣称严格达标。媒体与报告位于 `temp/task19/`，测试日志在 `temp/task19-tests.log`，均不提交。此轮没有从正式 UI 现场输入新主题制作，也没有人工听评、DAW 打开或手机/Safari 实测。
+
+实施 checkbox 已更新，因 DAW 人工抽验/共同听感未完成，工单保留原位待验收。下载/报告页面接入登记交接 19-artifact-report。现有前端 Mock 采样率改动保留在工作区，不纳入本轮提交。分支沿用 feature/backend-music-quality-tickets；仅本地提交，不推送。
+
+
 唯一完成记录入口。新条目放在最上方，按日期倒序；同日新记录在前。每条写明工单与相关文档地址、实际实现、验证结果和未验收边界；状态 checkbox 只维护在对应工单。
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
+
+<a id="backend-music-review-tickets"></a>
+
+## 2026-11-07 · 专业音乐人视角后端评审与四张新工单
+
+- 工单：新建 [19 · 渲染音质与创作产物导出](../CC-Tasks/后端/19-render-quality-and-artifacts.md)、[20 · 鼓组律动与演奏人性化](../CC-Tasks/后端/20-groove-and-humanization.md)、[21 · 和声、声部连接与拍号速度](../CC-Tasks/后端/21-harmony-voice-leading-form.md)、[22 · 制作后端治理](../CC-Tasks/后端/22-backend-production-ops.md)；关联 [15 P2-A/P3](../CC-Tasks/后端/15-p0.md) 与 [12 · 后台待排期](../CC-Tasks/12-admin-backlog.md)；交接：[21-harmony-contracts](../CROSS-END-HANDOFF.md#21-harmony-contracts)。
+- 评审：以专业制作用户视角通读 server/ 与 shared/ 生成渲染链路。结论摘要：工程侧严谨（契约校验、缓存完整性、密钥与失败保护），音乐侧薄弱——和声为 4 个级内三和弦循环且无转位/voice leading、贝斯恒根音、鼓无 backbeat/fill 且全事件落网格、FluidSynth 24kHz 单 SF2 干声、已生成的 MIDI/USTX/分轨不提供下载、导出无响度归一。
+- 落单：P0 快赢（48kHz、产物下载、loudnorm、LUFS 测量）→ 19；鼓组律动与确定性人性化 → 20；和声/经过音/voice leading/贝斯织体/拍号速度 → 21（契约提案，待授权，依赖 15-P2A-contracts 一并评审）；缓存配额/任务持久化/渲染并发池 → 22（领取工单 12 第 1/3 项）。混音效果链与分轨混音仍归 15 P3，长歌曲式仍归 15 P2-A，新工单未复制其 checkbox。
+- 验证：纯文档任务，仅检查本轮 Markdown 本地链接、README 索引一致性与 Git diff；未运行构建、LLM 或真实引擎测试，不改变任何既有验收状态。本轮仅本地提交，未推送。
 
 <a id="backend-p1-p2b-publish"></a>
 
