@@ -16,14 +16,17 @@ export function runProcess(command,args,cwd,timeout=120000){return new Promise((
 export {instrumentInput} from '../../shared/contracts/index.mjs';
 import {instrumentInput} from '../../shared/contracts/index.mjs';
 const hash=x=>createHash('sha256').update(x).digest('hex');
-// 48 kHz render revision: the cache key contains rate+revision, so legacy 24 kHz files become unreachable on their own.
-export const renderRate=48000,renderRevision=2;
+// Cache revisions: v2 = 48 kHz; v3 = deterministic MIDI groove and protection semantics.
+export const renderRate=48000,renderRevision=3;
 export class InstrumentRenderer {
  constructor(){this.pending=new Map();}
  get binary(){return process.env.FLUIDSYNTH_PATH||path.join(externalRoot,'FluidSynth/fluidsynth-v2.6.2-win10-x64-cpp11/bin/fluidsynth.exe')}
  async soundfonts(){try{return (await readdir(path.join(externalRoot,'soundfonts'))).filter(n=>/\.(sf2|sf3)$/i.test(n));}catch{return []}}
  async status(){const soundfonts=await this.soundfonts();try{return {installed:true,version:(await runProcess(this.binary,['--version'],externalRoot,5000)).split('\n')[0],soundfonts,ready:!!soundfonts.length};}catch{return {installed:false,ready:false,soundfonts}}}
- async render(raw){const input=instrumentInput.parse(raw);const fonts=await this.soundfonts();const selected=input.soundfont||process.env.SONGYU_SOUNDFONT||fonts[0];if(!fonts.includes(selected))throw Error('音源缺失：请选择已安装的 SF2/SF3');
+ async render(raw){const parsed=instrumentInput.parse(raw);
+  // Protected tracks keep their effective render input and cache key when groove controls change.
+  const {groove,...plain}=parsed;const input=parsed.locked||parsed.manuallyEdited||parsed.notes.some(n=>n.locked)?plain:parsed;
+  const fonts=await this.soundfonts();const selected=input.soundfont||process.env.SONGYU_SOUNDFONT||fonts[0];if(!fonts.includes(selected))throw Error('音源缺失：请选择已安装的 SF2/SF3');
   const sf=path.join(externalRoot,'soundfonts',selected);const bytes=await readFile(sf);const engine=await stat(this.binary).catch(()=>{throw Error('FluidSynth 未安装或路径无效')});
   const key=hash(JSON.stringify({input,sf:hash(bytes),engine:[engine.size,engine.mtimeMs],rate:renderRate,revision:renderRevision}));
   if(this.pending.has(key))return this.pending.get(key);

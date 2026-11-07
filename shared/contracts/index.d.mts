@@ -1,3 +1,6 @@
+import type {Groove} from './groove.mjs';
+export {grooveSchema} from './groove.mjs';
+export type {Groove} from './groove.mjs';
 import type {Performance} from './melody.mjs';
 import type {z} from 'zod';
 import type {MidiNote} from '../midi.mjs';
@@ -5,7 +8,7 @@ export {planInputSchema,planResponseSchema} from '../song-plan.mjs';
 export type MockTag={mock?:true};
 export interface Health extends MockTag {ffmpeg:boolean;llm:boolean;llmStatus:'local'|'unverified'|'verified';vocal?:string;images?:string}
 export interface RenderNote extends MidiNote {syllable?:string}
-export interface InstrumentInput {bpm:number;kind:'drums'|'bass'|'guitar'|'keys'|'melody';notes:RenderNote[];program?:number;soundfont?:string;endBeat:number}
+export interface InstrumentInput {bpm:number;kind:'drums'|'bass'|'guitar'|'keys'|'melody';notes:RenderNote[];groove?:Groove;locked?:boolean;manuallyEdited?:boolean;program?:number;soundfont?:string;endBeat:number}
 export interface AudioResult extends MockTag {audioUrl:string;key:string}
 export interface InstrumentResult extends AudioResult {providerId:'fluidsynth';soundfont:string;sampleRate:48000;startSeconds:0;cached:boolean}
 export type Runner='CPU'|'DirectML';

@@ -322,10 +322,23 @@ A1 授权见[契约记录](../shared/contracts/CHANGELOG.md)，当前证据见[A
 
 ### 创作产物与响度报告（工单 19）
 
-器乐新渲染为 48kHz / PCM s16，revision=2 使旧缓存自然失效；浏览器统一混音仍为现有 24kHz，因此本次不承诺最终 WAV 全链路 48kHz。位深保持 s16，未以缺少跨浏览器实测的 s24 替换稳定入口。
+器乐新渲染为 48kHz / PCM s16，当前 revision=3（48kHz 为 revision=2，律动为 revision=3）使旧缓存自然失效；浏览器统一混音仍为现有 24kHz，因此本次不承诺最终 WAV 全链路 48kHz。位深保持 s16，未以缺少跨浏览器实测的 s24 替换稳定入口。
 
 已知资产 key 可通过 `GET /api/artifacts/{key}.mid`、`.ustx`、`.wav` 下载缓存原字节。MIDI 是对应器乐渲染轨道的工程，并非整曲聚合 MIDI；USTX 对应演唱缓存源工程。不存在返回 404，只接受 64 位小写十六进制 key 和后缀白名单。逐轨下载零新增依赖；zip 暂不提供。
 
 `GET /api/artifacts/{key}.wav/loudness` 只读调用 FFmpeg ebur128 返回 `{integratedLufs,truePeakDbtp}`，静音无穷值使用 null，测量不可用返回 503；不改变音频。调用方可按人声/器乐 key 分别查询，无需改变 production 任务契约。
 
 MP4 导出使用 loudnorm（I=-14 LUFS、TP=-1.5 dBTP、LRA=11），48kHz AAC 192k。响应保持 MP4 下载，`X-Songyu-Loudness` JSON 头给出 input、output 和 target；output 是解码最终 AAC 的 ebur128 实测值，目标 TP 是上限，不要求安静素材贴近上限。页面尚未展示报告，不改变浏览器混音算法。真实资源 smoke 命令为 `node scripts/verify-render-quality.mjs`，需要可用 FluidSynth、SoundFont、FFmpeg 与 Playwright Chromium；输出仅在 `temp/task19/`。
+
+
+<a id="groove-render"></a>
+
+### 鼓组与确定性渲染律动（工单 20）
+
+自由模式 `freeArrangement` 使用 `drumPattern` 生成 2/4 backbeat、分层踩镲和段落末小节 fill。energy 改变节奏密度、fill 复杂度与力度；TAP 底鼓落点保留，rhythmCompletion=false 仅生成录入 kick。旧模式维持既有风格/TAP 实现，旧工程不会被加载过程自动重写。
+
+`POST /api/instruments/render` 的可选 groove 示例：`{projectId:"project-1",trackId:"track-1",version:1,swingTicks:60,timingTicks:15,velocityAmount:0.08}`。MIDI 分辨率 480 tick/beat；swing 延后 .5 拍的事件，非鼓 timing/velocity 用 tuple+参数的纯伪随机数生成器，保持同输入 MIDI 字节一致。位置只在 MIDI 编码时偏移，工程 beat 不变；末端裁剪、非负 onset 和最小 1 tick 时值保障事件有效。
+
+调用方透传 locked / manuallyEdited / notes[].locked；任一保护禁用整轨 groove，后端在 hash 前去掉该 groove，保护轨道不会因开关改变缓存键。非保护参数和身份/版本进入缓存键，revision=3。缺省不传 groove 不应用任何额外渲染律动。现有页面/浏览器和 production 尚不传这些字段，API 选项可用不等于页面已接；不应只在服务端启用而让浏览器导出使用另一套节奏。接线须保持参数/保护标记在保存、预览和导出间一致。
+
+运行 `node --test tests/groove.test.mjs` 可验证事件流与真实 FluidSynth PCM/缓存（缺少引擎自动 skip）；`node scripts/verify-render-quality.mjs --free` 用本地规则自由编曲测试 Chromium 解码/统一混音与真实 MP4，非真实 LLM 创作和人工听评。

@@ -1,5 +1,15 @@
 # 公共契约变更
 
+## 工单 20 · 确定性律动与器乐渲染参数（2026-11-07）
+
+- Owner Blacktea；依据用户继续完成工单 20 的限定范围实施 shared/free-score、MIDI 和器乐输入；不修改 SongPlan、工程 Schema、Client、Mock、UI，不延伸到混音或旧模式重构。
+- InstrumentInput 新增可选 groove：projectId / trackId（1–150 字）、version（正整数）、swingTicks（0–120 整数）、timingTicks（0–20 整数）、velocityAmount（0–0.2）；后 3 项缺省为 0。480 tick/beat；偶数八分音符（beat 的 .5 位置）后移 swingTicks；非鼓器乐 timing/velocity 使用稳定 tuple + 参数种子，不移动工程 beat。vocal 不应用。新增可选 locked / manuallyEdited 及 notes[].locked：任一保护即整轨不做渲染偏移，调用方必须透传真实保护状态。
+- MIDI 声明同步，groove 与保护标记经统一 instrumentInput 保留进入现有渲染 input hash；旧调用不带 groove 时 MIDI 保持原字节。算法 revision 独立进入缓存键（不伪造随机时间种子）。
+- 自由鼓组采用 2/4 backbeat、energy 分层、末小节 fill、交替踩镲力度；TAP 底鼓按原 16 格量化规则保留，补全关闭仅生成 TAP 底鼓。锁定/手写自由轨道返回原数据副本。旧模式已有 backbeat/TAP 语义，明确保持原实现。
+- 调用点：midiFile 与 InstrumentRenderer；当前 UI/浏览器和 production 不自动携带 groove，选项需后续按共享边界由 Toge 接线；不能把 API 可用写成页面已开放。
+- 测试 Owner Blacktea：实际 MIDI 事件、保护、确定性、缓存/真实 WAV 差异。Mock/UI Owner Toge，未代改；交接 20-groove-render，人工听评另验。
+
+
 ## 工单 19 · 只读产物与响度（2026-11-07）
 
 - Owner Blacktea；按工单 19 明确范围实施，不修改 Client/UI/Mock。

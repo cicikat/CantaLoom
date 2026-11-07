@@ -1,5 +1,20 @@
 # SONGYU 迭代日志
 
+<a id="groove-humanization-20"></a>
+
+## 2026-11-07 · 工单 20 鼓组与确定性律动
+
+关联：[工单 20](../CC-Tasks/后端/20-groove-and-humanization.md)、[律动接入](ARCHITECTURE.md#groove-render)、[契约变更](../shared/contracts/CHANGELOG.md)、[交接 20-groove-render](../CROSS-END-HANDOFF.md#20-groove-render)。
+
+自由模式新增 2/4 backbeat、energy 三档鼓型/末小节 fill、强弱踩镲，去掉原统一 `.5+energy*.5` 映射，保留 TAP kick 与关闭补全。可选器乐 groove 用工程 ID / 轨道 ID / version / 参数种子，只在 MIDI tick 层施加 swing 与非鼓 timing/velocity 抖动；整数/幅度约束经 Zod 校验、声明同步，参数进入缓存 hash，revision=3。锁定/手写/单音符锁定整轨旁路，hash 前去掉 groove，实际保护轨缓存键不随开关变化。旧模式已有 backbeat/TAP，决定不重构；未修改 UI/Mock/Client/工程 Schema/SongPlan。
+
+本机 Windows 真实 FluidSynth/现有 SoundFont：新增定向测试 4/4 通过，无跳过；独立解码 MIDI 事件断言 swingTicks=60 后 onset 为 0/300/480/780/960/1260/1440/1740，同输入字节一致；保护、TAP 补全关闭、energy 事件差异、真实 PCM 差异/缓存命中均通过。对照音保留 `temp/task20/variant-0..3.wav`，分别为直拍器乐、律动器乐、低能量鼓与高能量鼓，不提交音频。
+
+build 通过（保留既有 Zod 注释/bundle 体积提示）；npm test 99 项，98 通过、0 失败、1 跳过（未启用真实 LLM 路由）。其后补齐受保护轨 hash 归一，并重跑包含真实保护轨缓存的定向测试通过；最终核心/API/自由作曲/production/计划保护共 30 项定向回归全部通过。`node scripts/verify-render-quality.mjs --free` 以本地规则生成自由编曲，通过 Chromium 的现有 renderAudio/wavBlob、真实 FluidSynth 与 MP4 链路；混音 RMS 0.034584、24kHz，输入 -25.7 LUFS / -9.5 dBTP，最终 AAC -13.6 LUFS / -1.4 dBTP，沿用工单 19 的如实报告目标差距。输出/报告与日志均在 `temp/task20/` 或 `temp/task20-*.log`；git diff --check 通过。
+
+本轮没有真实 LLM 新创作、人工抽听、正式 UI 律动开关或手机/Safari 验收。自由鼓组/energy 默认进入现有核心；可选 groove 尚未由浏览器/production 默认携带，统一保存/预览/导出来源交给 Toge 确认后接线，未将 API 完成称为页面完成。工单实施项完成，人工听感待验，保留原位。沿用 feature/backend-music-quality-tickets，本轮本地提交，不推送；已有 src/api/mock.ts 改动保留、不暂存。
+
+
 <a id="render-quality-19"></a>
 
 ## 2026-11-07 · 工单 19 渲染与产物后端交付

@@ -1,3 +1,5 @@
+import {grooveSchema} from './groove.mjs';
+export {grooveSchema} from './groove.mjs';
 import {performanceSchema} from './melody.mjs';
 import {z} from 'zod';
 export {planInputSchema,planResponseSchema} from '../song-plan.mjs';
@@ -6,7 +8,7 @@ const mockFields={mock:z.literal(true).optional()};
 export const errorSchema=z.object({error:z.string()});
 export const healthSchema=z.object({ffmpeg:z.boolean(),llm:z.boolean(),llmStatus:z.enum(['local','unverified','verified']).default('local'),vocal:z.string().optional(),images:z.string().optional(),...mockFields});
 const note=z.object({beat:z.number().min(0).max(256),duration:z.number().positive().max(64),midi:z.number().int().min(0).max(127),velocity:z.number().min(0).max(1),sound:z.enum(['kick','snare','hat']).optional()});
-export const instrumentInput=z.object({bpm:z.number().min(40).max(240),kind:z.enum(['drums','bass','guitar','keys','melody']),notes:z.array(note).max(512),program:z.number().int().min(0).max(127).optional(),soundfont:z.string().max(200).optional(),endBeat:z.number().min(0).max(256)});
+export const instrumentInput=z.object({bpm:z.number().min(40).max(240),kind:z.enum(['drums','bass','guitar','keys','melody']),notes:z.array(note.extend({locked:z.boolean().optional()})).max(512),groove:grooveSchema.optional(),locked:z.boolean().optional(),manuallyEdited:z.boolean().optional(),program:z.number().int().min(0).max(127).optional(),soundfont:z.string().max(200).optional(),endBeat:z.number().min(0).max(256)});
 export const audioFileSchema=z.string().regex(/^[a-f0-9]{64}\.wav$/);
 // Read-only creative artifacts: same 64-hex cache key, whitelisted suffixes (project MIDI, sung USTX, per-track WAV).
 export const artifactFileSchema=z.string().regex(/^[a-f0-9]{64}\.(wav|mid|ustx)$/);
