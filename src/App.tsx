@@ -11,6 +11,7 @@ import {PatchlabCreation} from './components/PatchlabCreation';
 import {MixControls} from './components/MixControls';
 import {HeroTitle} from './components/HeroTitle';
 import {ChapterBridge} from './components/ChapterBridge';
+import {ArtifactDownloads,ExportLoudnessReport} from './components/ArtifactDownloads';
 
 const clock=(t:number)=>`${Math.floor(t/60).toString().padStart(2,'0')}:${Math.floor(t%60).toString().padStart(2,'0')}`;
 export default function App(){
@@ -64,7 +65,7 @@ export default function App(){
       <p className="mv-options-title">原创程序化画面 · 同步字幕</p>
       <div className="mv-option-row"><label>字幕样式 <select aria-label="字幕样式" value={p.subtitleStyle} onChange={e=>s.mutate('调整字幕样式',next=>{next.subtitleStyle=e.target.value as SubtitleStyle})}><option value="cinema">电影</option><option value="poster">海报</option><option value="minimal">简约</option></select></label><button className="minibtn" onClick={()=>s.mutate('替换画面配色',next=>{next.visualScenes=next.visualScenes.map(v=>({...v,theme:(v.theme+1)%4}))})}>换一组画面色彩</button></div>
       <button className="btn mv-export" disabled={!!busy||(!api.mock&&!s.health.ffmpeg)} onClick={()=>void s.exportPV()}>{api.mock?'模拟导出 MP4':'导出 MP4'}</button>
-      <p className="export-status">{api.mock?'MOCK：下载 JSON 测试回执，未运行 FFmpeg，不生成 MP4。':s.health.ffmpeg?'本机 FFmpeg 已配置；导出使用当前工程音轨。':'MP4 需要本机 FFmpeg；仍可导出 WAV 与工程。'}</p>
+      <ExportLoudnessReport report={s.exportReport}/><p className="export-status">{api.mock?'MOCK：下载 JSON 测试回执，未运行 FFmpeg，不生成 MP4。':s.health.ffmpeg?'本机 FFmpeg 已配置；导出使用当前工程音轨。':'MP4 需要本机 FFmpeg；仍可导出 WAV 与工程。'}</p>
      </div>
     </div>
    </section>
@@ -72,7 +73,7 @@ export default function App(){
   </main>
   <footer className="footer"><span>LOOP! MUSIC PLAYGROUND / SONGYU</span><span>BUILT FOR LITTLE IDEAS, 2026</span></footer>
 
-  <dialog ref={exportRef} className="export-modal" aria-label="导出作品" onCancel={()=>s.setExportOpen(false)} onClose={()=>{s.setExportOpen(false);exportTrigger.current?.focus()}} onClick={e=>{if(e.target===e.currentTarget)s.setExportOpen(false)}}><div className="pvtop"><h2>把声音，带走。</h2><button aria-label="关闭导出" onClick={()=>s.setExportOpen(false)}>×</button></div><p>工程只保存在当前浏览器。导出 JSON 可在以后恢复。</p><button className="btn" disabled={!!busy} onClick={()=>void s.exportWav()}>混音音频 · {api.mock?'MOCK 测试音 ':''}WAV ↓</button><button className="btn" disabled={!!busy||(!api.mock&&!s.health.ffmpeg)} onClick={()=>void s.exportPV()}>歌词视频 PV · {api.mock?'MOCK JSON 回执':'MP4'} ↓</button><button className="btn" onClick={s.saveProject}>完整工程 · JSON ↓</button><button className="minibtn" onClick={()=>s.importRef.current?.click()}>导入工程</button><button className="minibtn" onClick={()=>{if(window.confirm('新建会替换当前浏览器存档，请先导出需要保留的工程。')){setEditor(undefined);s.newProject();go('compose')}}}>新建作品</button><p>{s.llmLabel} · {api.mock?'测试音，未运行歌声模型':p.vocalMode==='external'?'当前有效演唱':'元音演示，不会读出中文歌词'}</p><p className="dialog-status" role="status">{busy||s.toast}</p></dialog>
+  <dialog ref={exportRef} className="export-modal" aria-label="导出作品" onCancel={()=>s.setExportOpen(false)} onClose={()=>{s.setExportOpen(false);exportTrigger.current?.focus()}} onClick={e=>{if(e.target===e.currentTarget)s.setExportOpen(false)}}><div className="pvtop"><h2>把声音，带走。</h2><button aria-label="关闭导出" onClick={()=>s.setExportOpen(false)}>×</button></div><p>工程只保存在当前浏览器。导出 JSON 可在以后恢复。</p><button className="btn" disabled={!!busy} onClick={()=>void s.exportWav()}>混音音频 · {api.mock?'MOCK 测试音 ':''}WAV ↓</button><button className="btn" disabled={!!busy||(!api.mock&&!s.health.ffmpeg)} onClick={()=>void s.exportPV()}>歌词视频 PV · {api.mock?'MOCK JSON 回执':'MP4'} ↓</button><button className="btn" onClick={s.saveProject}>完整工程 · JSON ↓</button><button className="minibtn" onClick={()=>s.importRef.current?.click()}>导入工程</button><button className="minibtn" onClick={()=>{if(window.confirm('新建会替换当前浏览器存档，请先导出需要保留的工程。')){setEditor(undefined);s.newProject();go('compose')}}}>新建作品</button><p>{s.llmLabel} · {api.mock?'测试音，未运行歌声模型':p.vocalMode==='external'?'当前有效演唱':'元音演示，不会读出中文歌词'}</p><ExportLoudnessReport report={s.exportReport}/><ArtifactDownloads project={p} busy={!!busy}/><p className="dialog-status" role="status">{busy||s.toast}</p></dialog>
   <input type="file" ref={s.importRef} accept=".json" hidden onChange={e=>void s.importProject(e.target.files?.[0])}/>
   {s.toast&&!s.exportOpen&&<div className="toast" role="status">{s.toast}<button aria-label="关闭提示" onClick={()=>s.setToast('')}>×</button></div>}{busy&&!s.exportOpen&&<div className="busy-banner" role="status">{busy}{busy.includes('PV')&&api.mock?' · MOCK 导出状态测试':''}</div>}
  </div>;

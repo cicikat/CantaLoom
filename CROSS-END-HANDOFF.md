@@ -16,16 +16,26 @@
 
 | ID | 来源 | 发起方 → 接收方 | 状态 |
 |---|---|---|---|
+| [27-phoneme-zero](#27-phoneme-zero) | 工单 27 / 15 P1 | Toge → Blacktea | 首个音素 0 毫秒覆盖可能继承辅音偏移，核心待修复 |
 | [5-C-synth-mix](#5-c-synth-mix) | 工单 5 C | Toge → Blacktea | 前端已接；浏览器伴奏增益核心待接手 |
 | [20-groove-render](#20-groove-render) | 工单 20 | Blacktea → Toge | 核心/API 已实现；页面与人工听评待安排 |
-| [15-P1-review](#15-p1-review) | 工单 15 P1 | Blacktea → Toge | 后端已推送；等待接口接入 review |
 | [15-P2A-contracts](#15-p2a-contracts) | 工单 15 P2-A | Blacktea → Toge | 等待本任务共享范围确认 |
 | [15-P2B-routing](#15-p2b-routing) | 工单 15 P2-B | Blacktea → Toge | 后端已推送；等待接入 review 与安排 |
 | [5-browser-timing](#5-browser-timing) | 工单 5 页面回归 | Blacktea → Toge | 待核对高负载下的测试时序稳定性 |
 | [15-P3-mixgraph](#15-p3-mixgraph) | 工单 15 P3 | Blacktea → Toge | 等待共享契约及渲染归属确认 |
 | [21-harmony-contracts](#21-harmony-contracts) | 工单 21 | Blacktea → Toge | 等待和声/拍号契约提案评审 |
 
-以下后端分支与提交已推送，main 的交付范围以对应 PR 合并结果为准；待确认的 P2-A/P3 仍不构成实施授权。当前 main 的前端 Mock/局部编辑进度以[工单 5](CC-Tasks/5-toge-free-creation.md)为准。
+以下后端分支与提交已推送，main 的交付范围以对应 PR 合并结果为准；待确认的 P2-A/P3 仍不构成实施授权。前端接线进度见[工单 5](CC-Tasks/5-toge-free-creation.md)与[工单 27](CC-Tasks/27-frontend-interface-sync.md)。
+
+<a id="27-phoneme-zero"></a>
+
+### 27-phoneme-zero · 首个音素显式零偏移仍继承辅音时机
+
+- 更新：2026-11-07；来源：[工单 27](CC-Tasks/27-frontend-interface-sync.md)、[工单 15 P1](CC-Tasks/后端/15-p0.md)；Toge → Blacktea；状态：已复现，核心待修复。本轮不修改共享音乐计算。
+- 证据：`shared/performance.mjs` 的 `notePerformance` 先以 truthy 的 `offsetMs` 生成 offset，再过滤掉无 offset/phoneme 的条目，导致 `{index:0,offsetMs:0}` 消失；后续非零 consonantMs 再插入第 0 音素。不是前端丢参数。
+- 最小复现：`notePerformance([{beat:0,duration:1,midi:60,syllable:'甲'}],0,120,{preset:'natural',consonantMs:12,overrides:[{index:0,phonemes:[{index:0,offsetMs:0}]}]}).phoneme_overrides` 实际返回 `[{index:0,offset:12}]`，预期显式 0 不继承句级偏移。现有测试仅覆盖 0 位替换发音、无句级偏移的其他位置 offset=0，没有覆盖该组合。
+- 对方下一步：修复显式 0 的存在性判断/合并顺序，兼容旧 consonantMs 与不带覆盖的历史依赖；补该组合回归，并核对实际 USTX/演唱结果。前端已在音素表单提示此边界，不自行改算法。
+- 验收/回执：结果回写本工单与[迭代日志](docs/iteration-log.md#frontend-interface-sync)，完成后通知前端移除限制说明，再清除此条。
 
 <a id="5-c-synth-mix"></a>
 
@@ -36,15 +46,6 @@
 - 已定位：`src/audio.ts` 的 addWav/processed 分支给 FluidSynth 应用 bandGain，但浏览器 synth 直接 schedule 到 master，未应用 bandGain；元音演示亦未接 vocalBus。默认 Mock 自由制作的伴奏是 synth，直接开放伴奏滑杆会无效。前端当前仅在 fluidsynth 启用伴奏音量；人声音量/混响仅在 external 启用；有明确禁用说明，不自动切引擎。
 - 对方下一步：在共同混音边界内确认并修复 synth 的伴奏增益路径，保持静音/独奏、现有 stem、WAV/PV、旧工程 enabled 默认和未处理干人声语义；提供实际 PCM/导出回归后回执，前端再解除相应禁用。顺带核对表达锁元数据进入 singingDependency 导致锁切换保守失效的预期；本轮按既有依赖处理，不伪造音频有效性。
 - 验收与回执：前端已验证 external 人声增益归零、混响 PCM 变化、FluidSynth Mock 两路归零后 WAV 与 PV 输入静音；这些是测试音，不是实际 FluidSynth/绮萱引擎验收。真实资源、制作闭环和人工听感继续[工单 6](CC-Tasks/6-joint-acceptance.md)。完成后证据写回工单/迭代日志，再移除本条。
-
-<a id="15-p1-review"></a>
-
-### 15-P1-review · 逐音素与高级表现接口
-
-- 更新：2026-11-07；来源：[工单 15](CC-Tasks/后端/15-p0.md) P1；Blacktea → Toge；状态：等待接口 review。
-- 已交付：已推送分支 `feature/backend-p1-phoneme` 的 `d00548b` 提供 phonemes 覆盖、颤音参数、dynCurve/表现曲线、能力查询；已有真实引擎 WAV 对照；本轮与最新 main 整合后重新运行真实音频回归，两项通过。
-- 对方下一步：review 新 Performance 字段与 capabilities/phonemes 语义，确定 Mock 与调教界面的接入范围；UI 只能开放安装声库实际支持的参数。完整字段、示例及真实测试边界见该分支工单 15 的“P1 交接 Toge”节与契约记录。
-- 边界与回执：共享契约 review 不自动授权代改对方 UI。后端交付见 [PR #9](https://github.com/cicikat/CantaLoom/pull/9)；接收方在本条写明 review 结论，再按工单 5/6 分别记录 Mock、真实联调和听感结果。
 
 <a id="15-p2a-contracts"></a>
 
@@ -92,15 +93,6 @@
 - 验收与回执：在工单 5 记录测试环境、复现和稳定性验证，完整功能断言仍需保留；完成后按维护规则清除此条及索引。原始日志保存在本机 temp/backend-p1-p2b-mock.log、temp/backend-p1-p2b-http.log、temp/baseline-loop-tap.log 及对应 retry 日志。
 
 
-<a id="19-artifact-report"></a>
-
-### 19-artifact-report · 产物与响度接入
-
-- 更新：2026-11-07；来源：[工单 19](CC-Tasks/后端/19-render-quality-and-artifacts.md)；Blacktea → Toge；状态：后端已实现，页面展示待安排。
-- 交付：`feature/backend-music-quality-tickets` 的只读 artifact 下载/分轨 ebur128 接口、MP4 `X-Songyu-Loudness` 报告，详见[架构说明](docs/ARCHITECTURE.md#创作产物与响度报告工单-19)，交付 [PR #10](https://github.com/cicikat/CantaLoom/pull/10)。UI 不在本轮范围；后续交付仅纳入已存在的 Mock 采样率单行兼容修改。
-- 对方下一步：按需接下载/报告入口；确认 DAW 导入 MIDI 与实际作品听感。后端真实渲染/浏览器混音证据见工单与迭代日志，不代替人耳和设备验收。
-
-
 <a id="20-groove-render"></a>
 
 ### 20-groove-render · 可选器乐渲染律动
@@ -108,4 +100,4 @@
 - 更新：2026-11-07；来源：[工单 20](CC-Tasks/后端/20-groove-and-humanization.md)；Blacktea → Toge；状态：音乐核心/API 已实现，页面/Mock 与人工听评待安排。
 - 已交付：自由模式新鼓组、TAP 保护、可选 groove 和保护标记契约；分支 feature/backend-music-quality-tickets，交付 [PR #10](https://github.com/cicikat/CantaLoom/pull/10)。本轮未修改 UI/Client/Mock/SongPlan/工程 Schema；字段与兼容边界见[契约记录](shared/contracts/CHANGELOG.md)及[接入说明](docs/ARCHITECTURE.md#groove-render)。
 - 对方下一步：需要开放 swing/人性化时，先确认保存/Client/Mock/production/浏览器预览与导出的统一参数来源和保护状态；不能只给服务端一次性参数，使浏览器重新渲染时丢失。按项目 ID、轨道 ID、版本构造稳定种子，不使用时间戳。
-- 验收/回执：本机对照音在 temp/task20/，工单与迭代日志有客观验证；人工抽听 backbeat 与段落推进尚未执行。本条不构成代改前端的授权。
+- 验收/回执：本机对照音在 temp/task20/，工单与迭代日志有客观验证；人工抽听 backbeat 与段落推进尚未执行。前端接线核对与当前缺口继续由[工单 27](CC-Tasks/27-frontend-interface-sync.md)维护，未因其他接口补接将本条标为完成。本条不构成代改前端的授权。

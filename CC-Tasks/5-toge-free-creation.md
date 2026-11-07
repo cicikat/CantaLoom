@@ -69,3 +69,7 @@ Owner：toge；音乐算法/服务问题交红茶，字段变化双方确认。A
 
 
 跨端测试交接：[5-browser-timing](../CROSS-END-HANDOFF.md#5-browser-timing)，核对高负载下 TAP/播放器回归的时序稳定性；本轮后端交付只登记证据，不代改前端用例。
+
+## 已交付接口补接（工单 27）
+
+原 C 的四项数值控件不代表 P0/P1 全部高级接口已接。2026-11-07 已按[工单 27](27-frontend-interface-sync.md)补上 Pitch 数值点、逐音符六项颤音、逐音素覆盖、句级力度/表现曲线、能力判定、历史演唱恢复与分轨产物/响度入口；验证与边界见[本轮记录](../docs/iteration-log.md#frontend-interface-sync)。可选 groove、synth 增益与真实共同验收仍未完成。

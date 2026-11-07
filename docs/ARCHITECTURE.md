@@ -244,7 +244,7 @@ production 串联规划、旋律、器乐与歌声。stage 契约枚举为 queue
 - 修改自由输入、调整当前工程、离开输入页、停止等待或卸载都会使操作代次失效；停止后不再轮询，迟到响应不能覆盖工程或新请求状态。Client 已发出的请求与后台已受理制作可能继续运行，界面明确说明这一点。
 - 失败、超时、错误 JSON/工程或任务丢失时保留旧工程，无自动模板回退；任务丢失提示重新制作。singing 失败可按返回 phraseId 逐句重试缺失演唱，仍等整体成功后应用。
 - 新作品成功后替换浏览器当前工程，入口提示先导出需要保留的作品；仍使用既有 Mock/真实存档隔离，刷新后可用底部播放器试听保存的工程。未改变旧 JSON 恢复方式。
-- 自由作品继续禁用旧模板重作曲、节奏覆盖及旧格子/歌词改写，避免把新谱面送回旧作曲器；C 的钢琴卷帘与局部旋律现已在虚拟歌姬页接通。试听、静音、锁定、现有演唱/导出沿用；调教和混音控件尚未交付。
+- 自由作品继续禁用旧模板重作曲、节奏覆盖及旧格子/歌词改写，避免把新谱面送回旧作曲器；C 的钢琴卷帘与局部旋律现已在虚拟歌姬页接通。试听、静音、锁定、演唱/导出沿用；工单 5 后续已交付调教/混音控件，高级调教补接见工单 27。
 
 本次证据见 [A2 迭代记录](iteration-log.md#a2-free-creation-page)，工单 checkbox 仅在 [工单 5](../CC-Tasks/5-toge-free-creation.md)。上述是 React 工作台接线的历史结果；LOOP! 原型接线后的真实闭环与人工听感仍跟踪 [工单 6](../CC-Tasks/6-joint-acceptance.md)。
 
@@ -281,6 +281,8 @@ Performance 可选 mode=auto/manual、energy、locked、overrides。旧 JSON 无
 ### 分轨与混音
 
 2026-11-07 页面接线：每句 `QixuanPanel` 内新增默认折叠的「演唱调教」，支持 preset、Auto/Manual、四个句级数值、按音符稳定 ID 选择的人工覆盖/锁、句级表达锁，以及最多三版调教恢复。`PerformanceControls` 调用现有 `setPhrasePerformance` / `autoTuneProject(project,lineId)` / `restorePerformance`；输入范围来自共享 Schema，未修改音乐核心或公共契约。保存表达后由现有重唱按钮仅生成当前句，不重新调用作曲/旋律接口；失败保留旧资产，依赖过期由现有规则显示。原有 Pitch 曲线在修改四个数值时保留；「清除音符覆盖」会明确清除所选音符整项覆盖。表达锁仍进入既有演唱依赖，切换后可能标记本句需要重唱，本轮没有改依赖算法。
+
+[工单 27](../CC-Tasks/27-frontend-interface-sync.md)进一步接入：`QixuanPanel` 将查询到的 voice/capabilities 传入控件；在逐音符覆盖中使用 `AdvancedPerformanceControls` 编辑 Pitch 控制点、颤音六参、音素位置/时序/发音，以及句级 DYN/六类表现曲线。曲线采用数值点与 SVG 控制点预览，时间单位按契约区分句首/音符起点；全量校验后应用，局部清除保留其他字段。声库能力缺失或不支持时音素/对应表现曲线禁用，不开放 ene/tenc 等假效果；整句平面 phonemes 仅作原始参照，不猜测音符对应。历史演唱新增恢复按钮，沿用 `restoreVocalAsset` 检查当前依赖/runner，失败不改工程。Mock 与 HTTP 夹具证据见[接线记录](iteration-log.md#frontend-interface-sync)，不作为真实引擎验收。
 
 歌词区底部新增默认折叠的「混音与分轨试听」。`MixControls` 只更新并校验 `SongProject.mixSettings`；`usePlayer.play({stem})` 将现有 stem 选项透传给 `AudioEngine.play`，分轨从头播放。改设置通过既有 `change` 停止旧声音，下一次试听与既有 WAV/PV 用例读取同一设置；不新增 fetch、音频缓存或导出接口。人声音量/混响仅对 external 歌声启用；bandGain 仅对 fluidsynth 启用，浏览器 synth 未接增益，禁用并提示。toge 明确选择「只接前端，核心问题交接红茶」，未改 `audio.ts` / `audio-mix.ts`；交接 [5-C-synth-mix](../CROSS-END-HANDOFF.md#5-c-synth-mix)。接线与测试证据见[本轮记录](iteration-log.md#expression-mix-controls)，真实引擎与听感仍待工单 6。
 
@@ -344,8 +346,10 @@ A1 授权见[契约记录](../shared/contracts/CHANGELOG.md)，当前证据见[A
 
 `GET /api/artifacts/{key}.wav/loudness` 只读调用 FFmpeg ebur128 返回 `{integratedLufs,truePeakDbtp}`，静音无穷值使用 null，测量不可用返回 503；不改变音频。调用方可按人声/器乐 key 分别查询，无需改变 production 任务契约。
 
-MP4 导出使用 loudnorm（I=-14 LUFS、TP=-1.5 dBTP、LRA=11），48kHz AAC 192k。响应保持 MP4 下载，`X-Songyu-Loudness` JSON 头给出 input、output 和 target；output 是解码最终 AAC 的 ebur128 实测值，目标 TP 是上限，不要求安静素材贴近上限。页面尚未展示报告，不改变浏览器混音算法。真实资源 smoke 命令为 `node scripts/verify-render-quality.mjs`，需要可用 FluidSynth、SoundFont、FFmpeg 与 Playwright Chromium；输出仅在 `temp/task19/`。
+MP4 导出使用 loudnorm（I=-14 LUFS、TP=-1.5 dBTP、LRA=11），48kHz AAC 192k。响应保持 MP4 下载，`X-Songyu-Loudness` JSON 头给出 input、output 和 target；output 是解码最终 AAC 的 ebur128 实测值，目标 TP 是上限，不要求安静素材贴近上限。工单 27 已接报告展示，不改变浏览器混音算法。真实资源 smoke 命令为 `node scripts/verify-render-quality.mjs`，需要可用 FluidSynth、SoundFont、FFmpeg 与 Playwright Chromium；输出仅在 `temp/task19/`。
 
+
+前端接线：统一 Client 的 `artifact(file)` 校验白名单后返回原 Blob，`loudness(file)` 只接受 WAV 并校验测量响应；`exportVideo(input,onReport?)` 保持原 Blob 返回，报告异常不阻止成功文件下载。`features/export/files.ts` 统一组装当前有效人声文件，以及用户明确点击后按既有 `instrumentAudio` 请求准备的 FluidSynth 分轨；不持久化新的工程字段，不切换音源，不导出服务器路径。`ArtifactDownloads` 挂在已有导出框，`ExportLoudnessReport` 在 PV 区/导出框展示本次同工程快照报告；工程变化后不展示旧报告。Mock 文件/响度是明确标注的夹具；没有真正 FFmpeg 时不能宣称成片实测。
 
 <a id="groove-render"></a>
 

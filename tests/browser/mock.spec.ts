@@ -338,6 +338,58 @@ test('C tuning rejects invalid controls and a failed re-sing preserves the previ
  await row.getByRole('button',{name:'绮萱演唱',exact:true}).click();await expect(row).toContainText('MOCK 重唱失败');expect(await mockStored(page)).toEqual(edited);expect(edited.vocalAssets).toEqual(before.vocalAssets);
 });
 
+test('P1 advanced tuning reaches the single-line render request and survives save, locks and invalid edits',async({page})=>{
+ const before=await openPiano(page),row=page.locator('.qixuan-line').first(),panel=row.locator('.expression-panel');
+ await panel.locator(':scope > summary').click();await panel.getByText('逐音符人工覆盖',{exact:true}).click();await panel.getByText('音高曲线、颤音与音素',{exact:true}).click();
+ await panel.getByText('音符音高曲线',{exact:true}).click();
+ await panel.getByRole('button',{name:'添加音高曲线点',exact:true}).click();await panel.getByRole('button',{name:'添加音高曲线点',exact:true}).click();await panel.getByLabel('音高曲线点2数值',{exact:true}).fill('10');await panel.getByRole('button',{name:'保存音高曲线',exact:true}).click();
+ await panel.getByText('逐音符颤音形态',{exact:true}).click();
+ for(const [label,n] of [['颤音长度','70'],['颤音周期','180'],['颤音淡入','20'],['颤音淡出','30'],['颤音漂移','10'],['颤音音量联动','-5']])await panel.getByLabel(label,{exact:true}).fill(n);
+ await panel.getByRole('button',{name:'保存颤音形态',exact:true}).click();
+ await panel.getByText('逐音素时序与发音',{exact:true}).click();await panel.getByRole('button',{name:'添加音素覆盖',exact:true}).click();await panel.getByLabel('音素1位置',{exact:true}).fill('0');await panel.getByLabel('音素1时序',{exact:true}).fill('50');await panel.getByLabel('音素1发音',{exact:true}).fill('zh/ang');await panel.getByRole('button',{name:'保存音素覆盖',exact:true}).click();
+ await panel.getByText('整句表现与力度曲线',{exact:true}).click();
+ for(const [abbr,label,y] of [['dyn','力度曲线','-80'],['brec','气声曲线','50']]){await panel.getByLabel('表现曲线',{exact:true}).selectOption(abbr);await panel.getByRole('button',{name:`添加${label}点`,exact:true}).click();await panel.getByRole('button',{name:`添加${label}点`,exact:true}).click();await panel.getByLabel(`${label}点2数值`,{exact:true}).fill(y);await panel.getByRole('button',{name:`保存${label}`,exact:true}).click()}
+ const edited=await mockStored(page),override=edited.lyrics[0].performance.overrides.find((o:any)=>o.index===0);
+ expect(override).toMatchObject({pitch:[{x:0,y:0,shape:'io'},{x:100,y:10,shape:'io'}],vibratoLength:70,vibratoPeriod:180,vibratoIn:20,vibratoOut:30,vibratoDrift:10,vibratoVolLink:-5,phonemes:[{index:0,offsetMs:50,phoneme:'zh/ang'}]});
+ expect(edited.lyrics[0].performance.dynCurve).toEqual([{x:0,y:0},{x:100,y:-80}]);expect(edited.lyrics[0].performance.curves).toContainEqual({abbr:'brec',points:[{x:0,y:0},{x:100,y:50}]});expect(edited.lyrics.slice(1)).toEqual(before.lyrics.slice(1));expect(edited.tracks).toEqual(before.tracks);expect(edited.vocalAssets).toEqual(before.vocalAssets);
+ await panel.getByLabel('颤音淡入',{exact:true}).fill('90');await panel.getByRole('button',{name:'保存颤音形态',exact:true}).click();await expect(panel).toContainText('颤音淡入与淡出合计');expect(await mockStored(page)).toEqual(edited);
+ await page.evaluate(async()=>{
+  // @ts-expect-error Vite browser module
+  const {api}=await import('/src/api/client.ts');const original=api.sing;(window as any).advancedRequests=[];api.sing=async(input:any)=>{(window as any).advancedRequests.push(input);return original(input)};
+ });
+ await row.getByRole('button',{name:'绮萱演唱',exact:true}).click();await expect(row).toContainText('MOCK 测试音已就绪');await expect(panel).toContainText('MOCK/SP');const calls=await page.evaluate(()=>(window as any).advancedRequests);expect(calls).toHaveLength(1);expect(calls[0].performance).toEqual(edited.lyrics[0].performance);expect(calls[0].lyricId).toBe(before.lyrics[0].id);
+ const take=(await mockStored(page)).vocalAssets[before.lyrics[0].id];await row.getByRole('button',{name:'重新演唱这一句',exact:true}).click();await expect.poll(async()=>(await mockStored(page)).vocalAssets[before.lyrics[0].id].take).toBe(take.take+1);await row.getByText('对比之前的演唱（最多 3 版）',{exact:true}).click();await row.getByRole('button',{name:'恢复历史演唱1',exact:true}).click();await expect.poll(async()=>(await mockStored(page)).vocalAssets[before.lyrics[0].id].audioUrl).toBe(take.audioUrl);
+ await panel.getByRole('button',{name:'锁定音符表达',exact:true}).click();await expect(panel.getByRole('button',{name:'保存颤音形态',exact:true})).toBeDisabled();await expect(panel.getByRole('button',{name:'保存音高曲线',exact:true})).toBeDisabled();const saved=await mockStored(page);await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await panel.screenshot({path:'temp/task27-advanced-mobile.png'});await page.reload();expect(await mockStored(page)).toEqual(saved);
+});
+
+test('P1 missing singer capabilities keep unsupported phoneme and expression controls unavailable',async({page})=>{
+ await openPiano(page);await page.locator('.singing-details>summary').click();await page.evaluate(async()=>{
+  // @ts-expect-error Vite browser module
+  const {api}=await import('/src/api/client.ts');const original=api.qixuan;api.qixuan=async()=>{const v=await original();delete v.capabilities;return v};
+ });
+ await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();const panel=page.locator('.expression-panel').first();await panel.locator(':scope > summary').click();await panel.getByText('逐音符人工覆盖',{exact:true}).click();await panel.getByText('音高曲线、颤音与音素',{exact:true}).click();await panel.getByText('逐音素时序与发音',{exact:true}).click();await expect(panel.getByRole('button',{name:'添加音素覆盖',exact:true})).toBeDisabled();await expect(panel).toContainText('服务未报告音素能力');await panel.getByText('整句表现与力度曲线',{exact:true}).click();await expect(panel.getByLabel('表现曲线',{exact:true}).locator('option[value=brec]')).toHaveJSProperty('disabled',true);
+});
+
+test('P1 artifact downloads use current sources, label mock reports and preserve the project after failures',async({page})=>{
+ const before=await openPiano(page);await projectSettings(page);await page.getByRole('button',{name:'导出作品',exact:true}).click();const dialog=page.getByRole('dialog',{name:'导出作品',exact:true}),files=dialog.locator('.artifact-downloads');await files.locator(':scope>summary').click();
+ await expect(files.getByRole('button',{name:'准备器乐分轨（FluidSynth）',exact:true})).toBeDisabled();await expect(files).toContainText('MOCK 文件');
+ const download=page.waitForEvent('download');await files.getByRole('button',{name:'下载 USTX',exact:true}).first().click();expect((await download).suggestedFilename()).toContain('.mock.ustx');
+ await files.getByRole('button',{name:'测量响度',exact:true}).first().click();await expect(files).toContainText('MOCK 固定数值，非实测');
+ await page.evaluate(async()=>{
+  // @ts-expect-error Vite browser module
+  const {api}=await import('/src/api/client.ts');(window as any).originalArtifact=api.artifact;(window as any).originalLoudness=api.loudness;api.artifact=async()=>{throw Error('缓存不存在')};api.loudness=async()=>{throw Error('响度测量不可用')};
+ });
+ await files.getByRole('button',{name:'下载 WAV',exact:true}).first().click();await expect(files).toContainText('缓存不存在');await files.getByRole('button',{name:'测量响度',exact:true}).first().click();await expect(files).toContainText('响度测量不可用');expect(await mockStored(page)).toEqual(before);
+ await page.keyboard.press('Escape');await projectSettings(page);await page.locator('.engine-panel summary').click();await page.getByLabel('乐器音源',{exact:true}).selectOption('fluidsynth');await page.getByRole('button',{name:'导出作品',exact:true}).click();await files.getByRole('button',{name:'准备器乐分轨（FluidSynth）',exact:true}).click();await expect(files.getByRole('button',{name:'下载 MID',exact:true}).first()).toBeVisible({timeout:20000});
+ await page.evaluate(async()=>{
+  // @ts-expect-error Vite browser module
+  const {api}=await import('/src/api/client.ts');api.artifact=(window as any).originalArtifact;api.loudness=(window as any).originalLoudness;
+ });
+ const midi=page.waitForEvent('download');await files.getByRole('button',{name:'下载 MID',exact:true}).first().click();expect((await midi).suggestedFilename()).toContain('.mock.mid');
+ const pv=page.waitForEvent('download');await dialog.getByRole('button',{name:/歌词视频 PV/}).click();expect((await pv).suggestedFilename()).toContain('.mock-export.json');await expect(dialog.getByRole('region',{name:'MP4 响度报告'})).toContainText('没有成片响度实测');
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await dialog.screenshot({path:'temp/task27-artifacts-mobile.png'});
+});
+
 test('C mix controls forward all preview stems and persist real PCM changes through WAV/PV export',async({page})=>{
  test.setTimeout(90000);
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await openPiano(page);

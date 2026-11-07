@@ -6,6 +6,8 @@ import {autoTuneProject,restorePerformance,setPhrasePerformance} from '../melody
 import {lineLocked} from '../features/singing/qixuan';
 import {expressionControls,parseControlFields,setNoteExpression,toggleExpressionLock,type ControlFields} from '../hooks/performance-edit';
 import type {SongProject,Lyric} from '../model';
+import type {QixuanStatus} from '../../shared/contracts/index.mjs';
+import {AdvancedPerformanceControls} from './AdvancedPerformanceControls';
 import './expression-mix.css';
 const controlSchema=toJSONSchema(performanceSchema).properties;
 
@@ -29,7 +31,7 @@ function NoteForm({line,index,onApply,onClear,disabled}:{line:Lyric;index:number
  const override=line.performance?.overrides?.find(o=>o.index===index),[fields,setFields]=useState<ControlFields>(()=>initialFields(override??{}));
  return <form onSubmit={e=>{e.preventDefault();onApply(fields)}}><fieldset disabled={disabled}><Fields fields={fields} onChange={setFields} preset={line.performance?.preset??'natural'}/><div className="expression-actions"><button type="submit">保存音符表达</button><button type="button" disabled={!override} onClick={onClear}>清除音符覆盖</button></div></fieldset></form>;
 }
-export function PerformanceControls({project:p,lineId,onChange,busy}:{project:SongProject;lineId:string;onChange:(p:SongProject)=>void;busy:boolean}){
+export function PerformanceControls({project:p,lineId,onChange,busy,voice}:{project:SongProject;lineId:string;onChange:(p:SongProject)=>void;busy:boolean;voice?:QixuanStatus}){
  const line=p.lyrics.find(l=>l.id===lineId)!,[status,setStatus]=useState(''),[noteId,setNoteId]=useState('');
  const index=Math.max(0,line.notes.findIndex(n=>n.id===noteId)),override=line.performance?.overrides?.find(o=>o.index===index);
  const protectedLine=lineLocked(p,lineId),disabled=busy||protectedLine||!!line.performance?.locked||p.vocalMode!=='external',key=JSON.stringify(line.performance);
@@ -38,7 +40,7 @@ export function PerformanceControls({project:p,lineId,onChange,busy}:{project:So
   {p.vocalMode!=='external'&&<p>请先生成或导入逐句歌声；元音演示不支持这些演唱参数。</p>}
   <PhraseForm key={key} line={line} disabled={disabled} onApply={input=>apply(()=>setPhrasePerformance(p,lineId,input))}/>
   <div className="expression-actions"><button type="button" disabled={disabled} onClick={()=>apply(()=>autoTuneProject(p,lineId))}>自动调教这一句</button><button type="button" disabled={disabled||!p.performanceHistory?.[lineId]?.length} onClick={()=>apply(()=>restorePerformance(p,lineId),'已恢复上一版调教，请确认演唱是否需要更新。')}>恢复上一版调教（{p.performanceHistory?.[lineId]?.length??0}/3）</button><button type="button" aria-pressed={!!line.performance?.locked} disabled={busy||protectedLine||p.vocalMode!=='external'} onClick={()=>apply(()=>toggleExpressionLock(p,lineId),line.performance?.locked?'已解锁这句表达。':'已锁定这句表达，自动调教会跳过它。')}>{line.performance?.locked?'解锁表达':'锁定表达'}</button></div>
-  <details className="expression-advanced"><summary>逐音符人工覆盖</summary><label>调教音符 <select aria-label="调教音符" value={line.notes[index]?.id??''} disabled={!line.notes.length} onChange={e=>setNoteId(e.target.value)}>{line.notes.map((n,i)=><option key={n.id} value={n.id}>{i+1} · {n.syllable==='+'?'延音':n.syllable}</option>)}</select></label><NoteForm key={key+line.notes[index]?.id} line={line} index={index} disabled={disabled||!!override?.locked||!line.notes.length} onApply={fields=>apply(()=>setNoteExpression(p,lineId,index,fields))} onClear={()=>apply(()=>setPhrasePerformance(p,lineId,{...line.performance!,overrides:line.performance!.overrides!.filter(o=>o.index!==index)}))}/><button type="button" disabled={disabled||!override} aria-pressed={!!override?.locked} onClick={()=>apply(()=>toggleExpressionLock(p,lineId,index),override?.locked?'已解锁音符表达。':'已锁定音符表达，自动调教会保留它。')}>{override?.locked?'解锁音符表达':'锁定音符表达'}</button><p>只改选中音符。留空跟随整句设置；已保存的 Pitch 曲线会保留。</p></details>
+  <details className="expression-advanced"><summary>逐音符人工覆盖</summary><label>调教音符 <select aria-label="调教音符" value={line.notes[index]?.id??''} disabled={!line.notes.length} onChange={e=>setNoteId(e.target.value)}>{line.notes.map((n,i)=><option key={n.id} value={n.id}>{i+1} · {n.syllable==='+'?'延音':n.syllable}</option>)}</select></label><NoteForm key={key+line.notes[index]?.id} line={line} index={index} disabled={disabled||!!override?.locked||!line.notes.length} onApply={fields=>apply(()=>setNoteExpression(p,lineId,index,fields))} onClear={()=>apply(()=>setPhrasePerformance(p,lineId,{...line.performance!,overrides:line.performance!.overrides!.filter(o=>o.index!==index)}))}/><button type="button" disabled={disabled||!override} aria-pressed={!!override?.locked} onClick={()=>apply(()=>toggleExpressionLock(p,lineId,index),override?.locked?'已解锁音符表达。':'已锁定音符表达，自动调教会保留它。')}>{override?.locked?'解锁音符表达':'锁定音符表达'}</button><p>只改选中音符。留空跟随整句设置；已保存的高级表达会保留。</p><AdvancedPerformanceControls project={p} lineId={lineId} index={index} voice={voice} disabled={disabled} onChange={onChange}/></details>
   <p role="status">{status}</p>
  </details>;
 }

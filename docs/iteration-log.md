@@ -1,3 +1,19 @@
+<a id="frontend-interface-sync"></a>
+
+## 2026-11-07 已交付接口前端补接
+
+关联：[工单 27](../CC-Tasks/27-frontend-interface-sync.md)、[工单 5](../CC-Tasks/5-toge-free-creation.md)、[工单 15 P1](../CC-Tasks/后端/15-p0.md)、[工单 19](../CC-Tasks/后端/19-render-quality-and-artifacts.md)、[接口清单](INTERFACES.md)、[架构接线](ARCHITECTURE.md#performance)、[Client 授权与兼容](../shared/contracts/CHANGELOG.md)。基线 origin/main `101867d`，本地分支 `feature/frontend-interface-sync`。此前 Git 快进只证明代码一致，未证明新增能力已接页面；本轮核实 P0/P1 高级调教、产物/报告与可选 groove 确有前端缺口。
+
+本轮完成：默认折叠的 Pitch 数值点/控制点预览、六项颤音、音素时序/发音、整句 DYN/表现曲线；capabilities 未报告或不支持时禁用相应控件。沿用既有单句渲染与三版调教历史，修改只使对应句演唱依赖失效；补历史演唱恢复按钮，依赖/runner 不匹配仍明确拒绝。整句 phonemes 平面列表仅展示原始参照，不伪造逐音符映射；没有拖拽曲线画笔。未改后端、音乐核心、工程模型或公开请求/响应 Schema。
+
+toge 明确授权后补 Client 的只读产物/响度方法与兼容的导出报告回调。既有导出框可下载有效人声 WAV/USTX；FluidSynth 模式下明确点击准备当前器乐逐轨 WAV/MID。浏览器 synth 不自动切音源；没有整曲聚合 MIDI/ZIP。MP4 保持原 Blob 下载，显示 input/output/target；缺失或无效报告不丢已成功文件，null 不显示为零。工程变化后隐藏旧报告。Mock 产物与固定响度明确标注夹具。
+
+验证：`npm run build` 通过；`npx tsx --test tests/performance-edit.test.ts tests/api.test.ts tests/p1-phoneme.test.ts` **20/20** 通过。6 项相关 Mock 页面用例分轮通过：原表达/失败保护、新高级调教、缺失能力、下载/响度失败保护、原混音 PCM/WAV/PV；补历史演唱恢复与中文校验提示后高级调教用例再次 **1/1** 通过，桌面/390px 无横向溢出并查看截图。真实模式导出 HTTP 夹具 **1/1** 通过（含响应头数值、null、缺失报告）；真实 FFmpeg **1 项跳过**：隔离服务没有可用 FFmpeg，PATH 与检查的常见安装位置未找到，不安装或伪造实测。没有重跑真实 LLM / 绮萱 / FluidSynth / DAW / 人工听感，继续[工单 6](../CC-Tasks/6-joint-acceptance.md)。
+
+首轮 Mock 3 通过/3 失败：禁用 option 的断言方法不适用、模拟失败未恢复测试替身，以及 Vite 监听 Windows 下载 `.crdownload` 引发 EBUSY 后中断后续混音测试。修正两处测试并在单次命令设置 `CHOKIDAR_USEPOLLING=true`，受影响 3 项重跑全部通过；未改 Vite/Playwright 配置，也未隐藏失败证据。构建仍有既有 Zod 注释和大 chunk 提示。
+
+前端交接 `15-P1-review` / `19-artifact-report` 已完成并从待交接移除，真实闭环仍由工单 6 维护。未完成的[可选 groove](../CROSS-END-HANDOFF.md#20-groove-render)、[synth 伴奏增益](../CROSS-END-HANDOFF.md#5-c-synth-mix)继续保留；长歌/专业和声/MixGraph 仍是待确认提案。另发现并复现[27-phoneme-zero](../CROSS-END-HANDOFF.md#27-phoneme-zero)：仅为第 0 音素设 offsetMs=0 时，核心会过滤该项并继续应用非零 consonantMs；前端传参未丢，已加限制说明并交红茶修复，未越界改算法。本轮只做本地提交，未推送或部署。
+
 ## 2026-11-07 管理脚本中断与保存校验修复
 
 [工单 26](../CC-Tasks/已完成/26-admin-model-discovery.md)后续修复。修正路由表单插入节点错误，避免初始化中断导致按钮无响应；routeKeys 改为可选任务集合，修复空集合或只填单个任务时保存失败。真实 Chromium 管理 E2E 1/1 通过：保存 DPAPI 配置、清空密钥输入、HTTP 夹具连接测试、刷新脱敏和无页面异常；不代表真实厂商调用验收。
@@ -83,7 +99,7 @@ build 通过（保留既有 Zod 注释/bundle 体积提示）；npm test 99 项�
 
 ## 2026-11-07 · 工单 19 渲染与产物后端交付
 
-关联：[工单 19](../CC-Tasks/后端/19-render-quality-and-artifacts.md)、[接入说明](ARCHITECTURE.md#创作产物与响度报告工单-19)、[契约](../shared/contracts/CHANGELOG.md)、[交接 19-artifact-report](../CROSS-END-HANDOFF.md#19-artifact-report)。
+关联：[工单 19](../CC-Tasks/后端/19-render-quality-and-artifacts.md)、[接入说明](ARCHITECTURE.md#创作产物与响度报告工单-19)、[契约](../shared/contracts/CHANGELOG.md)、[交接 19-artifact-report](iteration-log.md#frontend-interface-sync)。
 
 本轮接续工作区已有 48kHz/产物端点修改，完成 PCM s16/revision=2、MIDI/USTX/WAV 原字节下载与非法路径拒绝、只读分轨 ebur128 测量、MP4 loudnorm 和最终 AAC 测量报告；保留 MP4 二进制响应，新增 X-Songyu-Loudness 头。逐轨下载零依赖，决定暂不提供 zip。s24 缺少跨浏览器证据，按工单保留 s16。未代改 UI/Client/Mock。
 
