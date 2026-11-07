@@ -94,6 +94,7 @@ npm start
 | Blacktea（红茶） | [15 · 后端音乐制作升级](CC-Tasks/后端/15-p0.md)：P0 精细调声与单句重唱已完成并通过真实引擎验收，接口交接见工单；P1–P3 待排期 |
 | Toge（toge） | [5 · 自由创作 Mock、页面与局部编辑](CC-Tasks/5-toge-free-creation.md)：LOOP! 原型接线与 Mock 验证已完成；调教和混音控件待实施 |
 | 双方共同验收 | [6 · 原型接线后的真实闭环与听感](CC-Tasks/6-joint-acceptance.md)：依赖 4/5 就绪，分别记录 Mock、真实引擎、页面和人工听感 |
+| 跨端交接规则与入口 | [18 · 跨端交接文档](CC-Tasks/已完成/18-cross-end-handoff.md)：登记、按需读取与完成后清理 |
 | 前一轮工单整理 | [7 · 项目工作流整理](CC-Tasks/已完成/7-documentation-workflow.md)：已完成的范围与验证入口 |
 | 本轮文档合并 | [8 · 文档主题合并与历史归位](CC-Tasks/已完成/8-docs-consolidation.md) |
 | 日常使用入口 | [16 · 单一双击入口与准备状态](CC-Tasks/已完成/16-easy-launch.md)，已完成；实际资源配置仍依赖红茶工单 4 |
@@ -107,6 +108,7 @@ npm start
 | 需要了解什么 | 阅读入口 |
 |---|---|
 | Agent 长期规则 | [AGENTS.md](AGENTS.md) |
+| 待对方确认、接线或联调的跨端事项 | [CROSS-END-HANDOFF.md](CROSS-END-HANDOFF.md)，仅相关任务按需读取，完成后清理 |
 | 分工、联调、Git 与验证规则 | [TEAM_WORKFLOW.md](docs/TEAM_WORKFLOW.md) |
 | 系统目录、工程数据、API 与页面接入 | [ARCHITECTURE.md](docs/ARCHITECTURE.md)；字段提案在[契约变更记录](shared/contracts/CHANGELOG.md) |
 | 原型前端接线方向 | [ARCHITECTURE 原型接线](docs/ARCHITECTURE.md#prototype-frontend)：保留 LOOP! 设计、复用现有能力及当前缺口 |

@@ -4,6 +4,16 @@
 
 以下历史证据由原 ACCEPTANCE.md、V021_ACCEPTANCE.md、V031_BACKEND_ACCEPTANCE.md、V032_BACKEND_ACCEPTANCE.md 合并，保留原执行结果与限制。它们不表示当前电脑刚通过测试。旧记录中的当时工作流或待办仅作历史；现行规则见 [AGENTS](../AGENTS.md)与[团队工作流](TEAM_WORKFLOW.md)，当前任务从 [README](../README.md#协作工单)进入。
 
+<a id="cross-end-handoff"></a>
+
+## 2026-11-07 · 根目录跨端交接与按需上下文
+
+- 工单：[18 · 跨端交接文档](../CC-Tasks/已完成/18-cross-end-handoff.md)；入口：[CROSS-END-HANDOFF.md](../CROSS-END-HANDOFF.md)；规则：[AGENTS](../AGENTS.md#project-workflow)、[团队工作流](TEAM_WORKFLOW.md#跨端交接登记)。按用户要求，在发现需对方接手/确认/联调时由 Agent 随本轮工作自动登记，原工单只留 ID 和链接；完成后将正式结果写回原工单/日志，默认删除交接项，必要时短暂标记已完成并附日期、证据。
+- 上下文边界：AGENTS 只保留短规则和入口；交接正文不列为启动必读、不全文自动注入，只在当前任务相关时按工单号/接收方/模块检索。当前登记工单 15 的 P1 review、P2-A 契约、P2-B 路由交付及 P3 MixGraph 四项，注明本地分支成果未在 main 发布；未把已完成的前端 Mock 工作重新列为缺口，也未给待确认跨层代码追加授权。
+- Git 与保全：本次文档任务从核对后的 origin/main 55d5810 建 feature/backend-cross-end-handoff；已有后端提交保留在本地 feature/backend-p1-phoneme（9718420）。17 个既有未提交文件保存在本地 stash 65cc8c0dc1ad9dd80eddf85a9add6bb4deb3a11b；另将原始字节、清单与补丁保存在 Git 忽略的 backup/cross-end-handoff-2026-11-07/，17/17 SHA-256 与封存前一致。stash/backup 仅在本机，不随 PR 上传。
+- 恢复入口：确认工作区干净后切回 feature/backend-p1-phoneme，再运行 git stash apply 65cc8c0dc1ad9dd80eddf85a9add6bb4deb3a11b；apply 保留 stash，便于核对。原始字节备份可用于核对 Git 行尾规范化差异。不要在文档分支直接应用长歌草稿，不自动删除 stash 或备份。
+- 验证：仅检查本轮 Markdown 的本地链接/锚点、文档一致性、Git diff 与文档提交范围；未运行构建、前端 E2E、LLM 或真实引擎，也未重宣称此前音频验收。本次按用户要求提交文档 PR，前一轮后端成果继续留在原分支，P2-A/P3 的跨端实施与整单验收仍待对方确认。
+
 <a id="loop-prototype-wiring"></a>
 
 ## 2026-11-07 · 按 LOOP! 原型重做正式首页接线
