@@ -1,5 +1,5 @@
 import {spawn} from 'node:child_process';
-import {mkdtemp,writeFile,rm} from 'node:fs/promises';
+import {mkdtemp,writeFile,readFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 function run(command,args,cwd,timeout=120000){return new Promise((resolve,reject)=>{const child=spawn(command,args,{cwd,windowsHide:true,stdio:['ignore','ignore','pipe']});let stderr='';const timer=setTimeout(()=>{child.kill();reject(Error('编码超时，请稍后重试'))},timeout);child.stderr.on('data',x=>{stderr=(stderr+x.toString()).slice(-4000)});child.on('error',e=>{clearTimeout(timer);reject(e)});child.on('close',code=>{clearTimeout(timer);if(code===0)resolve();else reject(Error(`编码进程失败 (${code})：${stderr.slice(-700)}`))})})}
@@ -14,7 +14,11 @@ export async function createVideoService(root){
  let ffmpeg,ready=false;
  async function refresh(){ffmpeg=process.env.FFMPEG_PATH||'ffmpeg';try{await run(ffmpeg,['-version'],root,5000);ready=true}catch{ready=false}}
  await refresh();
- return {get ready(){return ready},get binary(){return ffmpeg},refresh,async render(data){
+ return {get ready(){return ready},get binary(){return ffmpeg},refresh,async preview(mp4){
+  if(!ready||mp4.length>12000000||mp4.subarray(4,8).toString()!=='ftyp')throw Error('预览输入无效');
+  const directory=await mkdtemp(path.join(tmpdir(),'songyu-preview-'));
+  try{await writeFile(path.join(directory,'input.mp4'),mp4);await run(ffmpeg,['-hide_banner','-loglevel','error','-y','-protocol_whitelist','file,pipe','-i','input.mp4','-t','35','-map','0:v:0','-map','0:a:0?','-vf','scale=960:-2','-c:v','libvpx-vp9','-deadline','realtime','-cpu-used','6','-crf','34','-b:v','0','-pix_fmt','yuv420p','-c:a','libopus','-b:a','96k','preview.webm'],directory);return await readFile(path.join(directory,'preview.webm'))}finally{await rm(directory,{recursive:true,force:true})}
+ },async render(data){
   const directory=await mkdtemp(path.join(tmpdir(),'songyu-'));
   try{await writeFile(path.join(directory,'mix.wav'),Buffer.from(data.wav,'base64'));await writeFile(path.join(directory,'subtitles.ass'),subtitles(data),'utf8');
  const args=['-hide_banner','-loglevel','error','-y'];for(let i=0;i<data.scenes.length;i++){const scene=data.scenes[i],png=Buffer.from(scene.png,'base64');if(png.subarray(0,8).toString('hex')!=='89504e470d0a1a0a')throw Error('画面不是有效 PNG');await writeFile(path.join(directory,`scene${i}.png`),png);args.push('-loop','1','-framerate','24','-t',String(scene.duration),'-i',`scene${i}.png`)}args.push('-i','mix.wav');
