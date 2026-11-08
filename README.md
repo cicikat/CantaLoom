@@ -32,7 +32,7 @@ LOOP! 首页已完成页面接线、Mock 流程及本地创作验证；历史真
 | 钢琴卷帘与局部旋律 | **已接线并通过 Mock**：在歌词卡片下按句编辑音高/位置/长度、锁定及指定句重作曲；改动句重唱，保留其他句与伴奏 | [编辑入口](docs/ARCHITECTURE.md#piano-roll)、[钢琴卷帘验证](docs/iteration-log.md#c-piano-roll) |
 | 新网页完整流程及听感 | **待双方验收**：现场新输入 → 制作 → 试听/导出，以及人工听感 | Mock 页面测试、后端历史实测与非静音指标不能代替这项验收 |
 
-最小页面已可在 Mock 中从新输入制作并试听；钢琴卷帘、局部旋律、调教与现有有效混音控件均已接线。每句调教在「逐句演唱与重唱」中展开，混音在歌词区底部展开；默认不占首屏。浏览器伴奏音量核心问题见[交接 5-C-synth-mix](CROSS-END-HANDOFF.md#5-c-synth-mix)，真实最小闭环仍需工单 4 / 6 验收。详细 checkbox 只维护在对应 CC-Tasks 工单中。
+最小页面已可在 Mock 中从新输入制作并试听；钢琴卷帘、局部旋律、调教与现有有效混音控件均已接线。每句调教在「逐句演唱与重唱」中展开，混音在歌词区底部展开；默认不占首屏。高级音高/颤音/音素/表现曲线在「逐音符人工覆盖」内；分轨文件与响度在「导出作品」中，MP4 报告只展示本次响应。见[工单 27](CC-Tasks/27-frontend-interface-sync.md)，Mock 文件和报告不是真实引擎/FFmpeg 验收。浏览器伴奏音量核心问题见[交接 5-C-synth-mix](CROSS-END-HANDOFF.md#5-c-synth-mix)，真实最小闭环仍需工单 4 / 6 验收。详细 checkbox 只维护在对应 CC-Tasks 工单中。
 
 ## 开始开发
 
@@ -99,7 +99,9 @@ npm start
 | Blacktea（红茶） | [21 · 和声、声部连接与拍号速度](CC-Tasks/后端/21-harmony-voice-leading-form.md)：契约提案待评审授权，依赖 15 P2-A 确认，待排期 |
 | Blacktea（红茶） | [22 · 制作后端治理](CC-Tasks/后端/22-backend-production-ops.md)：缓存配额、任务持久化、渲染并发池；领取工单 12 子任务，待排期 |
 | Toge（toge） | [5 · 自由创作 Mock、页面与局部编辑](CC-Tasks/5-toge-free-creation.md)：LOOP!、调教及现有混音路径已接线并通过 Mock；视觉核对及真实共同验收待完成 |
+| Toge（toge） | [27 · 已交付接口与前端接线](CC-Tasks/27-frontend-interface-sync.md)：高级调教/历史演唱恢复、分轨下载/响度报告已补；可选 groove 与真实验收仍未完成 |
 | Toge（toge） | [23 · 首页三个视觉章节与竖屏版式](CC-Tasks/23-three-chapter-page.md)：入场动效、Music Blocks 过渡、MV 放映页与竖屏调整已实现并通过 Mock；待 toge 实际滚动核对 |
+| Toge（toge） | [29 · 五章节滚动转场](CC-Tasks/29-five-chapter-scroll-transitions.md)：幕布揭开工作台、Let's 逐字翻转并揭开 MV，已实现并通过 Mock 与无头浏览器逐帧检查；待 toge 实际滚动核对手感 |
 | Blacktea（测试审计） | [24 · 测试体系审计与精简](CC-Tasks/已完成/24-test-system-audit.md)：等价覆盖、测试分层与 CI 去重；不修改业务逻辑 |
 | 双方共同验收 | [6 · 原型接线后的真实闭环与听感](CC-Tasks/6-joint-acceptance.md)：依赖 4/5 就绪，分别记录 Mock、真实引擎、页面和人工听感 |
 | 跨端交接规则与入口 | [18 · 跨端交接文档](CC-Tasks/已完成/18-cross-end-handoff.md)：登记、按需读取与完成后清理 |

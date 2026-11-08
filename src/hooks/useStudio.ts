@@ -3,15 +3,17 @@ import {type SongProject,type Track,type Style,estimateBpm,record,uid,trackInfo}
 import {createProject,regenerate,applyRhythm,lyricNotes,syncVocal} from '../composer';
 import {composeFromIdea} from '../composition';
 import {effectivePlan} from '../song-plan';
-import {api} from '../api/client';
+import {api,type ExportReport} from '../api/client';
 import {usePlayer} from './usePlayer';
 import {useProduction} from './useProduction';
 import {useProductionReadiness} from './useProductionReadiness';
 import {STORAGE,initialProject,canAutoSave,readProject,exportProject} from '../features/project/files';
 import {exportWavFile,exportPVFile} from '../features/export/files';
+import {editStudioLyrics,syncStudioLyrics} from './lyric-edit';
 export function useStudio(){
  const [p,setP]=useState<SongProject>(initialProject),[page,setPage]=useState(0),[section,setSection]=useState(''),[idea,setIdea]=useState(p.metadata.idea),[style,setStyle]=useState<Style>(p.style),[taps,setTaps]=useState<number[]>([]),[complete,setComplete]=useState(true),[busy,setBusy]=useState(''),[toast,setToast]=useState(''),[saved,setSaved]=useState('已保存在此浏览器'),[health,setHealth]=useState<{llm:boolean;ffmpeg:boolean;available:boolean;llmStatus:'local'|'unverified'|'verified'}>({llm:false,ffmpeg:false,available:false,llmStatus:'local'}),[exportOpen,setExportOpen]=useState(false),[autoSave,setAutoSave]=useState(canAutoSave);
  const {time,playing,stop,seek,play,tapAudio}=usePlayer(p,busy,setBusy,notify);
+ const [lastExport,setLastExport]=useState<{project:SongProject;report:ExportReport}>();
  const [planError,setPlanError]=useState('');
  const plan=effectivePlan(p);
  const llmLabel=api.mock?'MOCK 固定测试方案 · 未调用 LLM':health.llmStatus==='verified'?'真实 LLM · 最近一次方案已校验':health.llm?'LLM 已配置 · 真实调用未验证':'本地规则 · 未调用 LLM';
@@ -30,20 +32,23 @@ export function useStudio(){
   if(busy)return;if(p.mode==='free'){notify('自由作品请使用自由创作入口；原曲没有改动');return}production.invalidate();const token=requestToken.current;setBusy('搭建创作方向');setPlanError('');
   const useLLM=health.llm&&!forceLocal;
   try{
-   const next=await composeFromIdea(p,idea,style,useLLM);
+   const source=production.lyrics.trim()?structuredClone(syncStudioLyrics(p,production.lyrics)):p;
+   if(source!==p)for(const line of source.lyrics)if(!line.locked&&!line.notes.some(n=>n.locked)&&!lyricLocked(line.sectionId))line.source='manual';
+   const next=await composeFromIdea(source,idea,style,useLLM);
    if(requestToken.current!==token)return;
    if(useLLM&&!api.mock)setHealth(h=>({...h,llmStatus:'verified'}));
    change(next);notify(api.mock&&useLLM?'已应用 MOCK 固定测试方案，未调用 LLM':useLLM?'已应用经校验的 LLM 音乐方案；音符由本地合成':'已应用本地规则音乐方案，未调用 LLM');
-  }catch{
+  }catch(e){
    if(requestToken.current!==token)return;
-   const message='音乐方案生成或校验失败，当前工程完整保留。可用本地规则继续。';
+   const message=e instanceof Error&&!useLLM?e.message:'音乐方案生成或校验失败，当前工程完整保留。可用本地规则继续。';
    setPlanError(message);if(useLLM&&!api.mock)setHealth(h=>({...h,llmStatus:'unverified'}));notify(message);
   }finally{setBusy('')}
  }
  function toggleStep(t:Track,step:number){if(t.locked||p.mode==='free')return;mutate('手动编辑节奏',next=>{const track=next.tracks.find(x=>x.id===t.id)!,s=next.sections.find(s=>s.id===t.sectionId)!;const exists=track.notes.some(n=>Math.floor((n.beat-s.start)%4*4)===step);if(exists)track.notes=track.notes.filter(n=>Math.floor((n.beat-s.start)%4*4)!==step);else for(let bar=0;bar<s.beats/4;bar++)track.notes.push({id:uid(),beat:s.start+bar*4+step/4,midi:t.kind==='drums'?36:t.kind==='bass'?36:67,duration:.22,velocity:.55,...(t.kind==='drums'?{sound:'kick' as const}:{})});track.version++;track.manuallyEdited=true})}
- function editLyric(id:string,text:string){mutate('手动修改单句歌词',next=>{const l=next.lyrics.find(l=>l.id===id)!;l.text=text;l.source='manual';l.version++;l.notes=lyricNotes(l,next.vocalPreset,l.version,next);syncVocal(next,l.sectionId)})}
+ function editLyric(id:string,text:string){try{change(editStudioLyrics(p,[{id,text}]))}catch(e){notify((e as Error).message)}}
+ function syncLyrics(){try{change(syncStudioLyrics(p,production.lyrics));notify(p.vocalMode==='external'?'歌词已同步到便利贴和 MV；改动句需要重新演唱，其他句保留。':'歌词已同步到便利贴和 MV。')}catch(e){notify((e as Error).message)}}
  async function exportWav(){setBusy('混合音轨');try{await exportWavFile(p);notify(api.mock?'MOCK 测试音 WAV 已导出（非真实歌声）':'已导出真实立体声 WAV')}catch(e){notify((e as Error).message)}finally{setBusy('')}}
- async function exportPV(){setBusy('合成 PV，请稍候');try{await exportPVFile(p);notify(api.mock?'MOCK 导出交互完成 · 已下载 JSON 回执，未生成 MP4':'PV 导出完成 · H.264 / AAC / 720p')}catch(e){notify(`PV 导出失败：${(e as Error).message}`)}finally{setBusy('')}}
+ async function exportPV(){setBusy('合成 PV，请稍候');try{const report=await exportPVFile(p);setLastExport({project:p,report});notify(api.mock?'MOCK 导出交互完成 · 已下载 JSON 回执，未生成 MP4':'PV 导出完成 · H.264 / AAC / 720p')}catch(e){notify(`PV 导出失败：${(e as Error).message}`)}finally{setBusy('')}}
  async function importProject(file?:File){if(!file)return;try{const project=await readProject(file);change(project);setIdea(project.metadata.idea);setStyle(project.style);setAutoSave(true);setSection('');notify('工程已恢复，音轨版本与锁定状态已保留')}catch(e){notify(`导入失败：${(e as Error).message}`)}if(importRef.current)importRef.current.value=''}
  function saveProject(){exportProject(p);notify('已导出完整工程，可随时导入继续创作')}
  function manualSave(){try{localStorage.setItem(STORAGE,JSON.stringify(p));setAutoSave(true);notify('工程已保存在此浏览器')}catch{notify('保存失败，请导出工程 JSON')}}
@@ -54,5 +59,5 @@ export function useStudio(){
  function rewriteMelody(id:string){mutate('重写单句旋律',next=>{const line=next.lyrics.find(x=>x.id===id)!;line.version++;line.notes=lyricNotes(line,next.vocalPreset,line.version,next);syncVocal(next,line.sectionId)})}
  function newProject(){change(createProject());setIdea('海风吹过夏天的轻快歌');setStyle('海盐汽水');setPage(0);setAutoSave(true);setExportOpen(false)}
  const lyricLocked=(sectionId:string)=>!!p.tracks.find(t=>t.sectionId===sectionId&&t.kind==='vocal')?.locked;
- return {p,page,setPage:(value:number)=>{if(value!==page)production.invalidate('已离开输入页，上次制作结果不会覆盖当前工程。');requestToken.current++;setPage(value)},section,setSection,idea,setIdea:(value:string)=>{production.invalidate();requestToken.current++;setIdea(value)},style,setStyle:(value:Style)=>{production.invalidate();requestToken.current++;setStyle(value)},taps,setTaps,complete,setComplete,time,playing,busy,toast,setToast,saved,health,exportOpen,setExportOpen,setAutoSave,planError,plan,llmLabel,importRef,lastTap,selected,length,tapBpm,notify,stop,seek,play,change,mutate,tap,apply,develop,toggleStep,editLyric,exportWav,exportPV,importProject,saveProject,manualSave,recordChange,regenerateAll,regenerateTrack,changePreset,rewriteMelody,newProject,lyricLocked,production,readiness};
+ return {p,exportReport:lastExport?.project===p?lastExport.report:undefined,page,setPage:(value:number)=>{if(value!==page)production.invalidate('已离开输入页，上次制作结果不会覆盖当前工程。');requestToken.current++;setPage(value)},section,setSection,idea,setIdea:(value:string)=>{production.invalidate();requestToken.current++;setIdea(value)},style,setStyle:(value:Style)=>{production.invalidate();requestToken.current++;setStyle(value)},taps,setTaps,complete,setComplete,time,playing,busy,toast,setToast,saved,health,exportOpen,setExportOpen,setAutoSave,planError,plan,llmLabel,importRef,lastTap,selected,length,tapBpm,notify,stop,seek,play,change,mutate,tap,apply,develop,toggleStep,editLyric,syncLyrics,exportWav,exportPV,importProject,saveProject,manualSave,recordChange,regenerateAll,regenerateTrack,changePreset,rewriteMelody,newProject,lyricLocked,production,readiness};
 }

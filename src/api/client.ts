@@ -10,6 +10,13 @@ export class ApiError extends Error {
  constructor(message:string,public status=0){super(message);this.name='ApiError'}
 }
 export interface ClientOptions {baseUrl?:string;mode?:'real'|'mock';request?:typeof fetch;timeoutMs?:number;onTask?:(task:c.GenerationTask)=>void}
+export interface ExportLoudness {input:c.LoudnessReport;output:c.LoudnessReport;target:c.LoudnessReport&{lra:number}}
+export interface ExportReport {loudness?:ExportLoudness;status:'measured'|'missing'|'invalid'|'mock'}
+function exportReport(headers:Headers,mock:boolean):ExportReport{
+ const raw=headers.get('X-Songyu-Loudness');
+ if(!raw)return {status:mock?'mock':'missing'};
+ try{const value=JSON.parse(raw),input=c.loudnessReportSchema.parse(value.input),output=c.loudnessReportSchema.parse(value.output),target=c.loudnessReportSchema.parse(value.target);if(typeof value.target.lra!=='number'||!Number.isFinite(value.target.lra))throw Error('Invalid LRA');return {status:mock?'mock':'measured',loudness:{input,output,target:{...target,lra:value.target.lra}}}}catch{return {status:'invalid'}}
+}
 export function createApiClient({baseUrl='',mode='real',request=fetch,timeoutMs,onTask}:ClientOptions={}){
  const mock=mode==='mock';
  const transport=mock?mockRequest:request;
@@ -24,7 +31,7 @@ export function createApiClient({baseUrl='',mode='real',request=fetch,timeoutMs,
    if(!response.ok){const error=c.errorSchema.safeParse(await response.json().catch(()=>null));throw new ApiError(error.success?error.data.error:`请求失败 (${response.status})`,response.status)}
    const type=response.headers.get('content-type')||'';
    const result=type.includes('json')&&path!=='/api/export'?await response.json():await response.blob();
-   return {result,publish};
+   return {result,publish,headers:response.headers};
   }catch(e){const error=e instanceof ApiError?e:new ApiError(controller.signal.aborted?'请求超时，请重试':e instanceof Error?e.message:'无法连接 API');publish('failed',error.message);throw error}
   finally{clearTimeout(timer)}
  }
@@ -53,9 +60,11 @@ export function createApiClient({baseUrl='',mode='real',request=fetch,timeoutMs,
   instruments:(input:c.InstrumentInput)=>json('/api/instruments/render',c.instrumentResultSchema,c.instrumentInput.parse(input),130000,'instrument'),
   sing:(input:c.QixuanInput)=>json('/api/singing/qixuan/render',c.qixuanResultSchema,c.qixuanInput.parse(input),610000,'singing'),
   importSinging:(input:c.ImportInput)=>json('/api/singing/import',c.audioResultSchema,c.importInput.parse(input)),
+  async artifact(file:string){c.artifactFileSchema.parse(file);const {result}=await send('/api/artifacts/'+encodeURIComponent(file),undefined,130000);if(!(result instanceof Blob))throw new ApiError('产物响应格式无效');return result},
+  loudness:(file:string)=>{c.audioFileSchema.parse(file);return json('/api/artifacts/'+encodeURIComponent(file)+'/loudness',c.loudnessReportSchema,undefined,130000)},
   async audio(path:string){c.audioFileSchema.parse(path.replace(/^\/api\/audio\//,''));const {result}=await send(path,undefined,130000);return (result as Blob).arrayBuffer()},
   mediaUrl:(path:string)=>mock?mockMediaUrl(path):url(path),
-  async exportVideo(input:c.ExportInput){const {result,publish}=await send('/api/export',c.exportInput.parse(input),180000,'export');const blob=result as Blob;if(!blob.type.includes(mock?'application/json':'video/mp4')){publish('failed','导出响应格式无效');throw new ApiError('导出响应格式无效')}publish('succeeded');return blob},
+  async exportVideo(input:c.ExportInput,onReport?:(report:ExportReport)=>void){const {result,publish,headers}=await send('/api/export',c.exportInput.parse(input),180000,'export');const blob=result as Blob;if(!blob.type.includes(mock?'application/json':'video/mp4')){publish('failed','导出响应格式无效');throw new ApiError('导出响应格式无效')}publish('succeeded');onReport?.(exportReport(headers,mock));return blob},
  };
 }
 // Only public VITE_ values are read here. Server secrets never enter the bundle.

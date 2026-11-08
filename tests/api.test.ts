@@ -8,6 +8,7 @@ import {singingDependency} from '../src/singing';
 import {validateProject,type VocalAsset} from '../src/model';
 import {readProject} from '../src/features/project/files';
 import {qixuanInput,qixuanResultSchema,instrumentInput,type GenerationTask} from '../shared/contracts/index.mjs';
+import type {ExportReport} from '../src/api/client';
 
 test('shared inputs reject invalid notes, runners and filesystem paths in audio requests',async()=>{
  const p=createProject(),l=p.lyrics[0];const input={lyricId:l.id,lyrics:l.text,start:l.start,end:l.end,bpm:p.bpm,notes:l.notes,engineVersion:'fixture'};
@@ -54,6 +55,27 @@ test('client timeout covers a stalled response body and fails the generation tas
  const tasks:GenerationTask[]=[];const address=server.address() as import('node:net').AddressInfo;
  try{const client=createApiClient({baseUrl:`http://127.0.0.1:${address.port}`,timeoutMs:100,onTask:t=>tasks.push(t)});await assert.rejects(()=>client.instruments({bpm:120,kind:'keys',notes:[],endBeat:16}),/请求超时/);assert.deepEqual(tasks.map(t=>t.state),['running','failed'])}
  finally{server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()))}
+});
+
+test('artifact Client validates paths, preserves source bytes and reports missing caches or unavailable measurements',async()=>{
+ const key='a'.repeat(64),bytes=new Uint8Array([77,84,104,100,0,1,2,3]);let calls=0,path='',status=200;
+ const client=createApiClient({baseUrl:'http://fixture.local',request:async url=>{calls++;path=String(url);if(status!==200)return Response.json({error:status===404?'缓存丢失':'响度测量不可用'},{status});return path.endsWith('/loudness')?Response.json({integratedLufs:null,truePeakDbtp:-1.2}):new Response(bytes,{headers:{'Content-Type':'audio/midi'}})}});
+ for(const file of ['../secret.mid',key+'.zip','UPPER.mid'])await assert.rejects(()=>client.artifact(file));assert.equal(calls,0);
+ assert.deepEqual(new Uint8Array(await (await client.artifact(key+'.mid')).arrayBuffer()),bytes);assert.equal(path,`http://fixture.local/api/artifacts/${key}.mid`);
+ assert.deepEqual(await client.loudness(key+'.wav'),{integratedLufs:null,truePeakDbtp:-1.2});
+ assert.throws(()=>client.loudness(key+'.mid'));status=404;await assert.rejects(()=>client.artifact(key+'.ustx'),/缓存丢失/);status=503;await assert.rejects(()=>client.loudness(key+'.wav'),/响度测量不可用/);
+ const mock=createApiClient({mode:'mock',request:()=>{throw Error('Mock contacted network')}});
+ assert.equal((await mock.artifact(key+'.mid')).size,26);assert.equal((await mock.loudness(key+'.wav')).integratedLufs,-20);
+ const voice=await mock.qixuan();assert.ok(voice.available&&voice.capabilities?.curves.brec);assert.ok(voice.available&&!voice.capabilities?.curves.ene);
+});
+
+test('MP4 keeps its Blob API while exposing validated measured reports; bad or absent reports do not lose the file',async()=>{
+ const input={wav:'UklGRg==',scenes:Array.from({length:4},()=>({png:'AAAA',duration:5})),duration:20,lyrics:[],title:'fixture',style:'cinema' as const};
+ const measured={input:{integratedLufs:-20,truePeakDbtp:-3},output:{integratedLufs:-13.6,truePeakDbtp:-1.4},target:{integratedLufs:-14,truePeakDbtp:-1.5,lra:11}};
+ for(const [header,expected] of [[JSON.stringify(measured),'measured'],[undefined,'missing'],['invalid JSON','invalid'],[JSON.stringify({...measured,output:{integratedLufs:'bad'}}),'invalid']] as const){
+  let report:ExportReport|undefined;const client=createApiClient({request:async()=>new Response('mp4 fixture',{headers:{'Content-Type':'video/mp4',...(header?{'X-Songyu-Loudness':header}:{})}})});
+  const blob=await client.exportVideo(input,r=>{report=r});assert.equal(await blob.text(),'mp4 fixture');assert.equal(report?.status,expected);if(expected==='measured')assert.deepEqual(report?.loudness,measured);
+ }
 });
 
 test('vocal result transaction preserves siblings and rejects stale notes, runner, locks or removed lines',()=>{

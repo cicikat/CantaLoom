@@ -1,3 +1,91 @@
+<a id="lets-mv-entry-autoplay"></a>
+
+## 2026-11-08 Let's 到 MV 改为单次下滑后自动揭幕
+
+关联：[工单 29](../CC-Tasks/29-five-chapter-scroll-transitions.md)、[章节接线](ARCHITECTURE.md#prototype-frontend)、[转场组件](../src/components/ChapterActs.tsx)、[时间进度](../src/components/chapter-motion.ts)。toge 继续要求整句到 MV 的过渡也只需下滑触发，中途不必持续滚动。保留先前自动翻字；完整句子出现后再下滑一次，用 1800ms 自动完成收拢、色块铺满、向下拉开三步。提前滑到后续区间时先等待翻字完成再接动画。
+
+不能只移动幕布：原 MV 在滚动轨道更后面，直接拉开会露出空白。因此色块完全覆盖视口后，才把实际 MV 移到下面，揭幕时自动走完占位距离；结束落到真实可操作的 MV，并停止逐帧调度，之后正常滚动不被拉回。中途或结束后向上滑一次会按时钟倒回 Let's，再下滑可重播；导航/键盘焦点仍能直接跳过，减少动态效果保持普通流的静止页。仅改前端转场、测试及对应文档，没有后端、契约、音乐/音频或导出改动，无新增跨端交接。
+
+验证：最终 `npm run build` 通过（既有 Zod 注释与大 chunk 提示）；动效单元 **6/6**，覆盖收拢→铺满→揭幕的顺序、完成后停调度、反向与两端稳定；定向 Mock 页面 **4/4**。新增用例在 1280×800 / 390×844 下发送单次真实滚轮，随后不继续操作，仍完整露出实际 MV、可切换字幕、可继续自然滚动；验证单次上滑返回、中途倒回、再下滑重播、无横向溢出及无页面错误。既有自动翻字、两处原版圆形入场、布局/钢琴卷帘、减少动态效果和 MV 导航同时通过。首轮新增用例在 MV 正常继续滚动的断言失败：桌面页尾只剩 47px，却要求滚动超过 50px；改为按实际可滚动上限断言后重跑通过，没有为此修改页面。输出 `temp/lets-mv-autoplay-tests/`、`temp/lets-mv-autoplay-retest/`、`temp/lets-mv-autoplay-final/`，使用 `CHOKIDAR_USEPOLLING=true`。本轮未重跑完整 Mock、历史 TAP 失败项、帧率采样、真实引擎或手机实机；实际手感仍待 toge 核对。仅本地提交。
+
+<a id="lets-entry-autoplay"></a>
+
+## 2026-11-08 Let's 文字改为滑入后自动播完
+
+关联：[工单 29](../CC-Tasks/29-five-chapter-scroll-transitions.md)、[章节接线](ARCHITECTURE.md#prototype-frontend)、[转场组件](../src/components/ChapterActs.tsx)、[播放时钟](../src/components/chapter-motion.ts)。toge 要求 Let's 和前面的文字过渡页一样，滑进去后自动播放，不依赖持续滚动。此前翻字虽然使用时钟，仍要先滚到额外文字行程的 `.4`，且进度还被滚动区间钳制；因此仅进入标题页并停住时不会完成翻字。
+
+现在进入原版圆形入场 `.42` 即启动一次时钟，保留 1200ms 首句入场/停顿后，用 1600ms 自动翻成完整 make a music video，字母翻滚和色块变宽/变紫沿用原样。停止滚动仍可播完，播完停止逐帧调度；退出 `.34` 后复位，再进来重播，小幅滚动不重新计时。圆形运动、标题停留距离、后续句子收拢/铺满与向下揭开 MV 继续由滚动控制；跳过动画进入揭幕段或减少动态效果时直接显示终态。无后端、契约、音乐或导出改动，无新增跨端交接。
+
+验证：`npm run build` 通过（既有 Zod 注释与大 chunk 提示）；动效单元 **4/4**；定向 Mock 页面 **3/3**，包括原版布局/钢琴卷帘、两处原版圆形入场、Let's 自动播放。新增用例在 1280×800 / 390×844 下只滑入一次，随后无滚动/鼠标操作也能让实际末字完整出现、旧字消失、色块变宽变紫和提示出现，滚动位置保持不变；检查退出重播、细微滚动不重启、MV 导航、减少动态效果与无页面错误。输出 `temp/lets-autoplay-tests/`，使用 `CHOKIDAR_USEPOLLING=true`。未重跑完整 Mock、上一轮 TAP 失败项、帧率采样、真实引擎或手机实机；实际滚动手感继续待 toge 核对。仅本地提交。
+
+<a id="original-circle-openers"></a>
+
+## 2026-11-08 两处转场恢复原版圆形入场与一屏停顿
+
+关联：[工单 29](../CC-Tasks/29-five-chapter-scroll-transitions.md)、[章节接线](ARCHITECTURE.md#prototype-frontend)、[转场组件](../src/components/ChapterActs.tsx)、[样式](../src/chapters.css)。toge 要求两处都回退到原版。对照 `1f2c3d8` 恢复首页末屏重叠、原圆半径/顶端支点/线性上升、五圆 `.06` 错拍与 `.24` 行程；去掉 c837114 另写的圆形运动及随滚动拼字。Music / Blocks 使用原版 `.42` 阈值与 45ms 字母错拍，到点后自动弹完，保留原版标题末段轻微上移/缩小；标题弹出后约一屏才开始新增的紫色页向下拉开。
+
+工作台 → Let's 同样重叠工作台末屏，复用原版五圆运动与停留（紫/蓝/橙/薄荷/黄，保持黄色标题页）；Let's 与色块到点后自动弹入。原版 180vh 入场/停顿之后，继续既有 220vh 翻字、色块伸缩/吞下整句/撑满、拉开露出 MV。导航、焦点跳转与减少动态效果继续沿用。无后端、音乐计算、共享契约或导出改动，无新增跨端交接。
+
+验证：`npm run build` 通过（既有 Zod 注释与大 chunk 提示）；动效单元测试 **4/4**。最终定向 Mock 页面 **2 通过、1 失败**：原版布局/钢琴卷帘和新增两处入场检查通过；新增用例覆盖 1280×800 / 390×844 的一屏重叠、圆形尺寸/缩放/位移、停止滚动后自动弹字、一屏停顿、倒滚复位、减少动态效果、导航，以及圆入场前不拦截上一章点击。额外 TAP/播放/PV 用例首轮通过，但最终轮与单独重跑都卡在模拟敲击的 BPM 范围断言（87、88，要求 >90），这两次没有执行到后续 PV 断言；未修改节奏逻辑，也未宣称当前全套回归通过，原因尚未确认。首轮新增入场用例另曾失败：窄屏实际滚动取整使理想进度与实际位移相差约 1.26px，断言改用实际写入的进度后重跑通过，未为此改动动画。输出在 `temp/original-openers-tests/`、`temp/original-openers-retest/`、`temp/original-openers-final/`、`temp/original-openers-tap-retest/`，使用 `CHOKIDAR_USEPOLLING=true`。本轮未跑全套 Mock、帧率采样、真实引擎或手机实机；toge 的实际滚动手感仍待工单 29 核对。仅本地提交。
+
+<a id="scroll-transition-discs"></a>
+
+## 2026-11-08 滚动转场改回圆形
+
+关联：[工单 29](../CC-Tasks/29-five-chapter-scroll-transitions.md)、[转场组件](../src/components/ChapterActs.tsx)。toge 反馈横向色带「没有重心、像塑料」：第一段改回从底部中间依次升起长大的五个圆，紫圆即幕布，向下拉开时露出圆弧边；工作台 → Let's 的入场也改为四个圆，黄圆盖满后文字弹入。Let's → MV（色块撑满后拉开）按要求不变。圆在舞台钉住前可越过上一页，但不接收点击；舞台背景延续首页点点纸 / 工作台格纸。Music Blocks 拼好后的停留约半屏滚动距离，短于原五圆版的约一屏，未调整。
+
+验证：tsc、build 通过；`tests/chapter-motion.test.ts` 4/4；Mock 页面回归（`CHOKIDAR_USEPOLLING=true`）**35/35**。按 toge 要求本轮未再截图或测帧，未做人工滚动验收；无跨端交接。
+
+<a id="five-chapter-scroll-transitions"></a>
+
+## 2026-11-08 五章节滚动转场：幕布揭开与 Let's 文字翻转
+
+关联：[工单 29](../CC-Tasks/29-five-chapter-scroll-transitions.md)、[原型接线边界](ARCHITECTURE.md#prototype-frontend)、[转场组件](../src/components/ChapterActs.tsx)、[计时函数](../src/components/chapter-motion.ts)。按 toge 要求把首页 → 工作台 → MV 改成五个全屏章节，取代原五圆过渡（ChapterBridge 已删除）；上次被回退的 43359f7 的问题（遮罩盖住内容、加空白、全宽板条加模糊导致卡顿）作为约束。
+
+实现：两段过渡各是一条高轨道，画面 sticky 固定；后一章节包在 `.act-pin` 里，被拉到画面下方并在最后约一屏内钉住，幕布向下拉开时它原地不动，拉开后不留覆盖层，也没有给内容加空白。第一段黄/橙/紫三层纸错层升起，Music 字母与 Blocks 积木分拍入场，紫色前景幕布向下拉开露出工作台；工作台背景改为与幕布同色系的淡紫 4×4 切割垫网格。第二段同样三层纸升起，「go together」逐字鼓式翻滚（模糊、放大、下落、压扁回弹）成「make a music video」，色块右边缘跟随实际在场的字母伸缩并由薄荷绿变紫，再吞下「Let's」收拢整句、撑满全屏，最后像第一段一样向下拉开露出 MV。翻转用自带时钟播放，阈值带防抖，滚动过远时强制完成或复位，往回滚倒放。导航与键盘焦点直接到幕布拉开的位置；减少动态效果下两段是普通流中的静止标题页。
+
+过程中修掉的问题：sticky 不进入父元素内边距（钉住距离改用 `::after` 占位块）；MV 自身的 `position:relative` 覆盖 sticky；窄屏下 100px 基准测量被屏幕宽度截断、字母边缘被重复缩放；首页视差会把首页底部按钮压到纸层下（已去掉视差，首页不做任何变换）；过渡轨道透明容器在幕布拉开后仍挡住工作台和 MV 的点击（轨道改为不接收点击，只有色块接收）；幕布拉开后标题下 8 个小方块仍在后台无限闪烁，CPU 紧张时拖慢整页（TAP 计时用例在文件轮询下 3/3 失败），改为只在标题页可见时闪烁后 3/3 通过。
+
+验证：`npx tsc --noEmit` 与 `npm run build` 通过（仅既有大 chunk 提示）；`npx tsx --test tests/chapter-motion.test.ts` **4/4**；Mock 页面回归（`CHOKIDAR_USEPOLLING=true`）**35/35** 通过，其中 4 个用例改为先从导航进入工作台（工作台第一屏在幕布拉开前位于幕布下，Playwright 自动滚动会落在幕布下），章节用例改为检查两段过渡的状态与倒放复位。Playwright 无头 Chromium 逐帧截图检查 1280×800 与 390×844 两段全过程、翻转中间帧、反向倒放、减少动态效果。最终代码下真实滚轮连续从顶滚到底再滚回顶：1280×800 共 521 帧、1024×768 共 566 帧，中位 16.7ms，各有约 15 帧为 33ms（单次掉一帧，无帧超过 50ms）；390×844 共 607 帧无掉帧；无页面错误，回到顶部后翻转状态复位。
+
+未完成：桌面尺寸的掉帧集中在工作台露出及之后一段（每次滚轮一格掉一帧）；对照实验中去掉网格背景或卡片投影都没有明显减少，原因未查清，本轮按 toge 要求停止排查，留待下次。无头浏览器是软件渲染，数字只作参考。未在 toge 可见的浏览器里人工连续滚动（本轮会话窗口未打开，预览面板处于后台），手感、停留距离与配色待 toge 核对；未动后端、契约、画面与导出链路，无跨端交接。
+
+## 2026-11-08 积木按音符弹跳
+
+关联：[工单 5](../CC-Tasks/5-toge-free-creation.md)、[首页](../src/App.tsx)、[动效计算](../src/components/board-pulse.ts)。原先播放游标让所有轨道同一列（含空格）整齐抬起；现改为当前实际音符起音触发、力度决定高度、短暂上升后衰减回落，折叠显示的其他小节音符不触发，静音轨道不动；减少动态偏好下改用描边。未更改音符、播放或音频链路，无跨端交接。
+
+验证：六项定向断言通过（起音前、起音峰值、空格、跨小节、力度差异、衰减）；build 通过，保留既有依赖注释/chunk 提示。首轮 build 发现旧 current 变量引用，修正后通过。未做浏览器实际播放视觉验收或真实引擎测试；本轮仅本地提交。
+
+## 2026-11-08 演唱卡片标题调整
+
+关联：[工单 5](../CC-Tasks/5-toge-free-creation.md)、[首页源码](../src/App.tsx)。按 toge 要求将正式首页标题改为「今天使用什么演唱风格？」。仅修改展示文字，未改演唱逻辑；检查源码差异并通过 build，未做真实引擎或人工页面验收，无跨端交接。
+
+<a id="lyrics-current-project-sync"></a>
+
+## 2026-11-07 首屏改词同步便利贴与 MV
+
+关联：[工单 5](../CC-Tasks/5-toge-free-creation.md)、[首页接线](ARCHITECTURE.md#production)。toge 确认改的是首屏铅笔中的歌词；原输入仅存于 useProduction 草稿，本地搭建又只传主题/风格，因此便利贴与 MV 继续读旧工程。
+
+补「同步歌词到当前作品」与「用当前歌词填写」。同步维持当前作品句数，先检查全部改动，再一次发布工程；本地搭建同样带上草稿，将修改句标为手写，避免模板替换。自由作品复用既有等唱字数改词方法，保留音高/时值并同步 melodyDraft 文本与音节；字数不符、句/人声轨/相关音符锁定时保留原作品并提示。歌声不自动重制，改动句需重新演唱；兄弟句及伴奏保留。前端 Hook/组件完成，没有修改 shared、模型、Client、音乐核心或导出路径，无新增跨端交接。
+
+验证：`npm run build` 通过（先修正前端 Note 到草稿的必填 syllable 类型，重跑通过）；`npx tsx --test tests/lyric-edit.test.ts tests/phrase-edit.test.ts` **9/9**；定向 Mock 页面 **5/5**，覆盖首屏同步、实际 Canvas.fillText 的新字幕、PV 导出请求新歌词、刷新保存、本地搭建使用输入、自由作品草稿一致与字数失败保护，以及既有本地创作/演唱/导出/五句自由制作回归。补强本地搭建的换风格场景后，构建及该用例再次通过：显式输入中与原文相同的未锁定句也标为 manual，换风格不覆盖这些句子。页面测试使用 `CHOKIDAR_USEPOLLING=true`，沿用既有 Windows 文件监听规避。Mock 导出仍是 JSON 回执；未调用真实 LLM/绮萱、未运行真实 FFmpeg 编码或人工听感验收，继续工单 6。构建仅有既有 Zod 注释与 chunk 提示。本轮本地提交，不推送、不重启服务。
+
+<a id="frontend-interface-sync"></a>
+
+## 2026-11-07 已交付接口前端补接
+
+关联：[工单 27](../CC-Tasks/27-frontend-interface-sync.md)、[工单 5](../CC-Tasks/5-toge-free-creation.md)、[工单 15 P1](../CC-Tasks/后端/15-p0.md)、[工单 19](../CC-Tasks/后端/19-render-quality-and-artifacts.md)、[接口清单](INTERFACES.md)、[架构接线](ARCHITECTURE.md#performance)、[Client 授权与兼容](../shared/contracts/CHANGELOG.md)。基线 origin/main `101867d`，本地分支 `feature/frontend-interface-sync`。此前 Git 快进只证明代码一致，未证明新增能力已接页面；本轮核实 P0/P1 高级调教、产物/报告与可选 groove 确有前端缺口。
+
+本轮完成：默认折叠的 Pitch 数值点/控制点预览、六项颤音、音素时序/发音、整句 DYN/表现曲线；capabilities 未报告或不支持时禁用相应控件。沿用既有单句渲染与三版调教历史，修改只使对应句演唱依赖失效；补历史演唱恢复按钮，依赖/runner 不匹配仍明确拒绝。整句 phonemes 平面列表仅展示原始参照，不伪造逐音符映射；没有拖拽曲线画笔。未改后端、音乐核心、工程模型或公开请求/响应 Schema。
+
+toge 明确授权后补 Client 的只读产物/响度方法与兼容的导出报告回调。既有导出框可下载有效人声 WAV/USTX；FluidSynth 模式下明确点击准备当前器乐逐轨 WAV/MID。浏览器 synth 不自动切音源；没有整曲聚合 MIDI/ZIP。MP4 保持原 Blob 下载，显示 input/output/target；缺失或无效报告不丢已成功文件，null 不显示为零。工程变化后隐藏旧报告。Mock 产物与固定响度明确标注夹具。
+
+验证：`npm run build` 通过；`npx tsx --test tests/performance-edit.test.ts tests/api.test.ts tests/p1-phoneme.test.ts` **20/20** 通过。6 项相关 Mock 页面用例分轮通过：原表达/失败保护、新高级调教、缺失能力、下载/响度失败保护、原混音 PCM/WAV/PV；补历史演唱恢复与中文校验提示后高级调教用例再次 **1/1** 通过，桌面/390px 无横向溢出并查看截图。真实模式导出 HTTP 夹具 **1/1** 通过（含响应头数值、null、缺失报告）；真实 FFmpeg **1 项跳过**：隔离服务没有可用 FFmpeg，PATH 与检查的常见安装位置未找到，不安装或伪造实测。没有重跑真实 LLM / 绮萱 / FluidSynth / DAW / 人工听感，继续[工单 6](../CC-Tasks/6-joint-acceptance.md)。
+
+首轮 Mock 3 通过/3 失败：禁用 option 的断言方法不适用、模拟失败未恢复测试替身，以及 Vite 监听 Windows 下载 `.crdownload` 引发 EBUSY 后中断后续混音测试。修正两处测试并在单次命令设置 `CHOKIDAR_USEPOLLING=true`，受影响 3 项重跑全部通过；未改 Vite/Playwright 配置，也未隐藏失败证据。构建仍有既有 Zod 注释和大 chunk 提示。
+
+前端交接 `15-P1-review` / `19-artifact-report` 已完成并从待交接移除，真实闭环仍由工单 6 维护。未完成的[可选 groove](../CROSS-END-HANDOFF.md#20-groove-render)、[synth 伴奏增益](../CROSS-END-HANDOFF.md#5-c-synth-mix)继续保留；长歌/专业和声/MixGraph 仍是待确认提案。另发现并复现[27-phoneme-zero](../CROSS-END-HANDOFF.md#27-phoneme-zero)：仅为第 0 音素设 offsetMs=0 时，核心会过滤该项并继续应用非零 consonantMs；前端传参未丢，已加限制说明并交红茶修复，未越界改算法。本轮只做本地提交，未推送或部署。
+
 ## 2026-11-07 管理脚本中断与保存校验修复
 
 [工单 26](../CC-Tasks/已完成/26-admin-model-discovery.md)后续修复。修正路由表单插入节点错误，避免初始化中断导致按钮无响应；routeKeys 改为可选任务集合，修复空集合或只填单个任务时保存失败。真实 Chromium 管理 E2E 1/1 通过：保存 DPAPI 配置、清空密钥输入、HTTP 夹具连接测试、刷新脱敏和无页面异常；不代表真实厂商调用验收。
@@ -126,7 +214,7 @@ build 通过（保留既有 Zod 注释/bundle 体积提示）；npm test 99 项�
 
 ## 2026-11-07 · 工单 19 渲染与产物后端交付
 
-关联：[工单 19](../CC-Tasks/后端/19-render-quality-and-artifacts.md)、[接入说明](ARCHITECTURE.md#创作产物与响度报告工单-19)、[契约](../shared/contracts/CHANGELOG.md)、[交接 19-artifact-report](../CROSS-END-HANDOFF.md#19-artifact-report)。
+关联：[工单 19](../CC-Tasks/后端/19-render-quality-and-artifacts.md)、[接入说明](ARCHITECTURE.md#创作产物与响度报告工单-19)、[契约](../shared/contracts/CHANGELOG.md)、[交接 19-artifact-report](iteration-log.md#frontend-interface-sync)。
 
 本轮接续工作区已有 48kHz/产物端点修改，完成 PCM s16/revision=2、MIDI/USTX/WAV 原字节下载与非法路径拒绝、只读分轨 ebur128 测量、MP4 loudnorm 和最终 AAC 测量报告；保留 MP4 二进制响应，新增 X-Songyu-Loudness 头。逐轨下载零依赖，决定暂不提供 zip。s24 缺少跨浏览器证据，按工单保留 s16。未代改 UI/Client/Mock。
 

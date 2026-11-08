@@ -1,5 +1,5 @@
-/* Three visual chapters on one scrolling page:
-   1 hero with a rhythmic entrance · 2 "Music Blocks" bridge + workbench · 3 MV theatre. */
+/* Five full-screen steps on one scrolling page:
+   1 hero · "Music Blocks" act · 2 workbench · "Let's" act · 3 MV theatre (acts: components/ChapterActs.tsx). */
 
 :root{--bounce:cubic-bezier(.34,1.56,.64,1);--mv-bg:#1d1b26;--mv-panel:#28253a;--mv-line:#4a4562;--mv-text:#c9c3dc}
 .nav-links button{white-space:nowrap}
@@ -64,15 +64,36 @@
 @keyframes burst-spin{0%{opacity:0;scale:.2;rotate:-200deg}100%{opacity:1;scale:1;rotate:0deg}}
 @keyframes boat-bob{0%,100%{translate:0 0;rotate:0deg}50%{translate:0 -6px;rotate:-3deg}}
 
-/* ---------- Chapter 2 · bridge ---------- */
-/* The tall block overlaps the last screen of the hero so the rings rise over it while scrolling. */
-.chapter-bridge{position:relative;z-index:30;height:280vh;height:280svh;margin-top:-100vh;margin-top:-100svh;pointer-events:none}
-.bridge-stage{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden}
-.chapter-bridge.is-filled .bridge-stage{background:var(--violet)}
-.chapter-bridge.is-filled .bridge-ring{visibility:hidden}
-/* Radius ≥ 0.6 × screen height keeps the far edge of the last ring off-screen on tall phones. */
-.bridge-ring{--s:calc(var(--i)*.06);--e:clamp(0,(var(--p,0) - var(--s))/.24,1);--R:calc(max(100vw,85dvh)*.75);position:absolute;left:50%;top:100%;width:calc(var(--R)*2);height:calc(var(--R)*2);margin-left:calc(var(--R)*-1);border:3px solid var(--ink);border-radius:50%;background:var(--c);transform-origin:50% 0;transform:translateY(calc(var(--e)*(-100dvh - 15%))) scale(calc(.55 + .45*var(--e)));pointer-events:auto;will-change:transform}
-.bridge-title{--x:clamp(0,(var(--p,0) - .84)/.16,1);position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px;text-align:center;translate:0 calc(var(--x)*-10vh);scale:calc(1 - var(--x)*.08)}
+/* ---------- Scroll acts between the chapters ----------
+   hero → .act-bench ("Music Blocks") → workbench → .act-mv ("Let's …") → MV.
+   Each act is a tall track; its 100vh stage is pinned with sticky. The page after it lives in .act-pin, which pulls
+   that page up under the stage and pins it there for the last --act-reveal of scrolling, so the curtain can be pulled
+   down to uncover it in place. ChapterActs.tsx writes the per-frame transforms. Track lengths are tuned here. */
+:root{--act-bench-text:180vh;--act-bench-reveal:95vh;--act-mv-text:400vh;--act-mv-reveal:95vh;--bench:#ece7f8;--bench-line:#ddd4f3;--bench-line-strong:#cbbdee}
+/* The track overlaps the pinned page, so only the stage itself may catch clicks. */
+.act{position:relative;z-index:2;height:calc(100vh + var(--act-text) + var(--act-reveal));margin-top:-100vh;pointer-events:none}
+.act-bench{--act-text:var(--act-bench-text);--act-reveal:var(--act-bench-reveal)}
+.act-mv{--act-text:var(--act-mv-text);--act-reveal:var(--act-mv-reveal)}
+/* Restore the original overlap, ring radius, top anchor, linear rise and .06 stagger from 1f2c3d8.
+   The transparent stage lies over the last screen of the preceding chapter, without adding a paper screen. */
+.act-stage{position:sticky;top:0;height:100vh;overflow:hidden;pointer-events:none;contain:layout style}
+.act-ring{--s:calc(var(--i)*.06);--e:clamp(0,(var(--p,0) - var(--s))/.24,1);--R:calc(max(100vw,85dvh)*.75);position:absolute;left:50%;top:100%;width:calc(var(--R)*2);height:calc(var(--R)*2);margin-left:calc(var(--R)*-1);border:3px solid var(--ink);border-radius:50%;background:var(--c);transform-origin:50% 0;transform:translateY(calc(var(--e)*(-100dvh - 15%))) scale(calc(.55 + .45*var(--e)));will-change:transform}
+.is-covered>.act-ring{visibility:hidden}
+.bench-curtain{position:absolute;inset:0}
+.is-covered .bench-curtain{background:var(--violet);pointer-events:auto}
+.act-mv .is-covered .say-curtain{background:var(--yellow)}
+.is-covered .say-curtain{pointer-events:auto}
+.say-curtain{will-change:transform}
+.act-cast{position:absolute;left:0;right:0;bottom:100%;height:64px;background:linear-gradient(to top,rgba(32,33,35,.14),rgba(32,33,35,0));pointer-events:none}
+/* Sticky boxes never move into their parent's padding, so the extra pinned distance is a spacer after the page. */
+.act-pin{position:relative;z-index:1;margin-top:calc(-100vh - var(--act-reveal))}
+.act-pin::after{content:"";display:block;height:var(--act-reveal)}
+.bench-pin{--act-reveal:var(--act-bench-reveal)}
+.mv-pin{--act-reveal:var(--act-mv-reveal)}
+.act-pin>*{position:sticky;top:0}
+
+/* Act 1 · Music Blocks title on the violet front layer. */
+.act-title{--x:clamp(0,(var(--p,0) - .84)/.16,1);position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px;text-align:center;translate:0 calc(var(--x)*-10vh);scale:calc(1 - var(--x)*.08)}
 .bridge-kicker{margin:0;font-size:12px;font-weight:900;letter-spacing:2px;color:var(--off);background:var(--ink);padding:8px 14px;border-radius:6px}
 .bridge-word{margin:0;display:flex;flex-direction:column;align-items:center;gap:.1em;font-size:clamp(68px,11.5vw,176px);font-weight:1000;font-style:italic;line-height:.95;letter-spacing:-.04em}
 .bridge-music{display:flex;color:var(--off);-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:.045em .045em 0 var(--ink)}
@@ -85,12 +106,27 @@
 .is-titled .bridge-kicker,.is-titled .bridge-steps,.is-titled .bridge-hint{opacity:1;translate:0 0;transition:opacity .3s .25s,translate .5s var(--bounce) .25s}
 .bridge-steps{display:flex;gap:7px}
 .bridge-steps i{width:18px;height:18px;border:2px solid var(--ink);border-radius:4px;background:var(--off)}
-.is-titled .bridge-steps i{animation:step-light 1.2s steps(1) infinite;animation-delay:calc(var(--k)*150ms)}
+@media (prefers-reduced-motion:no-preference){.is-active .bridge-steps i{animation:step-light 1.2s steps(1) infinite;animation-delay:calc(var(--k)*150ms)}}
 .bridge-hint{margin:0;font-size:13px;font-weight:800;color:#2c2540}
 @keyframes step-light{0%{background:var(--yellow);translate:0 -3px}12.5%,100%{background:var(--off);translate:0 0}}
 
+/* Act 2 · "Let's" + a colour block that follows the phrase, then fills the screen and becomes the curtain. */
+.say-curtain{position:absolute;inset:0}
+.say-curtain>.act-cast{opacity:0}
+.is-filled .say-curtain>.act-cast{opacity:1}
+.say-block{position:absolute;left:0;top:0;border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink);background:var(--mint);pointer-events:none}
+.say-text{position:absolute;inset:0;margin:0;transform-origin:50% 47%;color:var(--ink);font-weight:1000;font-style:italic;line-height:1.12;letter-spacing:-.03em;white-space:nowrap}
+.say-lets,.say-phrase{position:absolute;left:0;top:0;display:block;width:max-content}
+.say-lets,.say-phrase,.say-block{opacity:0;translate:0 .5em;transition:opacity .2s,translate .25s}
+.is-titled .say-lets,.is-titled .say-phrase,.is-titled .say-block{opacity:1;translate:0 0;transition:opacity .3s .25s,translate .55s var(--bounce) .25s}
+.say-phrase{perspective:6em}
+.say-ch{display:inline-block;transform-origin:50% 60% -.35em;backface-visibility:hidden}
+.say-gap{display:inline-block;width:.28em}
+.say-hint{position:absolute;left:0;right:0;bottom:14%;margin:0;text-align:center;font-size:13px;font-weight:800;color:#2c2540;opacity:0}
+
 /* ---------- Chapter 2 · workbench ---------- */
-.chapter-blocks{background-color:var(--violet);background-image:radial-gradient(#a28ae6 1.3px,transparent 1.5px);background-size:24px 24px;padding-bottom:88px;border-bottom:2px solid var(--stroke)}
+/* A pale lavender cutting mat: 4 × 4 beat grid, same family as the violet curtain that uncovers it. */
+.chapter-blocks{min-height:100vh;background-color:var(--bench);background-image:linear-gradient(var(--bench-line-strong) 1.5px,transparent 1.5px),linear-gradient(90deg,var(--bench-line-strong) 1.5px,transparent 1.5px),linear-gradient(var(--bench-line) 1px,transparent 1px),linear-gradient(90deg,var(--bench-line) 1px,transparent 1px);background-size:128px 128px,128px 128px,32px 32px,32px 32px;background-position:-1px -1px;padding-bottom:88px}
 .chapter-blocks .sections{padding:72px clamp(16px,3.6vw,56px) 0}
 .chapter-blocks .stepheader small{color:#352c4d}
 .chapter-blocks .layout{gap:28px;margin-top:26px}
@@ -101,7 +137,7 @@
 .chapter-blocks .mix-panel{box-shadow:4px 4px 0 var(--stroke)}
 
 /* ---------- Chapter 3 · MV theatre ---------- */
-.chapter-mv{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;min-height:100vh;min-height:100svh;background:var(--mv-bg);color:var(--off);padding:0 0 88px}
+.chapter-mv{overflow:hidden;display:flex;flex-direction:column;justify-content:center;min-height:100vh;min-height:100svh;background:var(--mv-bg);color:var(--off);padding:0 0 88px}
 .chapter-mv .mv-marquee{flex-shrink:0}
 .mv-inner{flex:1;width:100%}
 .mv-marquee{width:112%;margin:34px 0 0 -6%;rotate:-1.5deg;background:var(--yellow);color:var(--ink);border-block:3px solid var(--off);overflow:hidden;font-size:13px;font-weight:900;letter-spacing:2px;white-space:nowrap}
@@ -133,10 +169,11 @@
 .mv-options .export-status{margin-top:12px;color:var(--mv-text)}
 .footer{background:#15141b;color:#8e89a3;border-top:2px solid #2c2a38}
 
-/* Workbench and theatre pieces rise in as they scroll into view (only where scroll timelines exist). */
+/* Lyric cards further down the workbench rise in as they scroll into view (only where scroll timelines exist).
+   The workbench's first screen and the MV are uncovered by their curtains instead. */
 @supports (animation-timeline:view()){
  @media (prefers-reduced-motion:no-preference){
-  .chapter-blocks .stepheader,.chapter-blocks .board,.chapter-blocks .studio-side>section,.chapter-blocks .lyric,.mv-head,.mv-stage,.mv-options{animation:chapter-rise linear both;animation-timeline:view();animation-range:entry 0% entry 60%}
+  .chapter-blocks .lyric{animation:chapter-rise linear both;animation-timeline:view();animation-range:entry 0% entry 60%}
  }
 }
 @media (prefers-reduced-motion:no-preference){.mv-marquee>div{animation:marquee 26s linear infinite}}
@@ -171,6 +208,7 @@
  .bridge-word{font-size:clamp(56px,17vw,96px)}
  .bridge-music{-webkit-text-stroke:2px var(--ink)}
  .bridge-blocks span{border-width:2px}
+ .say-block{border-width:2px;box-shadow:4px 4px 0 var(--ink)}
  .chapter-blocks{padding-bottom:56px}
  .chapter-blocks .sections{padding:52px 14px 0}
  .chapter-blocks .lyrics-section{margin-top:28px}
@@ -192,11 +230,13 @@
  .lyric{min-height:0}
 }
 
-/* Reduced motion: no overlay or scroll choreography, just the solid title page. */
+/* Reduced motion: each act is a still full-screen title page in normal flow; nothing is pinned or overlapped. */
 @media (prefers-reduced-motion:reduce){
- .chapter-bridge{height:auto;margin-top:0;pointer-events:auto}
- .bridge-stage{position:relative;height:auto;min-height:70vh;background:var(--violet)}
- .bridge-ring{display:none}
- .bridge-title{position:relative;inset:auto;min-height:70vh;translate:none;scale:none}
- .bridge-word span span,.bridge-kicker,.bridge-steps,.bridge-hint{opacity:1;translate:none;scale:none}
+ .act{height:auto;margin-top:0}
+ .act-stage{position:relative;clip-path:none}
+ .act-pin{margin-top:0}
+ .act-pin::after{display:none}
+ .act-pin>*{position:relative}
+ .act-title{translate:none;scale:none}
+ .bridge-word span span,.bridge-kicker,.bridge-steps,.bridge-hint,.say-lets,.say-phrase,.say-block{opacity:1;translate:none;scale:none;transition:none}
 }

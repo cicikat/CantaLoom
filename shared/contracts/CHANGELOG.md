@@ -1,5 +1,16 @@
 # 公共契约变更
 
+<a id="frontend-interface-27"></a>
+
+## 工单 27 · 已有产物与响度接口接线（2026-11-07）
+
+- Owner / Frontend reviewer：Toge。toge 本会话明确选择「一并补下载与报告」，授权 `src/api/client.ts`、`src/features/export/files.ts` 及对应 Mock / 页面 / 测试；不改后端、混音核心、工程模型或音乐算法。
+- 沿用工单 19 的 `artifactFileSchema` / `loudnessReportSchema`、二进制 `/api/export` 和 `X-Songyu-Loudness`，不新增公开字段或改义。Client 新增只读下载、分轨响度方法；`exportVideo` 保持返回 Blob，新增可选报告回调，原调用继续兼容。
+- 报告缺失或格式错误不阻止已成功的 MP4 下载；页面明确显示报告不可用，绝不从目标值推算实测。Mock 下载/报告明确是夹具，不作为 FFmpeg 或 DAW 证据。
+- 器乐文件从当前工程走既有器乐请求取得缓存 key；仅 FluidSynth 模式按明确按钮准备，不改变模式或调用参数。人声只列当前依赖有效的资产；USTX 仅用于绮萱。下载是逐轨，不宣称整曲 MIDI/ZIP。
+- 高级调教沿用既有 Performance 字段、`api.qixuan` / `api.sing` 和单句应用函数，只改前端、Hook、Mock 与测试；能力缺失时不假设声库支持。
+- 验证责任：前端请求/响应与参数透传、错误保护、保存、页面流程由 Toge；真实引擎、真实成片及人工听感仍见工单 6。实施结果见[工单 27](../../CC-Tasks/27-frontend-interface-sync.md)及[迭代日志](../../docs/iteration-log.md)。
+
 ## 工单 20 · 确定性律动与器乐渲染参数（2026-11-07）
 
 - Owner Blacktea；依据用户继续完成工单 20 的限定范围实施 shared/free-score、MIDI 和器乐输入；不修改 SongPlan、工程 Schema、Client、Mock、UI，不延伸到混音或旧模式重构。

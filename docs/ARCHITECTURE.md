@@ -55,10 +55,13 @@
 | 章节 | 结构与实现 |
 |---|---|
 | 1 · 首屏 `#compose` | 至少占满一屏。`HeroTitle` 给标题一份完整读屏文字，动画字母对读屏隐藏；`src/chapters.css` 用 `--beat` 节拍让左右元素交替入场，「变成一首歌！」逐字由旋转星星弹出并向右溅碎片 |
-| 2 · Music Blocks + 工作台 `#board` / `#lyrics` | `ChapterBridge` 是首屏之后的一段高滚动区（向上叠住首屏最后一屏），内部画面固定在视口；滚动进度写入 CSS 变量 `--p`，五个圆据此依次上升，铺满后显示 `Music Blocks` 并停留，之后接淡紫色工作台。过渡层 `aria-hidden`、不接收点击 |
+| 2 · Music Blocks + 工作台 `#board` / `#lyrics` | `BenchAct`（`ChapterActs.tsx`）重叠首页最后一屏，复用 `1f2c3d8` 的五圆几何与 180vh 滚动行程；标题到 `.42` 后按原版 CSS 节拍自动弹出，停留约一屏后才向下拉开紫色页。工作台包在 `.bench-pin` 里，在幕布拉开期间钉住不动 |
+| Let's 过渡 | `MvAct`：复用同样的五圆入场、前一屏重叠与约一屏标题停顿，末色为黄；进入 `.42` 后自动播放首句入场和「go together」→「make a music video」逐字翻转，色块同步伸缩变紫。完整句子后再下滑一次，自动用 1800ms 收拢、撑满全屏、向下揭开 MV；铺满后才将实际 MV 移到幕布下，并自动消耗揭幕占位距离，结束落到可操作的 MV，不需持续滚动。单次上滑可中途/结束后倒回 Let's；退出 `.34` 后文字复位。所有时钟结束即停止逐帧调度；导航/键盘焦点直接跳到 MV，减少动态效果时显示静止终态 |
 | 3 · MV 放映页 `#pv` | 深色章节，含字幕走马灯、胶片框画面、播放条、字幕样式/换色/导出与说明；画面仍是 `Landscape` / `drawPV`，未改画面与导出代码 |
 
-系统开启「减少动态效果」时，入场动画、过渡的圆和滚动联动全部关闭，过渡章变为普通纯色标题块。`.page` 使用 `overflow: clip`（替代 hidden）以保证过渡层的粘性定位生效且不产生横向滚动。
+两段过渡见[工单 29](../CC-Tasks/29-five-chapter-scroll-transitions.md)。每帧只读两条轨道的位置，再改少量元素的 transform / 透明度（色块尺寸除外），没变化就不写；纯计时函数在 `chapter-motion.ts`，有单元测试。过渡层 `aria-hidden`；幕布本身拦截点击，拉开后不留覆盖层。导航用 `chapterScrollTop()` 滚到幕布完全拉开的位置，键盘焦点进入被盖住的章节会直接跳过去。sticky 不进入父元素内边距，所以钉住距离用 `.act-pin::after` 占位块实现。
+
+系统开启「减少动态效果」时，入场动画和滚动联动全部关闭，两段过渡变为普通流中的静止全屏标题页，不钉住、不重叠。`.page` 使用 `overflow: clip`（替代 hidden）以保证 sticky 生效且不产生横向滚动。
 
 正式首页不再运行原型的随机格子、随机换词、独立振荡器或字幕定时器。原 HTML 文件保留原始演示，并提供正式入口说明，不能用 file:// 单文件代替 Node / Vite 应用。未改后端、公开契约、模型、混音或导出算法；UI 继续经既有 hooks、Client 和导出用例接入。原型重接后的构建、29 项相关单元测试、26 项 Mock 页面测试及 10 项真实模式页面/接口夹具已通过，详见[本轮记录](iteration-log.md#loop-prototype-wiring)。真实模型、绮萱、MP4 编码与人工听感仍按[工单 6](../CC-Tasks/6-joint-acceptance.md)验收。
 
@@ -238,13 +241,15 @@ production 串联规划、旋律、器乐与歌声。stage 契约枚举为 queue
 
 首页 `PatchlabCreation` 在原型首屏负责主题、可选手写歌词、可选 BPM 和目标时长；底部播放器继续复用 useStudio / usePlayer。原 FreeCreation 组件不再挂载。`useProduction` 通过既有 Client 的 `startProduction` / `production` / `retryProduction` 协调请求，不在组件内新增 fetch，不改公开契约、服务或音乐算法。Owner 为 toge，调用原有 validateProject / validateMelody / currentVocalAsset 进行只读校验。
 
+首屏歌词输入先作为制作草稿；点击「同步歌词到当前作品」才更新现有作品。「用当前歌词填写」可载入当前各句，便于局部改词。`hooks/lyric-edit.ts` 先校验全部修改，再经 `useStudio.change` 一次更新；歌词卡片、Landscape / drawPV、自动保存及既有导出均读取同一份工程。同步维持当前句数，增减句数仍走自由制作（1–8 行），不套用旧模板的四句限制。本地搭建也先应用已填写的词，标为 manual，避免被模板替换；失败不发布中间工程。自由作品调用既有 `setLyricText(...,{keepMelody:true})`，同步 melodyDraft 的文本与音节；唱字数不匹配或会改动锁定内容时拒绝，保留原作品。修改仅使对应句的歌声依赖过期，需重新演唱；其他句与伴奏保留。没有新增契约或修改音乐/导出核心，验证见[歌词同步记录](iteration-log.md#lyrics-current-project-sync)。
+
 - 先按 freeInputSchema 校验输入；空行忽略，非空手写行保留原字词与空格，支持 1–8 行、每行最多 100 字。未填写歌词时由对应真实服务或明确 Mock 夹具提供；不调用旧 composeFromIdea。
 - 以约一秒间隔依次查询任务，展示返回的 state/stage 和已完成句数，不假定能观察到全部阶段，不显示百分比。Mock 显示“测试阶段”。
 - 仅 succeeded / ready-for-mix 后校验完整自由工程、20–30 秒时间轴、手写词/来源与输入一致、旋律和实际音符一致、每句演唱引用有效，再经 useStudio.change 一次应用并复用原播放器。不重建谱面、不把部分 project 提前存入当前工程，也不把 ready-for-mix 称为已导出视频。
 - 修改自由输入、调整当前工程、离开输入页、停止等待或卸载都会使操作代次失效；停止后不再轮询，迟到响应不能覆盖工程或新请求状态。Client 已发出的请求与后台已受理制作可能继续运行，界面明确说明这一点。
 - 失败、超时、错误 JSON/工程或任务丢失时保留旧工程，无自动模板回退；任务丢失提示重新制作。singing 失败可按返回 phraseId 逐句重试缺失演唱，仍等整体成功后应用。
 - 新作品成功后替换浏览器当前工程，入口提示先导出需要保留的作品；仍使用既有 Mock/真实存档隔离，刷新后可用底部播放器试听保存的工程。未改变旧 JSON 恢复方式。
-- 自由作品继续禁用旧模板重作曲、节奏覆盖及旧格子/歌词改写，避免把新谱面送回旧作曲器；C 的钢琴卷帘与局部旋律现已在虚拟歌姬页接通。试听、静音、锁定、现有演唱/导出沿用；调教和混音控件尚未交付。
+- 自由作品继续禁用旧模板重作曲、节奏覆盖及旧格子/歌词改写，避免把新谱面送回旧作曲器；C 的钢琴卷帘与局部旋律现已在虚拟歌姬页接通。试听、静音、锁定、演唱/导出沿用；工单 5 后续已交付调教/混音控件，高级调教补接见工单 27。
 
 本次证据见 [A2 迭代记录](iteration-log.md#a2-free-creation-page)，工单 checkbox 仅在 [工单 5](../CC-Tasks/5-toge-free-creation.md)。上述是 React 工作台接线的历史结果；LOOP! 原型接线后的真实闭环与人工听感仍跟踪 [工单 6](../CC-Tasks/6-joint-acceptance.md)。
 
@@ -281,6 +286,8 @@ Performance 可选 mode=auto/manual、energy、locked、overrides。旧 JSON 无
 ### 分轨与混音
 
 2026-11-07 页面接线：每句 `QixuanPanel` 内新增默认折叠的「演唱调教」，支持 preset、Auto/Manual、四个句级数值、按音符稳定 ID 选择的人工覆盖/锁、句级表达锁，以及最多三版调教恢复。`PerformanceControls` 调用现有 `setPhrasePerformance` / `autoTuneProject(project,lineId)` / `restorePerformance`；输入范围来自共享 Schema，未修改音乐核心或公共契约。保存表达后由现有重唱按钮仅生成当前句，不重新调用作曲/旋律接口；失败保留旧资产，依赖过期由现有规则显示。原有 Pitch 曲线在修改四个数值时保留；「清除音符覆盖」会明确清除所选音符整项覆盖。表达锁仍进入既有演唱依赖，切换后可能标记本句需要重唱，本轮没有改依赖算法。
+
+[工单 27](../CC-Tasks/27-frontend-interface-sync.md)进一步接入：`QixuanPanel` 将查询到的 voice/capabilities 传入控件；在逐音符覆盖中使用 `AdvancedPerformanceControls` 编辑 Pitch 控制点、颤音六参、音素位置/时序/发音，以及句级 DYN/六类表现曲线。曲线采用数值点与 SVG 控制点预览，时间单位按契约区分句首/音符起点；全量校验后应用，局部清除保留其他字段。声库能力缺失或不支持时音素/对应表现曲线禁用，不开放 ene/tenc 等假效果；整句平面 phonemes 仅作原始参照，不猜测音符对应。历史演唱新增恢复按钮，沿用 `restoreVocalAsset` 检查当前依赖/runner，失败不改工程。Mock 与 HTTP 夹具证据见[接线记录](iteration-log.md#frontend-interface-sync)，不作为真实引擎验收。
 
 歌词区底部新增默认折叠的「混音与分轨试听」。`MixControls` 只更新并校验 `SongProject.mixSettings`；`usePlayer.play({stem})` 将现有 stem 选项透传给 `AudioEngine.play`，分轨从头播放。改设置通过既有 `change` 停止旧声音，下一次试听与既有 WAV/PV 用例读取同一设置；不新增 fetch、音频缓存或导出接口。人声音量/混响仅对 external 歌声启用；bandGain 仅对 fluidsynth 启用，浏览器 synth 未接增益，禁用并提示。toge 明确选择「只接前端，核心问题交接红茶」，未改 `audio.ts` / `audio-mix.ts`；交接 [5-C-synth-mix](../CROSS-END-HANDOFF.md#5-c-synth-mix)。接线与测试证据见[本轮记录](iteration-log.md#expression-mix-controls)，真实引擎与听感仍待工单 6。
 
@@ -344,8 +351,10 @@ A1 授权见[契约记录](../shared/contracts/CHANGELOG.md)，当前证据见[A
 
 `GET /api/artifacts/{key}.wav/loudness` 只读调用 FFmpeg ebur128 返回 `{integratedLufs,truePeakDbtp}`，静音无穷值使用 null，测量不可用返回 503；不改变音频。调用方可按人声/器乐 key 分别查询，无需改变 production 任务契约。
 
-MP4 导出使用 loudnorm（I=-14 LUFS、TP=-1.5 dBTP、LRA=11），48kHz AAC 192k。响应保持 MP4 下载，`X-Songyu-Loudness` JSON 头给出 input、output 和 target；output 是解码最终 AAC 的 ebur128 实测值，目标 TP 是上限，不要求安静素材贴近上限。页面尚未展示报告，不改变浏览器混音算法。真实资源 smoke 命令为 `node scripts/verify-render-quality.mjs`，需要可用 FluidSynth、SoundFont、FFmpeg 与 Playwright Chromium；输出仅在 `temp/task19/`。
+MP4 导出使用 loudnorm（I=-14 LUFS、TP=-1.5 dBTP、LRA=11），48kHz AAC 192k。响应保持 MP4 下载，`X-Songyu-Loudness` JSON 头给出 input、output 和 target；output 是解码最终 AAC 的 ebur128 实测值，目标 TP 是上限，不要求安静素材贴近上限。工单 27 已接报告展示，不改变浏览器混音算法。真实资源 smoke 命令为 `node scripts/verify-render-quality.mjs`，需要可用 FluidSynth、SoundFont、FFmpeg 与 Playwright Chromium；输出仅在 `temp/task19/`。
 
+
+前端接线：统一 Client 的 `artifact(file)` 校验白名单后返回原 Blob，`loudness(file)` 只接受 WAV 并校验测量响应；`exportVideo(input,onReport?)` 保持原 Blob 返回，报告异常不阻止成功文件下载。`features/export/files.ts` 统一组装当前有效人声文件，以及用户明确点击后按既有 `instrumentAudio` 请求准备的 FluidSynth 分轨；不持久化新的工程字段，不切换音源，不导出服务器路径。`ArtifactDownloads` 挂在已有导出框，`ExportLoudnessReport` 在 PV 区/导出框展示本次同工程快照报告；工程变化后不展示旧报告。Mock 文件/响度是明确标注的夹具；没有真正 FFmpeg 时不能宣称成片实测。
 
 <a id="groove-render"></a>
 

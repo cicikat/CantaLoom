@@ -11,6 +11,8 @@
 | 创作设置 | 主题 1–500 字；可选歌词 1–8 行、每行 1–100 字；速度 60–160；目标约 20/25/30 秒 | 首屏铅笔 |
 | 音符编辑 | 音高 48–84；长度 0.125–16 拍；位置不能超出当前句或重叠 | 歌词卡片「编辑旋律」 |
 | 每句调教 | 自然/轻柔/强烈、自动/手动；高级参数为过渡 0–160 ms、颤音 0–60、力度 −120–60、辅音 −60–60 ms | 「逐句演唱与重唱」→ 每句「演唱调教」 |
+| 高级调教 | 音符 Pitch 控制点、六项颤音、逐音素覆盖、句级力度/表现曲线；以 capabilities 决定音素与表现曲线的可用项 | 「逐音符人工覆盖」→「音高曲线、颤音与音素」 |
+| 产物与报告 | 当前有效歌声 WAV/USTX、FluidSynth 逐轨 WAV/MID、分轨响度与本次 MP4 响度报告 | 保存 / 导出 → 导出作品 |
 | 全曲混音 | 人声音量与伴奏音量 0–200%，默认 100%；混响 0–0.25，默认 0.08 | 歌词区底部「混音与分轨试听」 |
 
 这是可用能力的清单，不要求把所有限制做成输入框。energy 由既有单句自动分析带入；overrides 索引由音符选择器带入；take 由重唱操作带入；缓存、引擎版本和文件上限由程序处理。steps/depth、EQ、声像等固定或未实现参数不做滑杆。
@@ -50,7 +52,7 @@
 
 **v0.4.0 逐音符颤音（P1）**：`overrides[]` 新增 vibratoLength（0–100，音符长度百分比）、vibratoPeriod（5–500 ms）、vibratoIn / vibratoOut（0–100，淡入淡出，合计 ≤100）、vibratoDrift（±100）、vibratoVolLink（±100，音量联动）；缺省保持既有自动形态。滑音仍由 transitionMs 与 pitch 曲线控制。
 
-**v0.4.0 逐音素覆盖（P1）**：`overrides[].phonemes` ≤8 条，index＝本音符音素化结果序号（0–15，真实音素序列见渲染响应 `phonemes`）；`offsetMs`（±300，按 BPM 换算 tick）调逐音素时序，`phoneme` 替换发音（须在该声库音素词表内，服务端预校验，非法明确报错）；二者至少其一。同一位置只允许一条覆盖；显式 0 位覆盖优先于旧 consonantMs。
+**v0.4.0 逐音素覆盖（P1）**：`overrides[].phonemes` ≤8 条，index＝本音符音素化结果序号（0–15，真实音素序列见渲染响应 `phonemes`）；`offsetMs`（±300，按 BPM 换算 tick）调逐音素时序，`phoneme` 替换发音（须在该声库音素词表内，服务端预校验，非法明确报错）；二者至少其一。同一位置只允许一条覆盖。已知例外：第 0 音素仅设 offsetMs=0、未替换发音时，现有核心可能继续继承非零 consonantMs；前端已说明并交[27-phoneme-zero](../CROSS-END-HANDOFF.md#27-phoneme-zero)修复。其他显式 0 位覆盖仍按既有合并行为。
 
 **v0.4.0 句级表现曲线（P1）**：`performance.curves` ≤6 条，abbr ∈ brec（气声增量 ±100）/ voic（发声 0–100，默认 100）/ genc（声线位移 ±100）/ velc（速度 0–200，默认 100）/ pexp（音高表现力 0–100，默认 100）/ shfc（音高偏移 ±1200×0.1 半音）；points 2–64 个按 x 严格递增，x＝相对句首毫秒，y 为对应描述符范围内整数；覆盖范围外回落引擎默认值。`performance.dynCurve`（2–64 点，y −240–120＝0.1 dB）提供时整体替换自动 DYN 曲线，句尾衰减与收音由其尾部点控制。全部为绮萱声库原生支持并经真实 WAV 对照验证；能力以 `GET /api/singing/qixuan` 的 `capabilities` 为准（从声库配置实测解析）。
 
@@ -90,7 +92,7 @@ FluidSynth 响应 `sampleRate` 从 24000 升为 **48000**，源 WAV 保持 PCM s
 | `GET /api/artifacts/:file` | file 为 64 位小写十六进制缓存 key + `.mid` / `.ustx` / `.wav`；附件下载缓存原字节 | 非法文件名 400，缺失 404；无 zip，无目录/路径参数 |
 | `GET /api/artifacts/:file/loudness` | 只接受同格式 `.wav`；`{integratedLufs:number|null,truePeakDbtp:number|null}`，FFmpeg ebur128 只读测量 | 非法 400、缺失 404、FFmpeg 测量不可用 503；静音无穷值为 null |
 
-MID 对应器乐渲染轨道，USTX 对应真实演唱缓存源工程，WAV 对应各器乐/人声缓存；不是整曲聚合 MIDI。已有响应 key 可构造地址；USTX 不向前端暴露服务器 sourceProject 绝对路径。以上端点尚无 Client/Mock/页面入口，不应假设已有一键下载控件。
+MID 对应器乐渲染轨道，USTX 对应真实演唱缓存源工程，WAV 对应各器乐/人声缓存；不是整曲聚合 MIDI。已有响应 key 可构造地址；USTX 不向前端暴露服务器 sourceProject 绝对路径。工单 27 已接 `api.artifact(file)` / `api.loudness(file)`、Mock 与导出框「分轨文件与响度」。人声只列当前依赖有效的资产；器乐在 FluidSynth 模式下点击「准备器乐分轨」取得当前请求的缓存文件，不自动切换音源。缺失缓存/测量不可用如实提示，不改工程。
 
 ### 【新增 · 工单 20】器乐可选 groove 与保护字段
 
@@ -140,7 +142,7 @@ MID 对应器乐渲染轨道，USTX 对应真实演唱缓存源工程，WAV 对�
 {"input":{"integratedLufs":-25.7,"truePeakDbtp":-9.5},"output":{"integratedLufs":-13.6,"truePeakDbtp":-1.4},"target":{"integratedLufs":-14,"truePeakDbtp":-1.5,"lra":11}}
 ```
 
-上例来自本轮本地规则自由编曲/真实 FluidSynth/Chromium 混音/MP4 实测，不是真实 LLM 新创作。input 测量上传的 mix.wav，output 测量编码后 AAC；静音测量值可为 null。FFmpeg loudnorm 固定目标 -14 LUFS / -1.5 dBTP / LRA 11，AAC 192k/48kHz；**没有请求可调 LUFS 开关**，不改变浏览器混音。本例距目标 +0.4 LU / +0.1 dB，报告如实保留编码偏差，不宣称严格达标。当前 Client 返回 Blob，页面尚不展示该响应头；独立客户端需要自行读取头。
+上例来自本轮本地规则自由编曲/真实 FluidSynth/Chromium 混音/MP4 实测，不是真实 LLM 新创作。input 测量上传的 mix.wav，output 测量编码后 AAC；静音测量值可为 null。FFmpeg loudnorm 固定目标 -14 LUFS / -1.5 dBTP / LRA 11，AAC 192k/48kHz；**没有请求可调 LUFS 开关**，不改变浏览器混音。本例距目标 +0.4 LU / +0.1 dB，报告如实保留编码偏差，不宣称严格达标。Client 继续返回 Blob，并通过可选报告回调提供已校验的响应头；导出用例将本次报告传到 PV 区与导出框。报告缺失或损坏不影响 MP4 下载，页面说明不可用；null 显示无有限测量值。未将目标值标成实测。
 
 ## 状态查询（main）
 
@@ -162,6 +164,6 @@ MID 对应器乐渲染轨道，USTX 对应真实演唱缓存源工程，WAV 对�
 
 ## Mock 覆盖现状
 
-Mock 已覆盖 compose / melody / production 的创建、阶段、失败与单句重试；未知路径仍返回 404，不会偷连真实后端。plan/instrument/singing/export Mock 继续可用。Mock 歌声必须 `isDemo:true`，真实必须 `false`；真实模式拒绝 mock 标记响应与 Mock 缓存。调教、单句重唱、分轨与混音控件已通过 Mock 页面测试；测试音的 PCM 差异不代表真实歌声听感。默认 pitch 曲线夹具及曲线绘制 UI 当前不在本轮范围，既有工程曲线在数值编辑时保留。见[工单 5](../CC-Tasks/5-toge-free-creation.md)。
+Mock 已覆盖 compose / melody / production 的创建、阶段、失败与单句重试；未知路径仍返回 404，不会偷连真实后端。plan/instrument/singing/export Mock 继续可用。Mock 歌声必须 `isDemo:true`，真实必须 `false`；真实模式拒绝 mock 标记响应与 Mock 缓存。调教、单句重唱、分轨与混音控件已通过 Mock 页面测试；测试音的 PCM 差异不代表真实歌声听感。工单 27 已补能力查询/音素列表与高级控件；既有曲线在修改其他字段时保留。曲线采用数值点编辑和控制点预览，不宣称已有拖拽画笔；整句 phonemes 平面列表不等于逐音符映射。见[工单 27](../CC-Tasks/27-frontend-interface-sync.md)。
 
-新增 artifacts / loudness 端点及 groove 的真实事件效果尚无专用 Mock，不应把 Mock 参数透传当作真实 MIDI 人性化。
+artifacts / loudness 已有专用 Mock：MIDI 是空轨夹具、USTX 是标注过的空工程、响度是固定数值；页面/文件名明确 MOCK，不作真实音乐产物与测量证据。groove 的真实事件效果仍无专用 Mock，不把参数透传当作 MIDI 人性化。

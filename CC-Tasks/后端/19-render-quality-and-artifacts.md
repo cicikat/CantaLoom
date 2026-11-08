@@ -31,4 +31,4 @@ Owner：Blacktea / Backend & Music Engine。状态：后端实施与真实链路
 - MP4 loudnorm 选择 -14 LUFS / -1.5 dBTP（峰值上限）/ LRA 11，AAC 192k/48kHz；最终 AAC 解码后 ebur128 实测与输入/目标一起通过响应头返回。分轨用只读 WAV 响度端点查询，不改制作/浏览器混音算法。
 - 合成测试：-41.7 → -14.0 LUFS，编码后 TP -10.2 dBTP。真实 FluidSynth 浏览器全曲混音：-26.4 → -13.6 LUFS，TP -13.0 → -1.3 dBTP；距响度目标 +0.4 LU、峰值上限 +0.2 dB，报告保留实测差距，不宣称严格达标。浏览器 PCM RMS 0.031404，WAV 及 MP4 均实际生成。
 - 复现：配置 FFmpeg 后执行 `node --test tests/render-quality.test.mjs` 和 `node scripts/verify-render-quality.mjs`；后者输出在 `temp/task19/`，不提交媒体。具体全量验证见[迭代日志](../../docs/iteration-log.md#render-quality-19)。
-- 交接 ID：[19-artifact-report](../../CROSS-END-HANDOFF.md#19-artifact-report)。实现清单完成不代表页面已有下载/响度展示，人工 DAW 与听感未验，故本单暂不归档。
+- 前端交接 `19-artifact-report` 已完成并清除，页面逐轨下载/报告接线见[工单 27](../27-frontend-interface-sync.md)和[迭代日志](../../docs/iteration-log.md#frontend-interface-sync)。前端通过 Mock 与 HTTP 夹具，本机真实 FFmpeg 导出跳过；人工 DAW 与听感仍未验，本单暂不归档。
