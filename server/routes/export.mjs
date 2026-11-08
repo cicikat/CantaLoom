@@ -9,7 +9,7 @@ export function mountExport(app,video){
   if(Math.abs(data.scenes.reduce((v,s)=>v+s.duration,0)-data.duration)>.02||data.lyrics.some(l=>l.end<=l.start||l.end>data.duration)||data.lyrics.some((l,i)=>i>0&&l.start<data.lyrics[i-1].end))return res.status(400).json({error:'歌词或画面时间轴不匹配'});
   const wav=Buffer.from(data.wav,'base64');if(wav.subarray(0,4).toString()!=='RIFF'||wav.subarray(8,12).toString()!=='WAVE')return res.status(400).json({error:'需要 PCM WAV 音频'});
   exporting=true;let directory;
-  try{const result=await video.render(data);directory=result.directory;if(result.loudness)res.set('X-Songyu-Loudness',JSON.stringify(result.loudness));res.download(result.file,'songyu-pv.mp4',async error=>{await rm(directory,{recursive:true,force:true});exporting=false;if(error&&!res.headersSent)res.status(500).end()})}
+  try{const result=await video.render(data);directory=result.directory;if(result.loudness)res.set('X-Songyu-Loudness',JSON.stringify(result.loudness));res.download(result.file,'cantaloom-pv.mp4',async error=>{await rm(directory,{recursive:true,force:true});exporting=false;if(error&&!res.headersSent)res.status(500).end()})}
   catch(e){console.error('PV export failed:',e.message);if(directory)await rm(directory,{recursive:true,force:true});exporting=false;if(!res.headersSent)res.status(500).json({error:'FFmpeg 编码失败，请检查服务日志、字体与磁盘空间。'})}
  });
 }

@@ -14,7 +14,7 @@ export function mountArtifacts(app,root=cacheRoot){
   try{await access(file)}catch{return res.status(404).json({error:'音频缓存不存在'})}
   try{res.json(loudnessReportSchema.parse(await measureLoudness(process.env.FFMPEG_PATH||'ffmpeg',file,root)))}catch{res.status(503).json({error:'响度测量不可用，请检查 FFmpeg'})}
  });
-app.get('/api/artifacts/:file',async(req,res)=>{if(!artifactFileSchema.safeParse(req.params.file).success)return res.status(400).end();const file=req.params.file;res.download(path.join(root,file),`songyu-${file.slice(0,12)}${path.extname(file)}`,e=>{if(e&&!res.headersSent)res.status(404).json({error:'产物缓存不存在：请先渲染对应轨道或演唱'})})})}
+app.get('/api/artifacts/:file',async(req,res)=>{if(!artifactFileSchema.safeParse(req.params.file).success)return res.status(400).end();const file=req.params.file;res.download(path.join(root,file),`cantaloom-${file.slice(0,12)}${path.extname(file)}`,e=>{if(e&&!res.headersSent)res.status(404).json({error:'产物缓存不存在：请先渲染对应轨道或演唱'})})})}
 export function mountInstruments(app){const renderer=new InstrumentRenderer();
  app.get('/api/singing/dictionary',async(_req,res)=>{try{const text=await readFile(process.env.DIFFSINGER_DICTIONARY||path.join(externalRoot,'DiffSinger/dictionaries/opencpop-extension.txt'),'utf8');res.json(Object.fromEntries(text.trim().split(/\r?\n/).map(l=>l.split('\t'))))}catch{res.status(503).json({error:'DiffSinger 音素词典缺失'})}});
  app.post('/api/singing/import',async(req,res)=>{try{

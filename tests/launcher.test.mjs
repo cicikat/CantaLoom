@@ -11,7 +11,7 @@ test('launcher reuses only the same compiled app and respects check/no-open',asy
  const directory=await mkdtemp(path.join(temporaryRoot,'songyu-launcher-'));
  t.after(()=>rm(directory,{recursive:true,force:true}));
  await mkdir(directory+'/dist/assets',{recursive:true});
- const html='<title>声屿 SONGYU</title><div id="root"></div><script src="/assets/index-fixture.js"></script>',js='// launcher identity fixture';
+ const html='<title>织声机 CantaLoom</title><div id="root"></div><script src="/assets/index-fixture.js"></script>',js='// launcher identity fixture';
  await writeFile(directory+'/dist/index.html',html);await writeFile(directory+'/dist/assets/index-fixture.js',js);
  let mode='current',opened=0;
  const request=async input=>{

@@ -1,5 +1,22 @@
 <a id="lets-mv-entry-autoplay"></a>
 
+
+<a id="cantaloom-brand-integration"></a>
+
+## 2026-11-08 · 织声机 CantaLoom 更名与未合并 PR 整合
+
+工单：[30 · 品牌与 PR 整合](../CC-Tasks/已完成/30-cantaloom-brand-and-pr-integration.md)；相关说明：[README](../README.md)、[启动与架构](ARCHITECTURE.md)、[团队测试分层](TEAM_WORKFLOW.md#test-tiers)。
+
+用户明确授权合并未合并 PR，并废弃旧产品名。PR 12 已合并：保留后台精确 Key 字段定位、测试分层与进程清理。PR 14 已合并：整合 README/工单/交接和 Mock 测试冲突，保留新增前端场景、工作台导航与精确 TAP 时钟；不以覆盖任一端实现来解决冲突。现有音素零偏移、synth 增益等跨端待办继续保留，无新增接线交接。
+
+当前页面标题、后台品牌、无障碍文案、启动输出、文档、工程/器乐下载命名、USTX 元数据、Canvas 与 ASS 视频署名统一为织声机 CantaLoom；包名为 cantaloom-studio，GitHub 仓库简介同步更新。新增根目录「打开织声机.bat」，原启动文件继续兼容旧快捷方式；新工程为 .cantaloom.json，导入仍按 JSON 内容校验。旧 localStorage 键、SONGYU_* 配置、HTTP 头及已安装 SongyuBridge 保留兼容；历史工单与旧验收证据保留当时名称。未修改 Schema、存档结构、音乐算法或渲染参数。
+
+整合证据：PR 12 本地 build、96 项单元通过/6 项资源跳过、快速浏览器 12/12，远端 checks 通过。PR 14 更新后远端 checks 通过：107 项单元通过/6 跳过、Mock 37/37、快速浏览器 13 通过；本地快速浏览器 14/14，包含真实 MP4/AAC 响度。首次本地并行完整 Mock 为 36 通过/1 下载等待超时（60 秒）；更名版本串行重跑同一场景通过（31.4 秒），未放宽超时或断言，不能据此认定所有高负载情况均稳定。
+
+更名版本验证：build 通过；单元 107 通过、6 项资源验收跳过；「打开织声机.bat --check」在隔离端口 3199 通过构建页面、资产与 API 检查；文档本地链接与 diff 检查通过。定向 Mock 3/3（含新工程下载、旧扩展名导入、旧存档恢复），后台与导出浏览器 3/3（含真实 MP4、AAC 响度）；新入口启动检查同样通过。
+
+边界：HTTP/LLM 测试含明确夹具，真实 MP4 仅证明现有本地编码路径；未进行真实 LLM、绮萱/FluidSynth 新作品制作、人工听感、实际手机或 Safari 验收，继续按[共同工单 6](../CC-Tasks/6-joint-acceptance.md)执行。
+
 ## 2026-11-08 Let's 到 MV 改为单次下滑后自动揭幕
 
 关联：[工单 29](../CC-Tasks/29-five-chapter-scroll-transitions.md)、[章节接线](ARCHITECTURE.md#prototype-frontend)、[转场组件](../src/components/ChapterActs.tsx)、[时间进度](../src/components/chapter-motion.ts)。toge 继续要求整句到 MV 的过渡也只需下滑触发，中途不必持续滚动。保留先前自动翻字；完整句子出现后再下滑一次，用 1800ms 自动完成收拢、色块铺满、向下拉开三步。提前滑到后续区间时先等待翻字完成再接动画。

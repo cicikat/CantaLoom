@@ -1,4 +1,4 @@
-# SONGYU 两人协作工作流
+# CantaLoom 两人协作工作流
 
 本文件维护稳定流程与目录所有权；当前能力见 [README](../README.md)，任务 checkbox 见 [README 协作工单](../README.md#协作工单)索引的 CC-Tasks 清单。包版本与能力阶段不是同一概念；后端交付、Mock 可用、页面接线和完整验收分别记录。
 

@@ -39,7 +39,7 @@ async function main(){
   let sameProject=false;
   try{const response=await fetch(`http://127.0.0.1:${port}/api/admin/state`,{signal:AbortSignal.timeout(2000)});const state=await response.json();sameProject=response.ok&&typeof state.csrf==='string'&&typeof state.runtime?.root==='string'&&path.resolve(state.runtime.root).toLowerCase()===root.toLowerCase()}catch{}
   if(!sameProject)throw error;
-  console.log(`Existing SONGYU service found: ${adminUrl}`);
+  console.log(`Existing CantaLoom service found: ${adminUrl}`);
   console.log('Using the running service. Restart its original window to load backend code changes.');
   if(!noOpen&&process.platform==='win32'){const browser=spawn('rundll32.exe',['url.dll,FileProtocolHandler',adminUrl],{stdio:'ignore',windowsHide:true});browser.once('error',()=>console.log(`Open: ${adminUrl}`))}
   return;
@@ -73,7 +73,7 @@ async function main(){
   if(!page.ok||!html.includes('id="root"'))throw Error('The built page could not be loaded.');
   const asset=html.match(/src="([^"]+\.js)"/)?.[1];
   if(!asset||!(await fetch(new URL(asset,url),{signal:AbortSignal.timeout(3000)})).ok)throw Error('The built JavaScript asset could not be loaded.');
-  console.log(`\nSONGYU is ready: ${url}`);
+  console.log(`\nCantaLoom is ready: ${url}`);
   console.log(`FFmpeg: ${health.ffmpeg?'ready':'unavailable (WAV and local creation still work)'}. LLM: ${health.llmStatus||'unverified'}.`);
   if(check){console.log('Startup check passed: built page, JavaScript asset and API respond successfully.');return;}
   if(!noOpen&&process.platform==='win32'){

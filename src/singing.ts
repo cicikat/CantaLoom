@@ -14,9 +14,9 @@ export function alignedNotes(l:Lyric){
  return notes;
 }
 export function openUtauProject(p:SongProject,lines=p.lyrics,voice?:{singer:string;phonemizer:string;renderer:string}){if(!voice&&Object.values(p.vocalAssets||{}).some(a=>a.voiceId==='qixuan'))voice={singer:'Qixuan_v2.7.0_DiffSinger_OpenUtau',phonemizer:'OpenUtau.Core.DiffSinger.DiffSingerChinesePhonemizer',renderer:'DIFFSINGER'};return {
- name:p.metadata.title,comment:`SONGYU ${p.id} · ${p.metadata.updatedAt}`,ustx_version:'0.6',resolution:480,
+ name:p.metadata.title,comment:`CantaLoom ${p.id} · ${p.metadata.updatedAt}`,ustx_version:'0.6',resolution:480,
  tempos:[{position:0,bpm:p.bpm}],time_signatures:[{bar_position:0,beat_per_bar:4,beat_unit:4}],
- tracks:[{track_name:'SONGYU vocal',singer:voice?.singer??'',phonemizer:voice?.phonemizer??'OpenUtau.Plugin.Builtin.ChineseCVVPhonemizer',renderer_settings:{renderer:voice?.renderer??'CLASSIC'}}],
+ tracks:[{track_name:'CantaLoom vocal',singer:voice?.singer??'',phonemizer:voice?.phonemizer??'OpenUtau.Plugin.Builtin.ChineseCVVPhonemizer',renderer_settings:{renderer:voice?.renderer??'CLASSIC'}}],
  voice_parts:lines.map(l=>({name:p.sections.find(s=>s.id===l.sectionId)?.name??l.id,comment:l.text,track_no:0,position:Math.round(l.start*480),duration:Math.round((l.end-l.start)*480),notes:alignedNotes(l).map((n,i)=>({position:Math.round((n.beat-l.start)*480),duration:Math.round(n.duration*480),tone:n.midi,lyric:n.syllable,pitch:{data:[{x:-40,y:0,shape:"io"},{x:40,y:0,shape:"io"}],snap_first:true},vibrato:{length:0,period:175,depth:25,in:10,out:10,shift:0,drift:0},phoneme_expressions:[],phoneme_overrides:[],...(l.performance?notePerformance(alignedNotes(l),i,p.bpm,l.performance):{})})),curves:l.performance?performanceCurves(l.notes,l.start,l.end,l.performance,p.bpm):[]})),wave_parts:[]
 };}
 export function diffSingerInput(p:SongProject,l:Lyric,dictionary:Record<string,string>){

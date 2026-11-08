@@ -41,4 +41,4 @@ mountPlanning(app,{planner:()=>planner,video});
 mountExport(app,video);
 try{await access(path.join(root,'dist','index.html'));app.use(express.static(path.join(root,'dist')));app.get('/{*path}',(_req,res)=>res.sendFile(path.join(root,'dist','index.html')))}catch{/* Vite serves source during development */}
 app.use((err,_req,res,_next)=>{if(!res.headersSent)res.status(err.status||500).json({error:err.status===413?'请求过大，最大 24 MB':'请求无效或服务异常'})});
-const port=Number(process.env.PORT||3001);app.listen(port,'127.0.0.1',()=>console.log(`SONGYU API http://127.0.0.1:${port} · FFmpeg ${video.ready?'ready':'unavailable'} · LLM ${process.env.LLM_API_KEY?'configured':'local-only'}`));
+const port=Number(process.env.PORT||3001);app.listen(port,'127.0.0.1',()=>console.log(`CantaLoom API http://127.0.0.1:${port} · FFmpeg ${video.ready?'ready':'unavailable'} · LLM ${process.env.LLM_API_KEY?'configured':'local-only'}`));
