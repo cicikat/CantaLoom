@@ -417,3 +417,35 @@ trace 与现有 router 成功字段一致：provider（1–80 字）、model（1
 未启用例为 `"performancePlanning":{"status":"disabled"}`，全锁定跳过为 `{"status":"skipped"}`，均无 trace；旧响应和 Mock 夹具可不提供该新字段。无效创建输入仍 400，无法启动 503，任务不存在/重启 404，非可重试句 409。内存任务边界不变，追溯不写进 SongProject。本轮现有 Client 通过共享 Schema 已能保留字段，Mock/页面是否展示仍由 Toge review。证据见[工单 34](../CC-Tasks/已完成/34-production-trace-contract.md)与[日志](iteration-log.md#production-trace-34)。
 
 工单 34 序列化补充：project.vocalAssets 仅返回既有 VocalAsset 工程字段，剔除引擎返回的 sourceProject 绝对缓存路径与额外诊断，保留 dependency/voice/renderParameters 与成功应用/单句重试所需数据。内部资产不修改。
+
+
+<a id="ai-html-pv"></a>
+
+### 可选 AI HTML 动态 PV（工单 35）
+
+默认 Canvas/四张 PNG+ASS 导出不变。独立 `pv_design` 仅由 `POST /api/pv/design` 的明确请求触发，必须有显式任务路由及可用 keyRef；未配置不回退歌词模型，也不从 production 自动触发。`server/services/pv.mjs` 复用现有 TaskRouter；生产音乐、歌声、混音不改。后台增加同一任务项，安全/CSRF/DPAPI 边界不变；公开配置和追溯不返回 systemPrompt，表单省略该字段时服务端保留原设置，显式空串可清除。
+
+`shared/contracts/pv.mjs` 与相邻 `.d.mts` 定义：
+
+- `PvProject` 是最小工程投影：id/title/idea/mood/bpm、四段 sections（id/start/beats/energy）、歌词（id/text/start/end）及 ≤96 个 pulses（beat/strength）。时间始终为 beat，四段连续，15–35 秒，歌词不重叠/越界。不能直接上传整个 SongProject、WAV 或引擎配置。
+- `PvDesign` v1：1280×720，四场景 ID 和顺序精确匹配；每场景 ≤12 层；背景为双十六进制颜色渐变；shape(circle/rect/triangle)、particles(seed/count/fall/orbit)、text(title/current_lyric)。各层位置/尺寸/颜色/透明度/旋转/缩放及 2–12 个归一化关键帧均有范围；全局图层 ID 唯一、粒子总数 ≤384，每段恰有一个歌词源。无任意文本代码、CSS、路径、图片或 URL；不是模板 ID 选择。
+- `pvFingerprint(project)` 对 Schema 规范化快照做 SHA-256。设计响应和 HTML 导出携带该指纹。前端未来在应用设计、seek 和导出前重新投影当前工程并比较：歌词、BPM、时间轴等变化必须提示重新生成。指纹用于依赖一致性，不能证明客户端拥有工程或代替鉴权。
+
+`POST /api/pv/design` 请求为 `{project: PvProject}`；`200` 返回 `{source:'llm', inputFingerprint, pvDesign, trace?}`。trace 仅有 task/provider/model/promptVersion/attempts/Token/耗时/费用等 router 成功白名单，费用未知为 null。Mock 需 `{source:'mock',mock:true,...}` 且无真实 trace，产品 Mock 尚未接。完整**接口夹具**可用 [pv-fixture](../tests/support/pv-fixture.mjs)，真实验收产物不在 Git。
+
+错误：输入/绑定 400 `PV_INPUT_INVALID`，同一时刻已有规划 429 `PV_BUSY`，未配置独立路由/密钥 503 `PV_NOT_CONFIGURED`，上游或校验失败 502 `PV_PLANNING_FAILED`；不返回上游原始错误、不静默用固定本地方案替代。`GET /api/pv/status` 的 available 只表示可选 Chromium 文件探测，返回宽高/fps/maxSeconds；实际启动仍可能报 503。FFmpeg 沿用既有探测。
+
+`shared/pv-render.mjs` 的 `pvDocument(project,design,singingCredit)` 先校验，输出仓库可信 DOM/SVG runtime；文字仅 textContent，JSON 对脚本结束符转义，CSP 禁止连接、图片、字体下载和外部代码。`renderAt(timeMs)` 只依赖显式时间/快照/种子，不使用墙钟、Math.random 或 CSS 自行动画。标题/歌词/署名由可信快照绑定，HTML 不再叠加 ASS。预览需用 `iframe sandbox="allow-scripts"`，不得加 allow-same-origin；父页面发 `{type:'cantaloom-pv-seek',timeMs}` 消息给该 iframe；runtime 只接受 parent 来源及有限数值，父页需限定消息目标为自己持有的 iframe。布局固定 1280×720，由父容器整体缩放；字体沿用本机 Arial/Microsoft YaHei/sans-serif，帧一致性要求相同 Chromium/系统字体环境，未嵌入外部字体。
+
+旧 `POST /api/export` 请求仍是原四张 PNG + WAV/歌词/标题/style/duration/署名，逐字段兼容。新分支为：
+
+```js
+{ visualMode:'html', pvProject, pvDesign, inputFingerprint,
+  wav: mixedWavBase64, title:pvProject.title, duration:seconds,
+  lyrics:pvProject.lyrics.map(l=>({text:l.text,start:l.start*60/pvProject.bpm,end:l.end*60/pvProject.bpm})),
+  style:'cinema', singingCredit:'demo' }
+```
+
+HTML 不带 scenes；快照、设计、标题、歌词秒时间及 duration 必须一致；指纹不符 400 `PV_STALE_DESIGN`。Chromium 缺失/无法启动 503 `PV_CHROMIUM_UNAVAILABLE`；编码/预算失败 500，仍不回退画面。复用同一 export 编码互斥锁（异步探测前占位），并发 429。Chromium 使用原生 sandbox、离线 context、无服务工作线程/权限/下载、网络请求全部拒绝；只跑可信 runtime。固定 24fps CDP 捕获 PNG 帧（≤840）、临时帧 ≤512 MiB、帧阶段 145s/浏览器 watchdog 150s，HTML 编码与响度使用剩余的总 170s 预算；原 Canvas 的 120s FFmpeg 参数不变。结果仍为 MP4 Blob 和 X-Songyu-Loudness；同一已混音 WAV 进入原 loudnorm/AAC，不另渲染音频。失败与下载完成清理自己创建的临时目录。
+
+后端交付证据见[工单 35](../CC-Tasks/后端/35-ai-html-pv.md)、[日志](iteration-log.md#ai-html-pv-35)、[引擎要求](ENGINES.md#html-pv)。SongProject 持久化、Client/Mock、LOOP! 可选按钮/隔离预览和进度接线由 Toge 后续实施，不等于正式页面端到端完成。

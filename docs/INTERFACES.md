@@ -167,3 +167,10 @@ MID 对应器乐渲染轨道，USTX 对应真实演唱缓存源工程，WAV 对�
 Mock 已覆盖 compose / melody / production 的创建、阶段、失败与单句重试；未知路径仍返回 404，不会偷连真实后端。plan/instrument/singing/export Mock 继续可用。Mock 歌声必须 `isDemo:true`，真实必须 `false`；真实模式拒绝 mock 标记响应与 Mock 缓存。调教、单句重唱、分轨与混音控件已通过 Mock 页面测试；测试音的 PCM 差异不代表真实歌声听感。工单 27 已补能力查询/音素列表与高级控件；既有曲线在修改其他字段时保留。曲线采用数值点编辑和控制点预览，不宣称已有拖拽画笔；整句 phonemes 平面列表不等于逐音符映射。见[工单 27](../CC-Tasks/27-frontend-interface-sync.md)。
 
 artifacts / loudness 已有专用 Mock：MIDI 是空轨夹具、USTX 是标注过的空工程、响度是固定数值；页面/文件名明确 MOCK，不作真实音乐产物与测量证据。groove 的真实事件效果仍无专用 Mock，不把参数透传当作 MIDI 人性化。
+
+
+## 可选 AI HTML PV（工单 35，后端已交付/页面待接）
+
+`POST /api/pv/design` 单独请求当前工程最小投影，返回严格 pvDesign、inputFingerprint 和可选脱敏 trace；需要独立 pv_design 配置。`GET /api/pv/status` 探测可选 Chromium；失败仍能用 Canvas。HTML 导出使用原 /api/export 的 visualMode='html' 分支，不带四张 scenes，携带快照/设计/指纹及同一混音 WAV。旧 PNG 请求、MP4 Blob/响度头不变。类型、完整字段/夹具和错误语义见[架构](ARCHITECTURE.md#ai-html-pv)。
+
+本阶段没有 SongProject.pvDesign、Client HTML 方法、Mock、新按钮或 LOOP! HTML 预览；[35-ai-html-pv](../CROSS-END-HANDOFF.md#35-ai-html-pv)交 Toge 接存档/重开、指纹失效、sandbox seek、Canvas 回退与导出分支。Mock 必须 source=mock/mock=true，不虚构调用 trace 或 MP4。

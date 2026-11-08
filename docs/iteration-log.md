@@ -2,12 +2,18 @@
 
 <a id="ai-html-pv-35"></a>
 
-## 2026-11-08 · 工单 35 AI HTML PV（分阶段实施）
+## 2026-11-08 · 工单 35 AI HTML 动态 PV 后端与共享渲染
 
-- 工单：[35](../CC-Tasks/后端/35-ai-html-pv.md)；字段与本次限定授权见[CHANGELOG](../shared/contracts/CHANGELOG.md)。用户已确认共享 PV 设计/快照/HTML runtime、独立模型任务和原 export 兼容扩展，不改 SongProject/Client/Mock/前端。
-- P0：严格四段设计、复杂度/安全边界、快照指纹，pv_design 路由与管理配置/密钥枚举、POST /api/pv/design 与资源探测已实现。Admin 路由追溯不返回 systemPrompt。9 项定向测试与 build 通过；仅测试夹具，真实两首规划验证另行显式执行。P1 渲染/实际动态 MP4 未完成，不能据此称动态 PV 已交付。
-- 分阶段本地提交，未推送；原启动脚本删除和其他工作保留。后续结果在此条补充。
-
+- 工单：[35](../CC-Tasks/后端/35-ai-html-pv.md)；限定授权和字段见[CHANGELOG](../shared/contracts/CHANGELOG.md)，接口/新旧导出/错误/安全边界见[架构](ARCHITECTURE.md#ai-html-pv)，环境与复现见[引擎](ENGINES.md#html-pv)，前端交接 [35-ai-html-pv](../CROSS-END-HANDOFF.md#35-ai-html-pv)。用户明确确认 shared 快照/设计/runtime、独立模型任务、后台任务设置和既有 export 分支；不修改 SongProject/Client/Mock/React/Hook/CSS。
+- P0 本地 `be95902`：严格四段 PV 设计和最小快照、指纹、数量/数值/ID/未知字段校验、pv_design 路由及密钥枚举/后台清单、POST /api/pv/design、GET /api/pv/status。快速定向9/9、build通过后独立提交，不把数据API当动态PV完成。显式API才调用独立已配置视觉任务，不自动随歌曲制作调用，不失败回退模板。
+- 两首真实新歌词/不同曲风规划：实际 deepseek-v4.1-flash/provider=default，均一次通过。黎明前的纸灯：43,573ms，prompt/completion=2240/8657，四场景层数8/11/10/7；磁暴后的奔跑：53,274ms，2641/10891，层数6/6/6/5；图层、布局、关键帧不同，不是只换颜色。Token为真实响应记录，费用未知null。验收工具仅在进程内明确配置pv_design并复用已有可用歌词路由，不写回后台配置；正式API未配置则503。未上传WAV/密钥/完整工程给模型。
+- P1：共享可信pvDocument/renderAt、HTML/CSS/SVG白名单、textContent及脚本结束符转义、CSP、opaque iframe消息seek；native Chromium sandbox、离线/网络全拒绝，无外部资源或任意模型代码。原/api/export新增HTML判别分支，仍用同一混音WAV/loudnorm/AAC/响度头，字幕/署名由runtime单源绘制，HTML不叠ASS。PNG旧分支保持原行为；编码锁在异步检查前占位，资源/指纹/失败明确400/429/503/500，无伪MP4或静默换旧画面。
+- 真实动态产物：25秒、1280×720、24fps、600帧、MP4 1,368,568字节；FFprobe记录视频/音频轨道与时长。首轮标准截图触发145s预算，失败关闭/清理，无成功回执；改CDP直接捕获后帧阶段73,986ms、全链路77,662ms，PNG临时帧454,268,154字节。Node观测RSS峰值323,776,512字节；2秒采样验收进程树工作集1,221,758,976、私有1,229,746,176字节（包含验收harness，非严格瞬时峰值）。所有临时编码目录在成功/失败后清理。
+- 一致性与实测：12.5秒预览/视频SSIM=0.990783；14秒有效歌词帧SSIM=0.990036；完整FFmpeg解码通过、无检测到的黑场；人工检查首帧和中间截图无意外空白，未据此做人工创意/听感验收。离线preview-harness可拖动seek并显示真实歌词，opaque iframe/CSP网络拒绝及任意seek回到同一时间截图字节一致通过（含粒子重建）。音频为本地规则Web Audio/元音演示，不是中文绮萱歌唱；无AI生图/视频模型。
+- 资源边界：≤840帧、≤512MiB临时帧、145s帧预算/150s浏览器watchdog、170s HTML总预算；响度测量新增可选内部timeout，仅HTML按剩余额度，旧120s默认不改。本机77.7s在现有180s Client范围内，未据此更改Client或保证其他机器/复杂设计同速；可能预算失败。末次native-sandbox/看门狗单帧资源检查通过（1帧/513ms），未重复整片编码。编码后实际响度-13.9 LUFS/-1.4dBTP，保留AAC测量偏差，不把目标值当实测。
+- 回归：build通过（已有体积/依赖注释警告）；全量Node最终135项：127通过、8外部验收跳过；HTTP/浏览器18/18通过；选定Mock无API/混音WAV-PV/产物3/3通过，未重跑Mock全套；末次PV/路由定向13/13通过。禁用HTML Chromium后，旧四PNG/ASS路径的真实FFmpeg页面导出1/1通过；缺Chromium HTML明确503，旧Canvas HTTP夹具成功。Admin PV密钥加密持久化、state/llm不公开systemPrompt，表单省略仍保留原prompt且显式空串可清除，Host/Origin/CSRF/DPAPI边界不变。
+- 证据在temp/task35/：paper-lantern.json、magnet-storm.json、preview.html、preview-harness.html、ai-html-pv.mp4、mix.wav、render-report.json、frame-check.json、first/last/active-preview/active-video/harness截图；日志temp/task35-p0.log、task35-p1-unit.log、task35-targeted-final.log、task35-render-initial.log、task35-real-plan.log、task35-real-render.log、task35-legacy-real.log、task35-unit-complete.log、task35-build-complete.log、task35-e2e-http.log、task35-e2e-mock.log。资源命令见ENGINES；测试模型夹具与两次真实视觉规划分别标明。
+- P2交接已登记完整类型/设计与导出示例、错误/探测/Mock规范、真实产物与Canvas回退。Toge后续接工程设计/指纹存储、Client/Mock、LOOP!可选按钮/隔离预览/seek及失效提示；正式页面共验、跨端字体/手机/Safari与人工观感未完成。工单P2最后一项保留未勾选，整单不归档，不宣称产品端到端完成。分支feature/backend-ai-html-pv本地分阶段提交，未推送；原脚本删除和BACKEND-EXECUTION-NOTE.md保留。
 
 <a id="production-trace-34"></a>
 

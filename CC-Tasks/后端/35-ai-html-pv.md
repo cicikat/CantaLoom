@@ -1,8 +1,8 @@
 # 工单 35：AI HTML 动态 PV · 视觉规划、可信渲染与 MP4 导出
 
 Owner：Blacktea / Backend & Music Engine；共享 Schema、渲染适配与最终页面由 Toge review/接入。
-状态：实施中；P0 契约/模型路由/HTTP 已通过快速验证，真实模型验证与 P1 渲染继续。
-基线：2026-11-08 远端 `cicikat/CantaLoom` 的 `main` 静态核对；**未核验本地 `feature/backend-launcher-restart` 的未推送工作区，开工前先与本地 HEAD 复核。**
+状态：P0/P1 后端与共享渲染已完成（2026-11-08），P2 接口交接已登记；正式页面/存档/Mock 与共同观感验收待 Toge，整单未关闭。
+基线：2026-11-08 开工已核对 `origin/main` 为 `889f424`、本地前序工单 HEAD 为 `b8d21fd`；本任务沿用已验证的本地后端堆叠，分支 `feature/backend-ai-html-pv`，保留原有未提交删除。
 依赖：[工单 15 P2-B](15-p0.md) 既有 LLM 任务路由、[工单 6](../6-joint-acceptance.md) 真实页面/音频联合验收、[工单 27](../27-frontend-interface-sync.md) 接线纪律。新功能不依赖工单 31–34 完工。
 
 ## 一、目标（不是换四套固定 PV 模板）
@@ -79,20 +79,20 @@ Owner：Blacktea / Backend & Music Engine；共享 Schema、渲染适配与最�
 - [x] 核对当前工作区、已有编号/工单及 `AGENTS.md`、`docs/TEAM_WORKFLOW.md`；在 `shared/contracts/CHANGELOG.md` 写 `pv_design`、`pvDesignSchema`、导出兼容提案，并取得限定共享范围确认。
 - [x] 设计并实现严格受限的 `pvDesignSchema` / `.d.mts`：4 个 section ID 精确匹配、对象/文本/关键帧数量边界、颜色/坐标/数值/文本来源校验、未知字段拒绝；旧项目无需 pvDesign。
 - [x] 在现有 LLM Router / 管理设置中新增独立 `pv_design`；补后端 `POST /api/pv/design`、请求/响应类型、错误码和安全日志，不改生产制作主链。
-- [ ] 用两首不同曲风、不同歌词的输入验证模型视觉方案确实不同；禁止只给同一个静态模板换三种颜色。带 API 的验证必须记录模型 ID、耗时、Token 和是否为真实调用，失败不回退伪成功。
+- [x] 用两首不同曲风、不同歌词的输入验证模型视觉方案确实不同；禁止只给同一个静态模板换三种颜色。带 API 的验证必须记录模型 ID、耗时、Token 和是否为真实调用，失败不回退伪成功。
 
 ### P1 · 可信 HTML 动态渲染核心与独立导出
 
-- [ ] 实现受控 HTML/CSS/SVG 场景编译器、可信 `renderAt(timeMs)` 时钟与歌词绑定，不执行模型 JS/任意 HTML/网络资源。可在无 React 的小型离线 harness 中独立预览。
-- [ ] 实现 HTML 帧渲染到既有 FFmpeg 导出分支，保留旧 PNG+ASS 路径和 loudnorm/响度响应头/MP4 Blob 语义；单独声明 Chromium/FFmpeg 检测和资源要求。
-- [ ] 基准测量 20–30 秒、1280×720、24fps 的逐帧渲染/MP4 耗时与峰值资源，确认旧 180s Client / 120s 进程超时是否需按 HTML 模式调整；不可假设 600 张截图一定能在旧时限内编码完成。必要时做流式帧输入与限量并发，但不要引入常驻视频渲染服务。
-- [ ] 验证同一时间点 seek 帧一致、场景切换/歌词无跳跃、无双重字幕、无黑帧/截断；至少实际产出可播放的 HTML 模式 MP4，使用 FFprobe 验证轨道、时长、分辨率和音频同步。
-- [ ] 禁用 LLM / Chromium 资源时原 Canvas 导出仍按原接口成功；HTML 模式明确拒绝且不静默变回旧画面。缓存与临时目录清理正确。
+- [x] 实现受控 HTML/CSS/SVG 场景编译器、可信 `renderAt(timeMs)` 时钟与歌词绑定，不执行模型 JS/任意 HTML/网络资源。可在无 React 的小型离线 harness 中独立预览。
+- [x] 实现 HTML 帧渲染到既有 FFmpeg 导出分支，保留旧 PNG+ASS 路径和 loudnorm/响度响应头/MP4 Blob 语义；单独声明 Chromium/FFmpeg 检测和资源要求。
+- [x] 基准测量 20–30 秒、1280×720、24fps 的逐帧渲染/MP4 耗时与峰值资源，确认旧 180s Client / 120s 进程超时是否需按 HTML 模式调整；不可假设 600 张截图一定能在旧时限内编码完成。必要时做流式帧输入与限量并发，但不要引入常驻视频渲染服务。
+- [x] 验证同一时间点 seek 帧一致、场景切换/歌词无跳跃、无双重字幕、无黑帧/截断；至少实际产出可播放的 HTML 模式 MP4，使用 FFprobe 验证轨道、时长、分辨率和音频同步。
+- [x] 禁用 LLM / Chromium 资源时原 Canvas 导出仍按原接口成功；HTML 模式明确拒绝且不静默变回旧画面。缓存与临时目录清理正确。
 
 ### P2 · 前端交接（本轮只写接口交接，不代 Toge 实施）
 
-- [ ] 在 `CROSS-END-HANDOFF.md` 登记稳定 ID `35-ai-html-pv`，提供设计响应、Schema/TS 类型、导出新旧示例、错误状态、资源探测、Mock 夹具规范、真实 MP4 测试位置和旧模式回退说明。
-- [ ] 交 Toge 后续实现：工程 `pvDesign?` 保存/重开、统一 Client、LOOP! `#pv` 内可选生成按钮和 HTML 预览、seek 进度绑定、Canvas 回退、真实/Mock 状态标记、导出按钮分支；**不要在后端工单中改 `App.tsx`、Hooks、CSS 或 Mock。**
+- [x] 在 `CROSS-END-HANDOFF.md` 登记稳定 ID `35-ai-html-pv`，提供设计响应、Schema/TS 类型、导出新旧示例、错误状态、资源探测、Mock 夹具规范、真实 MP4 测试位置和旧模式回退说明。
+- [x] 交 Toge 后续实现：工程 `pvDesign?` 保存/重开、统一 Client、LOOP! `#pv` 内可选生成按钮和 HTML 预览、seek 进度绑定、Canvas 回退、真实/Mock 状态标记、导出按钮分支；**不要在后端工单中改 `App.tsx`、Hooks、CSS 或 Mock。**
 - [ ] 共验：同一工程动态预览与导出帧/歌词一致，手动改歌词或 BPM 后旧视觉设计的依赖失效提示明确，旧工程、旧 PV、Mock 不回退；最终[工单 6](../6-joint-acceptance.md)留人工观感验收。
 
 ## 五、拟定接口示例（提案，不代表已经交付）
@@ -138,3 +138,23 @@ Owner：Blacktea / Backend & Music Engine；共享 Schema、渲染适配与最�
 4. 每阶段在本地独立验证与提交，报告提交 SHA、文件列表、实际测试与未验内容。用户尚未要求本工单推送/创建 PR，不主动推送、合并或操作 main。
 
 **完成定义**：P0 + P1 必须有真实 HTML 动态 MP4、明确可消费的 Schema/错误语义、兼容的旧导出回归与可核验日志，才算后端/接口交付；P2 页面/Mock 未交付前**不能宣布产品端到端完成**。
+
+
+## 2026-11-08 实施结果与阶段检查
+
+- 限定授权：用户在本会话就 PV shared 契约/纯 HTML runtime、独立模型任务、后台配置和原 export 的兼容分支回复「确认上述限定范围」。未改 SongProject、Client、Mock、React/Hook/CSS。P0 本地提交 `be95902`；P1/交接另提交，均未推送。
+- P0：严格四段快照/设计、指纹、数量/数值/未知字段校验；API 与 pv_design 路由/密钥持久化/后台任务清单已实现；不自动触发、不回退其他模型。真实验收工具仅在显式开关下在其进程里指定现有可用模型，不写回用户配置。
+- 真实两首新歌词/不同曲风：`deepseek-v4.1-flash`，provider=default；「黎明前的纸灯」一次调用 43,573ms，prompt/completion=2240/8657；「磁暴后的奔跑」一次 53,274ms，2641/10891；均通过完整设计/ID/复杂度校验，图层类型、数量、布局和关键帧不同，不是固定模板换色。费用未知为 null，未做费用估算。
+- P1：同一 pvDocument/renderAt 供 opaque sandbox 预览和离线 Chromium；native sandbox/离线/网络拒绝/CSP/文本转义。固定24fps，145s帧阶段/150s watchdog、170s 总预算、512MiB临时帧、共用编码互斥；原 Canvas/ASS与音频路径保留。没有另起常驻渲染服务。
+- 真实 25s HTML MP4：1280×720、600帧、24fps、音视频轨道/时长由 FFprobe 验证；约77.7s，临时帧454MB，Node观测324MB、2秒采样进程树约1.22GB（含验收harness，非严格瞬时峰值）。12.5s SSIM=0.990783，14s有效歌词 SSIM=0.990036；完整解码无黑场，首末帧/音频完整。字幕/署名单源，未额外叠ASS。首轮截图触发145s预算并清理，改CDP捕获后上述实际通过。
+- 资源缺失与旧模式：HTML禁用/缺失明确503，旧请求可继续；禁用HTML Chromium后原四背景/ASS+真实FFmpeg的页面导出1/1通过。预算/失败不输出伪MP4、不改工程。增加响度测量的可选超时，仅HTML用剩余总预算，旧调用默认120s不变。
+- 安全补充：Admin state/llm 不返回 systemPrompt；服务端对表单省略的原 prompt 保留，不因脱敏丢配置，显式空串可清除；密钥仍按原DPAPI，未放松Host/Origin/CSRF。模型不输出任意DOM代码，SVG仅白名单基本形状，不接远程素材。
+- 交付入口：完整 Schema/类型/错误/新旧请求见[架构](../../docs/ARCHITECTURE.md#ai-html-pv)，资源/复现见[引擎](../../docs/ENGINES.md#html-pv)，交接 ID [35-ai-html-pv](../../CROSS-END-HANDOFF.md#35-ai-html-pv)。独立离线可拖动 seek 的 `temp/task35/preview-harness.html` 和实际 `ai-html-pv.mp4`、`mix.wav`、两份设计 JSON、FFprobe/SSIM/资源报告可本机检查。
+- 测试及边界：快速/资源数字统一见[迭代日志](../../docs/iteration-log.md#ai-html-pv-35)。音频为本地规则Web Audio混音/元音演示，真实LLM只生成视觉数据；未生成真实中文歌声，不把此成片当作正式LOOP!页面端到端或人工观感验收。P2最后一项保持未勾选，故本单留在当前目录，不归档。
+
+
+## 分阶段文件清单
+
+P0（`be95902`）：`CC-Tasks/后端/35-ai-html-pv.md`、`CROSS-END-HANDOFF.md`、`docs/iteration-log.md`、`scripts/verify-html-pv.mjs`、`server/admin-config.mjs`、`server/admin.mjs`、`server/index.mjs`、`server/public/admin.js`、`server/routes/pv.mjs`、`server/services/llm-router.mjs`、`server/services/pv-render.mjs`、`server/services/pv.mjs`、`shared/contracts/CHANGELOG.md`、`shared/contracts/pv.d.mts`、`shared/contracts/pv.mjs`、`tests/pv.test.mjs`、`tests/support/pv-fixture.mjs`。
+
+P1/交接（随本轮后续提交）：`CC-Tasks/后端/35-ai-html-pv.md`、`CROSS-END-HANDOFF.md`、`README.md`、`docs/ARCHITECTURE.md`、`docs/ENGINES.md`、`docs/INTERFACES.md`、`docs/iteration-log.md`、`scripts/verify-html-pv.mjs`、`server/admin-config.mjs`、`server/admin.mjs`、`server/routes/export.mjs`、`server/services/export.mjs`、`server/services/loudness.mjs`、`server/services/pv-render.mjs`、`shared/contracts/CHANGELOG.md`、`shared/contracts/index.d.mts`、`shared/contracts/index.mjs`、`tests/pv.test.mjs`、`scripts/check-html-pv.mjs`、`shared/pv-render.mjs`、`shared/pv-render.d.mts`、`tests/browser/pv.spec.js`。

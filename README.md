@@ -117,6 +117,8 @@ npm start
 
 本轮品牌与 PR 整合：[工单 30](CC-Tasks/已完成/30-cantaloom-brand-and-pr-integration.md)。
 
+可选 AI HTML 动态 PV：[工单 35](CC-Tasks/后端/35-ai-html-pv.md)后端/共享渲染已交付，有真实模型设计与动态 MP4；LOOP! 页面、存档与共同观感仍待接。[接口](docs/ARCHITECTURE.md#ai-html-pv) / [资源要求](docs/ENGINES.md#html-pv)。
+
 制作表现规划追溯与安全响应：[工单 34](CC-Tasks/已完成/34-production-trace-contract.md)；后端/共享响应完成，Mock/页面展示待 Toge review。
 
 Synth 伴奏增益核心修复：[工单 33](CC-Tasks/已完成/33-browser-synth-band-gain.md)；WAV/PV 已验证，控件待 Toge 解禁。

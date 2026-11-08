@@ -16,7 +16,7 @@
 
 | ID | 来源 | 发起方 → 接收方 | 状态 |
 |---|---|---|---|
-| [35-ai-html-pv](#35-ai-html-pv) | 工单 35 | Blacktea → Toge | 后端分阶段实施；页面待接 |
+| [35-ai-html-pv](#35-ai-html-pv) | 工单 35 | Blacktea → Toge | 后端/动态MP4已交付；页面/共验待接 |
 | [27-phoneme-zero](#27-phoneme-zero) | 工单 27 / 15 P1 | Toge → Blacktea | 核心已修复；待 Toge 清理旧限制提示 |
 | [24-test-review](#24-test-review) | 工单 24 | Blacktea → Toge | 测试审计交付；待浏览器测试语义 review |
 | [5-C-synth-mix](#5-c-synth-mix) | 工单 5 C | Toge → Blacktea | 核心已修复；待 Toge 解禁 Synth 伴奏控件 |
@@ -110,7 +110,11 @@
 
 <a id="35-ai-html-pv"></a>
 
-### 35-ai-html-pv · 独立视觉设计与可信 HTML PV
+### 35-ai-html-pv · AI HTML PV 后端/共享渲染已交付，页面与共验待接
 
-- 2026-11-08，Blacktea → Toge；本会话用户已确认限定共享/后端范围。P0 已提供严格 shared/contracts/pv.mjs / .d.mts、POST /api/pv/design、GET /api/pv/status；P1 动态渲染与原 export HTML 分支实施中，暂不接页面。
-- [工单 35](CC-Tasks/后端/35-ai-html-pv.md)、[契约记录](shared/contracts/CHANGELOG.md)、[实际证据](docs/iteration-log.md#ai-html-pv-35)。后端完成后再提供新旧导出示例、资源边界与真实 MP4；页面/Mock/Client/工程存储由 Toge 后续实施。
+- 更新 2026-11-08，Blacktea → Toge；本会话用户已确认限定范围。P0 `be95902`，P1/验收同 feature/backend-ai-html-pv 本地后续提交；未推送。工单：[35](CC-Tasks/后端/35-ai-html-pv.md)，[实际日志](docs/iteration-log.md#ai-html-pv-35)。
+- 共享入口：shared/contracts/pv.mjs/.d.mts 的快照、PvDesign/PvResult、pvFingerprint；shared/pv-render.mjs 的 pvDocument。POST /api/pv/design 需显式配置 pv_design；GET /api/pv/status 是 Chromium 探测。完整字段、成功/失败/Mock夹具、HTML与旧PNG导出示例见[架构](docs/ARCHITECTURE.md#ai-html-pv)、[资源](docs/ENGINES.md#html-pv)、[测试夹具](tests/support/pv-fixture.mjs)。
+- Toge 下一步：另行确认并接 SongProject 的设计/快照指纹存储与重开、统一Client/Mock、LOOP! #pv 可选按钮与状态；生成/应用/导出时投影当前工程并比对指纹，歌词或BPM变化使旧设计过期；iframe只给sandbox=allow-scripts，无allow-same-origin，父页仅给持有的frame发送cantaloom-pv-seek毫秒消息；共用runtime，不重写随机/动画算法。保持原Canvas默认与可选回退，不在制作后自动扣视觉Token。
+- 导出：原/api/export旧四PNG/WAV不变；新HTML分支带visualMode、pvProject、pvDesign、inputFingerprint与同一renderAudio混音WAV，不带scenes，不再加ASS。400校验/失效、429占用、503资源缺失、500编码/预算失败；Blob/响度头保留，180s既有Client在本机77.7s基准内足够，复杂设计仍可能触发512MiB/170s预算。Mock设计必须source=mock/mock=true，不伪造trace或MP4。
+- 资源/证据：temp/task35/preview-harness.html、ai-html-pv.mp4、两首设计JSON、render-report.json/frame-check.json；实际模型两次、新设计真实600帧MP4、seek字节稳定、活动歌词视频SSIM约0.9900、FFprobe、黑帧/完整解码、旧Canvas真实导出均通过。两秒采样进程树约1.22GB、临时帧454MB，仅为本机基准。音频是本地规则/元音演示，不是真实中文演唱。
+- 未验边界：产品页面/工程保存接线、跨端字体差异、手机/Safari和人工观感尚未共同验收。请在工单35 P2/工单6留下实际前端证据后再关闭交接；不要因后端动态成片已产出宣布产品端到端完成。
