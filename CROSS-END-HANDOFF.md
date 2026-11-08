@@ -17,11 +17,11 @@
 | ID | 来源 | 发起方 → 接收方 | 状态 |
 |---|---|---|---|
 | [27-phoneme-zero](#27-phoneme-zero) | 工单 27 / 15 P1 | Toge → Blacktea | 首个音素 0 毫秒覆盖可能继承辅音偏移，核心待修复 |
+| [24-test-review](#24-test-review) | 工单 24 | Blacktea → Toge | 测试审计交付；待浏览器测试语义 review |
 | [5-C-synth-mix](#5-c-synth-mix) | 工单 5 C | Toge → Blacktea | 前端已接；浏览器伴奏增益核心待接手 |
 | [20-groove-render](#20-groove-render) | 工单 20 | Blacktea → Toge | 核心/API 已实现；页面与人工听评待安排 |
 | [15-P2A-contracts](#15-p2a-contracts) | 工单 15 P2-A | Blacktea → Toge | 等待本任务共享范围确认 |
 | [15-P2B-routing](#15-p2b-routing) | 工单 15 P2-B | Blacktea → Toge | 后端已推送；等待接入 review 与安排 |
-| [5-browser-timing](#5-browser-timing) | 工单 5 页面回归 | Blacktea → Toge | 待核对高负载下的测试时序稳定性 |
 | [15-P3-mixgraph](#15-p3-mixgraph) | 工单 15 P3 | Blacktea → Toge | 等待共享契约及渲染归属确认 |
 | [21-harmony-contracts](#21-harmony-contracts) | 工单 21 | Blacktea → Toge | 等待和声/拍号契约提案评审 |
 
@@ -36,6 +36,15 @@
 - 最小复现：`notePerformance([{beat:0,duration:1,midi:60,syllable:'甲'}],0,120,{preset:'natural',consonantMs:12,overrides:[{index:0,phonemes:[{index:0,offsetMs:0}]}]}).phoneme_overrides` 实际返回 `[{index:0,offset:12}]`，预期显式 0 不继承句级偏移。现有测试仅覆盖 0 位替换发音、无句级偏移的其他位置 offset=0，没有覆盖该组合。
 - 对方下一步：修复显式 0 的存在性判断/合并顺序，兼容旧 consonantMs 与不带覆盖的历史依赖；补该组合回归，并核对实际 USTX/演唱结果。前端已在音素表单提示此边界，不自行改算法。
 - 验收/回执：结果回写本工单与[迭代日志](docs/iteration-log.md#frontend-interface-sync)，完成后通知前端移除限制说明，再清除此条。
+
+<a id="24-test-review"></a>
+
+### 24-test-review · 测试精简与运行方式
+
+- 更新：2026-11-07；来源：[工单 24](CC-Tasks/已完成/24-test-system-audit.md)；Blacktea → Toge；本轮用户授权修改测试/必要 CI，不修改页面或音乐业务逻辑。
+- 交付：Mock 浏览器 API 独立场景合入 A2 页面闭环，其 PCM/导入恢复/来源断言迁入，Node Mock/契约测试保留；TAP 虚拟时钟、完成响应闸门与失败截图统一配置。全部锁定/缓存/回滚/隔离/真实演唱场景保留。详见[审计证据](docs/iteration-log.md#test-system-audit)。
+- 接收方：review 测试语义与新的[快速/真实验收入口](docs/TEAM_WORKFLOW.md#test-tiers)。默认浏览器不执行 4 项 @acceptance，真实验收显式设置 SONGYU_TEST_TIER=acceptance；Qixuan 工程输入由 SONGYU_ACCEPTANCE_PROJECT 指定，不再依赖某台机器路径。
+- 边界：本轮不代表真实声库/模型、人工听感或手机/Safari 验收完成。回执后先留工单/日志证据，再移除此条。
 
 <a id="5-c-synth-mix"></a>
 
@@ -83,14 +92,6 @@
 - 对方下一步：与 [15-P2A-contracts](#15-p2a-contracts) 一并评审对 SongPlan 字段与旧工程兼容的影响（chordProgression 结构变化、validateMelody 弱拍放宽、三处 4/4 硬编码统一）；确认后先在 shared/contracts/CHANGELOG.md 写清关联工单与授权范围，再由 Owner 实施。
 - 验收与回执：见工单 21 验收节；本条目不构成跨区授权，工单 15/19/20/22 的实施也不以本条为前置。
 
-<a id="5-browser-timing"></a>
-
-### 5-browser-timing · 页面测试的高负载时序稳定性
-
-- 更新：2026-11-07；来源：[工单 5](CC-Tasks/5-toge-free-creation.md)；Blacktea → Toge；状态：待核对测试稳定性，不代表低负载下功能失败。
-- 证据：本轮真实音频与页面并行回归时，Mock 的 LOOP tap 检查期望 BPM >90，实际 76；未改动的 main 7bee0eb 同一检查也失败（89）。低负载串行重跑该用例 1/1 通过。无 API 播放检查首跑在 5 秒内未见暂停按钮，main 基线及本分支串行重跑均通过。
-- 对方下一步：核对浏览器测试对真实墙钟点击间隔和异步离线混音的依赖；区分机器负载影响与产品行为，评估可重复的节奏输入/播放器就绪等待策略，不靠放宽断言掩盖节奏错误。涉及 tests/browser/mock.spec.ts 与 tests/browser/plan.spec.ts，本轮后端交付未改这些文件。
-- 验收与回执：在工单 5 记录测试环境、复现和稳定性验证，完整功能断言仍需保留；完成后按维护规则清除此条及索引。原始日志保存在本机 temp/backend-p1-p2b-mock.log、temp/backend-p1-p2b-http.log、temp/baseline-loop-tap.log 及对应 retry 日志。
 
 
 <a id="20-groove-render"></a>

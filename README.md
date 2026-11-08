@@ -102,6 +102,7 @@ npm start
 | Toge（toge） | [27 · 已交付接口与前端接线](CC-Tasks/27-frontend-interface-sync.md)：高级调教/历史演唱恢复、分轨下载/响度报告已补；可选 groove 与真实验收仍未完成 |
 | Toge（toge） | [23 · 首页三个视觉章节与竖屏版式](CC-Tasks/23-three-chapter-page.md)：入场动效、Music Blocks 过渡、MV 放映页与竖屏调整已实现并通过 Mock；待 toge 实际滚动核对 |
 | Toge（toge） | [29 · 五章节滚动转场](CC-Tasks/29-five-chapter-scroll-transitions.md)：幕布揭开工作台、Let's 逐字翻转并揭开 MV，已实现并通过 Mock 与无头浏览器逐帧检查；待 toge 实际滚动核对手感 |
+| Blacktea（测试审计） | [24 · 测试体系审计与精简](CC-Tasks/已完成/24-test-system-audit.md)：等价覆盖、测试分层与 CI 去重；不修改业务逻辑 |
 | 双方共同验收 | [6 · 原型接线后的真实闭环与听感](CC-Tasks/6-joint-acceptance.md)：依赖 4/5 就绪，分别记录 Mock、真实引擎、页面和人工听感 |
 | 跨端交接规则与入口 | [18 · 跨端交接文档](CC-Tasks/已完成/18-cross-end-handoff.md)：登记、按需读取与完成后清理 |
 | 前一轮工单整理 | [7 · 项目工作流整理](CC-Tasks/已完成/7-documentation-workflow.md)：已完成的范围与验证入口 |

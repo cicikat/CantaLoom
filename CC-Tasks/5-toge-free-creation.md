@@ -69,7 +69,7 @@ Owner：toge；音乐算法/服务问题交红茶，字段变化双方确认。A
 完成一项后立即勾选本工单；在 [迭代日志](../docs/iteration-log.md) 顶部记录日期、实际结果、验证边界、工单及相关文档地址，再按范围本地提交。推送和 PR 按 [团队工作流](../docs/TEAM_WORKFLOW.md)及当前任务授权执行，不自动合并 main。
 
 
-跨端测试交接：[5-browser-timing](../CROSS-END-HANDOFF.md#5-browser-timing)，核对高负载下 TAP/播放器回归的时序稳定性；本轮后端交付只登记证据，不代改前端用例。
+跨端测试交接 5-browser-timing 已于 2026-11-07 按用户测试审计授权处理：TAP 改可控时钟、播放等待改条件断言，保留功能验证；证据见[工单 24 回执](../docs/iteration-log.md#test-system-audit)。后续前端测试语义 review 见 [24-test-review](../CROSS-END-HANDOFF.md#24-test-review)。
 
 ## 已交付接口补接（工单 27）
 
