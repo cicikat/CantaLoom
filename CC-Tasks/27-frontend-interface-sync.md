@@ -1,6 +1,6 @@
 # 工单 27：已交付接口与前端接线核对
 
-Owner：Toge / Frontend & UX。状态：高级调教、历史演唱恢复、产物下载与报告的前端阶段已完成；可选 groove 跨层接线与真实共同验收仍未完成。
+Owner：Toge / Frontend & UX。状态：高级调教、历史演唱恢复、产物下载与报告的前端阶段已完成；可选 groove 已由工单 36 接完，真实共同验收仍未完成。
 来源：2026-11-07 toge 转述红茶反馈：Git 同步后，前端仍缺少已交付功能。Git 内容一致不能作为页面接入验收。
 范围：先接现有 P0/P1 Performance 字段、能力查询、Mock 与页面验证；保持 LOOP! 布局与折叠入口。不修改后端、音乐算法、公开请求/响应 Schema、工程模型或混音核心。toge 随后明确授权「一并补下载与报告」，限定扩展 Client / 导出用例与对应 Mock / 页面 / 测试；见[契约接线记录](../shared/contracts/CHANGELOG.md#frontend-interface-27)。
 依赖：[接口清单](../docs/INTERFACES.md)、[工单 15 P1](后端/15-p0.md#p1-交接-toge接口schema示例与语义)、[工单 5](5-toge-free-creation.md)。
@@ -44,3 +44,5 @@ Owner：Toge / Frontend & UX。状态：高级调教、历史演唱恢复、产�
 2026-11-08 后端回执：[工单 34](已完成/34-production-trace-contract.md)已提供表现规划五态、可选脱敏 trace 与可选错误码，GET/retry 使用显式公开投影；现有 Client 能通过共享 Schema 保留字段。Mock/页面展示仍由 Toge review，沿用 15-P2B-routing；本轮只有接口夹具验证，无真实模型调用。
 
 2026-11-08 汇总：31–35 的剩余前端事项与唯一执行 checkbox 已转入[工单 36](36-toge-backend-followup.md)。本单保留既有接线证据，不授权接管其他后端范围。
+
+2026-11-08 工单 36 前端回执：Synth 音量/零偏移提示、Groove 制作与 Synth/WAV/PV、表现规划状态和 AI HTML PV 已接；当前入口见[接口清单](../docs/INTERFACES.md)，本轮 Mock/HTTP 夹具验证及真实未验边界见[日志](../docs/iteration-log.md#frontend-interface-36)。本单既有历史测试与缺口描述保留其日期，不再代表当前未接状态。

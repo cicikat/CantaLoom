@@ -48,3 +48,6 @@ notePerformance(
 - 本地分支 feature/backend-phoneme-explicit-zero，未推送。结果统一见[迭代日志](../../docs/iteration-log.md#phoneme-explicit-zero-32)。
 
 2026-11-08 前端汇总：本单剩余 Toge 接线/提示清理及页面验证统一在[工单 36](../36-toge-backend-followup.md)维护 checkbox；沿用原交接 ID，本文保留后端历史证据，不复制前端清单。
+
+
+2026-11-08 工单 36 前端回执：本单对应前端接线已完成，实际内容、Mock/HTTP 夹具验证及本轮未验边界见[工单 36](../36-toge-backend-followup.md)、[迭代日志](../../docs/iteration-log.md#frontend-interface-36)。不重做本单后端算法，不把本轮前端测试算作真实引擎/MP4或共同听感通过；现场真实页面与听感/观感继续[工单 6](../6-joint-acceptance.md)。

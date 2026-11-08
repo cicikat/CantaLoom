@@ -1,18 +1,18 @@
 import {useEffect,useRef,useState} from 'react';
 import {api,ApiError} from '../api/client';
 import type {SongProject} from '../model';
-import type {FreeInput} from '../../shared/contracts/free-composition.mjs';
-import type {ProductionJob} from '../../shared/contracts/production.mjs';
+import type {ProductionJob,ProductionInput} from '../../shared/contracts/production.mjs';
+import type {GrooveSettings} from '../../shared/contracts/groove.mjs';
 import {productionInput,productionProject} from './production-result';
 
 type Phase='idle'|'running'|'failed'|'ready'|'cancelled';
 export interface ProductionView {phase:Phase;job?:ProductionJob;message:string}
-export function useProduction(onApply:(project:SongProject)=>void,onStart:()=>void,initialIntent=''){
+export function useProduction(onApply:(project:SongProject)=>void,onStart:()=>void,initialIntent='',grooveSettings?:GrooveSettings){
  const [intent,setIntent]=useState(initialIntent),[lyrics,setLyrics]=useState(''),[bpm,setBpm]=useState(''),[targetSeconds,setTargetSeconds]=useState(25);
  const [view,setView]=useState<ProductionView>({phase:'idle',message:'写下主题，或带上你自己的歌词。'});
  const work=useRef({token:0,active:false,controller:new AbortController(),phase:'idle' as Phase});
  const callbacks=useRef({onApply,onStart});callbacks.current={onApply,onStart};
- const last=useRef<{input:FreeInput;job:ProductionJob}|undefined>(undefined);
+ const last=useRef<{input:ProductionInput;job:ProductionJob}|undefined>(undefined);
  const mounted=useRef(true);
  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;work.current.token++;work.current.active=false;work.current.controller.abort()}},[]);
  function publish(next:ProductionView){work.current.phase=next.phase;if(mounted.current)setView(next)}
@@ -23,8 +23,8 @@ export function useProduction(onApply:(project:SongProject)=>void,onStart:()=>vo
  function edit<T>(setter:(value:T)=>void,value:T){invalidate();setter(value)}
  async function execute(retry=false){
   if(work.current.active)return;
-  let input:FreeInput;
-  try{input=retry&&last.current?last.current.input:productionInput(intent,lyrics,bpm,targetSeconds)}
+  let input:ProductionInput;
+  try{input=retry&&last.current?last.current.input:productionInput(intent,lyrics,bpm,targetSeconds,grooveSettings)}
   catch(e){publish({phase:'failed',message:(e as Error).message});return}
   const previous=retry?last.current:undefined;
   const token=++work.current.token;work.current.active=true;work.current.controller=new AbortController();
@@ -57,7 +57,7 @@ export function useProduction(onApply:(project:SongProject)=>void,onStart:()=>vo
    last.current=undefined;publish({phase:'failed',message:message.includes('当前工程已保留')?message:`${message} 当前工程已保留。`});
   }finally{if(valid())work.current.active=false}
  }
- const retryable=view.phase==='failed'&&view.job?.stage==='singing'&&!!view.job.phraseId&&!!last.current;
+ const retryable=view.phase==='failed'&&view.job?.errorCode!=='PERFORMANCE_PLANNING_FAILED'&&view.job?.stage==='singing'&&!!view.job.phraseId&&!!last.current;
  return {intent,lyrics,bpm,targetSeconds,view,retryable,
   setIntent:(value:string)=>edit(setIntent,value),setLyrics:(value:string)=>edit(setLyrics,value),setBpm:(value:string)=>edit(setBpm,value),setTargetSeconds:(value:number)=>edit(setTargetSeconds,value),
   start:()=>execute(),retry:()=>execute(true),invalidate,

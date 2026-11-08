@@ -1,6 +1,7 @@
 import {pinyin} from 'pinyin-pro';
 import * as c from '../../shared/contracts/index.mjs';
 import {createMockFreeRoutes,type MockProductionScenario} from './mock-free';
+import {createMockPvRoutes,type MockPvScenario} from './mock-pv';
 
 // Fixed plan, regardless of user idea: a UI fixture, never model inference.
 const voice={available:true,id:'qixuan',version:'2.7.0',providerId:'openutau-diffsinger',label:'MOCK 测试声库（测试音，不是歌声）',engineVersion:'mock-fixture-v1',parameters:{steps:20,depth:.6},runners:['CPU','DirectML'],capabilities:{curves:{brec:true,voic:true,genc:true,velc:true,pexp:true,shfc:true,ene:false,tenc:false},phonemeOverride:{offset:true,replace:true},unsupported:['ene','tenc','voiceColor','phonemeEnvelope']},mock:true} as const;
@@ -10,13 +11,15 @@ async function audioKey(seconds:number,seed:string){const hash=await crypto.subt
 function wav(path:string){const key=c.audioFileSchema.parse(path.split('/').at(-1)).slice(0,-4),seconds=Math.min(35,Math.max(.1,parseInt(key.slice(0,8),16)/1000));const count=Math.ceil(seconds*24000),buffer=new ArrayBuffer(44+count*2),v=new DataView(buffer);const str=(at:number,s:string)=>[...s].forEach((ch,i)=>v.setUint8(at+i,ch.charCodeAt(0)));str(0,'RIFF');v.setUint32(4,buffer.byteLength-8,true);str(8,'WAVE');str(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,24000,true);v.setUint32(28,48000,true);v.setUint16(32,2,true);v.setUint16(34,16,true);str(36,'data');v.setUint32(40,count*2,true);const freq=220+parseInt(key.slice(8,10),16);for(let i=0;i<count;i++)v.setInt16(44+i*2,Math.sin(i*2*Math.PI*freq/24000)*1600*Math.min(1,i/240,(count-i)/240),true);return buffer}
 const media=new Map<string,string>();
 export function mockMediaUrl(path:string){if(!media.has(path))media.set(path,URL.createObjectURL(new Blob([wav(path)],{type:'audio/wav'})));return media.get(path)!}
-export function createMockRequest(scenario:MockProductionScenario='success'):typeof fetch {
+export function createMockRequest(scenario:MockProductionScenario='success',pvScenario:MockPvScenario='success'):typeof fetch {
  const freeRoutes=createMockFreeRoutes(audioKey,scenario);
+ const pvRoutes=createMockPvRoutes(pvScenario);
  return async(input,init)=>{
  const path=new URL(String(input),'http://mock.local').pathname;
  await new Promise<void>((resolve,reject)=>{if(init?.signal?.aborted)return reject(new DOMException('Aborted','AbortError'));const done=()=>{init?.signal?.removeEventListener('abort',abort);resolve()};const timer=setTimeout(done,150);const abort=()=>{clearTimeout(timer);reject(new DOMException('Aborted','AbortError'))};init?.signal?.addEventListener('abort',abort,{once:true})});
  const body=init?.body?JSON.parse(String(init.body)):undefined;
  const free=await freeRoutes(path,init?.method??'GET',body);if(free)return free;
+ const pv=await pvRoutes(path,body);if(pv)return pv;
  if(path==='/api/health')return Response.json({llm:true,llmStatus:'unverified',ffmpeg:true,vocal:'mock-test-tone',images:'procedural',mock:true});
  if(path==='/api/plan')return Response.json({title:'MOCK 固定测试作品',mood:'MOCK 明亮夹具',lyrics:['测试第一句歌词','测试第二句歌词','测试第三句歌词','测试第四句歌词'],songPlan:{key:{tonic:'C',mode:'major'},emotion:'bright',intensity:.6,chordProgression:[1,5,6,4],drumDensity:'steady',melodyContour:'arch',melodyRange:'medium',sectionEnergy:{intro:.4,verse:.6,chorus:.8,outro:.4},reasons:[{decision:'key',reason:'MOCK 固定测试数据，未调用 LLM。'}]},source:'llm',model:'mock-fixture-no-inference',mock:true});
  if(path==='/api/engines')return Response.json({instruments:{installed:true,ready:true,version:'MOCK 测试音源',soundfonts:['MOCK-test.sf2']},singing:'MOCK 测试数据，不依赖本地引擎',mock:true});
@@ -35,7 +38,7 @@ export function createMockRequest(scenario:MockProductionScenario='success'):typ
   // Minimal MIDI fixture (empty track), deliberately never represented as a real arrangement.
   return new Response(new Uint8Array([77,84,104,100,0,0,0,6,0,0,0,1,1,224,77,84,114,107,0,0,0,4,0,255,47,0]),{headers:{'Content-Type':'audio/midi'}});
  }
- if(path==='/api/export'){const p=c.exportInput.parse(body);return Response.json({mock:true,state:'succeeded',message:'MOCK 导出交互完成；没有运行 FFmpeg，没有生成 MP4',title:p.title,duration:p.duration})}
+ if(path==='/api/export'){const p=c.exportInput.parse(body);return Response.json({mock:true,state:'succeeded',message:'MOCK 导出交互完成；没有运行 FFmpeg，没有生成 MP4',title:p.title,duration:p.duration,visualMode:p.visualMode??'canvas',...(p.visualMode==='html'?{inputFingerprint:p.inputFingerprint}:{})})}
  // Closed fallback: Mock mode must never contact engines or administration.
  return Response.json({error:'MOCK 未定义该接口：'+path},{status:404});
  };

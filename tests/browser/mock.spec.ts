@@ -862,7 +862,7 @@ test('C mix controls forward all preview stems and persist real PCM changes thro
  test.setTimeout(90000);
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await openPiano(page);
  const mix=page.locator('.mix-panel');await mix.locator(':scope > summary').click();
- await expect(mix.getByLabel('伴奏音量',{exact:true})).toBeDisabled();await expect(mix).toContainText('当前浏览器伴奏暂不支持音量调整');
+ await expect(mix.getByLabel('伴奏音量',{exact:true})).toBeEnabled();await expect(mix).not.toContainText('当前浏览器伴奏暂不支持音量调整');
  await mix.getByLabel('人声音量',{exact:true}).fill('0');await mix.getByLabel('人声混响',{exact:true}).fill('0.12');
  await page.evaluate(async()=>{
   // @ts-expect-error Vite browser module

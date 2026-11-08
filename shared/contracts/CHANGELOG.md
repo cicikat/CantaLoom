@@ -1,5 +1,15 @@
 # 公共契约变更
 
+<a id="frontend-interface-36"></a>
+
+## 工单 36 · 剩余前端接线（2026-11-08，toge 已确认限定范围）
+
+- 确认依据：本轮接口核对列出 Groove、Synth 音量、制作追溯、HTML PV 和过期提示后，toge 明确要求「可以，直接一口气做完」。Owner Toge；复用后端既有契约，不改服务器、音乐算法或模型路由。
+- Client/startProduction 与 Hook/Mock 改用既有 ProductionInput；Groove 仅存三参数，compose 输入剥离 Groove；Synth 复用 projectInstrumentInput/performedNotes，关闭保持旧事件，保护轨旁路，不改谱面。
+- SongProject 新增可选 pvVisualMode='canvas'|'html'、pvVisual={project:PvProject,result:PvResult}。严格校验设计/快照/来源，指纹生成与预览/导出异步核对；保留过期设计但阻止 HTML 使用。旧 v1 无字段不迁移；追溯不另外持久化。真实模式拒绝 Mock 视觉资产。
+- Client 增加 pvStatus/pvDesign，exportVideo 接受既有 VideoExportInput，旧 Canvas/Blob/响度回调兼容；错误码保留。HTML 上传仅最小快照，复用 pvDocument、隔离 iframe 和同一 renderAudio；不自动调用视觉模型、不自动回退。
+- Mock 独立设计/状态及失败夹具、表现规划五态与可选 trace；页面/单元负责人 Toge，真实资源/人工验收交工单 6。验证证据写入工单 36 与迭代日志。
+
 ## 工单 35 · AI HTML PV（2026-11-08，限定范围已确认）
 
 - Owner Blacktea；本会话明确确认 shared PV 快照/设计/响应、纯 HTML 时间轴、独立 pv_design 与后台任务配置、既有 export HTML 分支。未授权修改 SongProject/Client/Mock/React/Hook/CSS，后续接入 Owner Toge。

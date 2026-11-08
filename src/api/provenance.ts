@@ -3,6 +3,7 @@ export function hasMockData(value:unknown):boolean {
  if(!value||typeof value!=='object')return false;
  const v=value as Record<string,unknown>;
  if(v.mock===true)return true;
+ if(v.pvVisual&&hasMockData((v.pvVisual as Record<string,unknown>).result))return true;
  for(const key of ['project','composition','draft','melodyDraft','planning'])if(hasMockData(v[key]))return true;
  for(const key of ['vocalAssets','vocalHistory']){
   const assets=v[key];

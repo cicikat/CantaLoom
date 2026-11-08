@@ -1,3 +1,7 @@
+import {usePv} from './hooks/usePv';
+import {HtmlPvPreview} from './components/HtmlPvPreview';
+import {PvDesignControls} from './components/PvDesignControls';
+import {singingCredit} from './features/pv/project';
 import {useEffect,useRef,useState,type CSSProperties} from 'react';
 import {flushSync} from 'react-dom';
 import {useStudio} from './hooks/useStudio';
@@ -23,6 +27,7 @@ const clock=(t:number)=>`${Math.floor(t/60).toString().padStart(2,'0')}:${Math.f
 export default function App(){
  const s=useStudio(),vocalStyle=useVocalStyle(s),{p,production,playing,time,selected,length}=s;
  const busy=s.busy||(vocalStyle.working?'切换风格并重新演唱…':'');
+ const pv=usePv(p,s.change,!!busy||production.view.phase==='running');
  const external=p.vocalMode==='external'||p.mode==='free';
  const vocalStyles=[{name:'自然',preset:'natural'},{name:'轻柔',preset:'soft'},{name:'强烈',preset:'strong'}] as const;
  const uniformPreset=p.lyrics.length&&p.lyrics.every(l=>(l.performance?.preset??'natural')===(p.lyrics[0].performance?.preset??'natural'))?(p.lyrics[0].performance?.preset??'natural'):undefined;
@@ -82,13 +87,13 @@ export default function App(){
     <div className="mv-inner">
      <header className="mv-head"><span className="mv-kicker">CHAPTER 03 · 🎬 LYRIC VIDEO</span><h2>好啦，给这首歌<br/>加个 <em>MV！</em></h2><p>歌词字幕逐句出现 · 音乐与画面同步</p></header>
      <div className="mv-stage">
-      <div className="mv-film"><span className="mv-sticker" aria-hidden="true">● REC</span><div className="mv-screen"><Landscape project={p} time={time}/></div></div>
+      <div className="mv-film"><span className="mv-sticker" aria-hidden="true">● REC</span><div className="mv-screen">{p.pvVisualMode==='html'?(pv.current?<HtmlPvPreview value={pv.current} time={time} credit={singingCredit(p)}/>:<p role="status">{pv.error||'正在核对 AI 画面…'} 请重新生成或选择 Canvas。</p>):<Landscape project={p} time={time}/>}</div></div>
       <div className="mv-bar"><button id="pvplay" className="mv-play" disabled={!!busy} onClick={()=>playing?s.stop():void s.play()}>{playing?'Ⅱ 暂停放映':'▶ 播放音乐与字幕'}</button><span className="mv-time">{clock(time)} / {clock(length)}</span><input type="range" aria-label="PV 进度" min={0} max={length} step={.05} value={Math.min(time,length)} onChange={e=>s.seek(Number(e.target.value))}/></div>
      </div>
      <div className="mv-options">
-      <p className="mv-options-title">原创程序化画面 · 同步字幕</p>
-      <div className="mv-option-row"><label>字幕样式 <select aria-label="字幕样式" value={p.subtitleStyle} onChange={e=>s.mutate('调整字幕样式',next=>{next.subtitleStyle=e.target.value as SubtitleStyle})}><option value="cinema">电影</option><option value="poster">海报</option><option value="minimal">简约</option></select></label><button className="minibtn" onClick={()=>s.mutate('替换画面配色',next=>{next.visualScenes=next.visualScenes.map(v=>({...v,theme:(v.theme+1)%4}))})}>换一组画面色彩</button></div>
-      <button className="btn mv-export" disabled={!!busy||(!api.mock&&!s.health.ffmpeg)} onClick={()=>void s.exportPV()}>{api.mock?'模拟导出 MP4':'导出 MP4'}</button>
+      <p className="mv-options-title">{p.pvVisualMode==='html'?'AI HTML 动态画面 · 同步字幕':'原创程序化画面 · 同步字幕'}</p><PvDesignControls pv={pv} project={p} disabled={!!busy||production.view.phase==='running'}/>
+      <div className="mv-option-row"><label>字幕样式 <select aria-label="字幕样式" disabled={p.pvVisualMode==='html'} value={p.subtitleStyle} onChange={e=>s.mutate('调整字幕样式',next=>{next.subtitleStyle=e.target.value as SubtitleStyle})}><option value="cinema">电影</option><option value="poster">海报</option><option value="minimal">简约</option></select></label><button className="minibtn" disabled={p.pvVisualMode==='html'} onClick={()=>s.mutate('替换画面配色',next=>{next.visualScenes=next.visualScenes.map(v=>({...v,theme:(v.theme+1)%4}))})}>换一组画面色彩</button></div>
+      <button className="btn mv-export" disabled={!!busy||(!api.mock&&!s.health.ffmpeg)||(p.pvVisualMode==='html'&&!pv.current)} onClick={()=>void s.exportPV()}>{api.mock?'模拟导出 MP4':'导出 MP4'}</button>
       <ExportLoudnessReport report={s.exportReport}/><p className="export-status">{api.mock?'MOCK：下载 JSON 测试回执，未运行 FFmpeg，不生成 MP4。':s.health.ffmpeg?'本机 FFmpeg 已配置；导出使用当前工程音轨。':'MP4 需要本机 FFmpeg；仍可导出 WAV 与工程。'}</p>
      </div>
     </div>
@@ -97,7 +102,7 @@ export default function App(){
   </main>
   <footer className="footer"><span>LOOP! MUSIC PLAYGROUND / CantaLoom</span><span>BUILT FOR LITTLE IDEAS, 2026</span></footer>
 
-  <dialog ref={exportRef} className="export-modal" aria-label="导出作品" onCancel={()=>s.setExportOpen(false)} onClose={()=>{s.setExportOpen(false);exportTrigger.current?.focus()}} onClick={e=>{if(e.target===e.currentTarget)s.setExportOpen(false)}}><div className="pvtop"><h2>把声音，带走。</h2><button aria-label="关闭导出" onClick={()=>s.setExportOpen(false)}>×</button></div><p>工程只保存在当前浏览器。导出 JSON 可在以后恢复。</p><button className="btn" disabled={!!busy} onClick={()=>void s.exportWav()}>混音音频 · {api.mock?'MOCK 测试音 ':''}WAV ↓</button><button className="btn" disabled={!!busy||(!api.mock&&!s.health.ffmpeg)} onClick={()=>void s.exportPV()}>歌词视频 PV · {api.mock?'MOCK JSON 回执':'MP4'} ↓</button><button className="btn" onClick={s.saveProject}>完整工程 · JSON ↓</button><button className="minibtn" onClick={()=>s.importRef.current?.click()}>导入工程</button><button className="minibtn" onClick={()=>{if(window.confirm('新建会替换当前浏览器存档，请先导出需要保留的工程。')){setEditor(undefined);s.newProject();go('compose')}}}>新建作品</button><p>{s.llmLabel} · {api.mock?'测试音，未运行歌声模型':p.vocalMode==='external'?'当前有效演唱':'元音演示，不会读出中文歌词'}</p><ExportLoudnessReport report={s.exportReport}/><ArtifactDownloads project={p} busy={!!busy}/><p className="dialog-status" role="status">{busy||s.toast}</p></dialog>
+  <dialog ref={exportRef} className="export-modal" aria-label="导出作品" onCancel={()=>s.setExportOpen(false)} onClose={()=>{s.setExportOpen(false);exportTrigger.current?.focus()}} onClick={e=>{if(e.target===e.currentTarget)s.setExportOpen(false)}}><div className="pvtop"><h2>把声音，带走。</h2><button aria-label="关闭导出" onClick={()=>s.setExportOpen(false)}>×</button></div><p>工程只保存在当前浏览器。导出 JSON 可在以后恢复。</p><button className="btn" disabled={!!busy} onClick={()=>void s.exportWav()}>混音音频 · {api.mock?'MOCK 测试音 ':''}WAV ↓</button><button className="btn" disabled={!!busy||(!api.mock&&!s.health.ffmpeg)||(p.pvVisualMode==='html'&&!pv.current)} onClick={()=>void s.exportPV()}>歌词视频 PV · {api.mock?'MOCK JSON 回执':'MP4'} ↓</button><button className="btn" onClick={s.saveProject}>完整工程 · JSON ↓</button><button className="minibtn" onClick={()=>s.importRef.current?.click()}>导入工程</button><button className="minibtn" onClick={()=>{if(window.confirm('新建会替换当前浏览器存档，请先导出需要保留的工程。')){setEditor(undefined);s.newProject();go('compose')}}}>新建作品</button><p>{s.llmLabel} · {api.mock?'测试音，未运行歌声模型':p.vocalMode==='external'?'当前有效演唱':'元音演示，不会读出中文歌词'}</p><ExportLoudnessReport report={s.exportReport}/><ArtifactDownloads project={p} busy={!!busy}/><p className="dialog-status" role="status">{busy||s.toast}</p></dialog>
   <input type="file" ref={s.importRef} accept=".json" hidden onChange={e=>void s.importProject(e.target.files?.[0])}/>
   {s.toast&&!s.exportOpen&&<div className="toast" role="status">{s.toast}<button aria-label="关闭提示" onClick={()=>s.setToast('')}>×</button></div>}{busy&&!s.exportOpen&&<div className="busy-banner" role="status">{busy}{busy.includes('PV')&&api.mock?' · MOCK 导出状态测试':''}</div>}
  </div>;

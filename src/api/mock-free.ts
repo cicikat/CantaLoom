@@ -1,6 +1,6 @@
 import {freeInputSchema,freePlanSchema,freeResultSchema,type FreeInput,type FreeResult} from '../../shared/contracts/free-composition.mjs';
 import {melodyRequestSchema,melodyResponseSchema,type MelodyRequest} from '../../shared/contracts/melody.mjs';
-import {productionJobSchema,type ProductionJob} from '../../shared/contracts/production.mjs';
+import {productionJobSchema,productionInputSchema,type ProductionJob,type ProductionInput} from '../../shared/contracts/production.mjs';
 import {freeTimeline} from '../../shared/free-timeline.mjs';
 import {localMelody,validateMelody} from '../../shared/melody.mjs';
 import {buildFreeScore} from '../../shared/free-score.mjs';
@@ -34,8 +34,8 @@ export function mockComposition(raw:FreeInput):FreeResult {
  return freeResultSchema.parse({mock:true,requestId:uid(),source:'llm',model,input,plan,sections:timeline.sections,draft:response.draft});
 }
 
-export type MockProductionScenario='success'|'planning-failure'|'singing-failure'|'lost';
-interface FixtureJob {job:ProductionJob;input:FreeInput;scenario:MockProductionScenario;step:number;project?:SongProject;composition?:FreeResult}
+export type MockProductionScenario='success'|'planning-failure'|'singing-failure'|'lost'|'performance-disabled'|'performance-skipped'|'performance-failure'|'performance-no-trace'|'performance-success';
+interface FixtureJob {job:ProductionJob;input:ProductionInput;scenario:MockProductionScenario;step:number;project?:SongProject;composition?:FreeResult}
 const stages=['checking','planning','melody','validated','instruments','singing'] as const;
 
 // An isolated route factory lets tests select failures without adding public API fields.
@@ -64,7 +64,7 @@ export function createMockFreeRoutes(audioKey:(seconds:number,seed:string)=>Prom
    if(path==='/api/melody'&&method==='POST')return Response.json(mockMelody(melodyRequestSchema.parse(body)));
    if(path==='/api/production'&&method==='POST'){
     if(jobs.size>=30){const old=[...jobs].find(([,f])=>f.job.state!=='running');if(!old)return Response.json({error:'MOCK 制作任务已满'},{status:409});jobs.delete(old[0])}
-    const input=freeInputSchema.parse(body),job:ProductionJob={mock:true,id:uid(),state:'running',stage:'queued',completedPhrases:0};
+    const input=productionInputSchema.parse(body),job:ProductionJob={mock:true,id:uid(),state:'running',stage:'queued',completedPhrases:0};
     const f={job,input,scenario,step:0};jobs.set(job.id,f);return new Response(await snapshot(f).text(),{status:202,headers:{'Content-Type':'application/json'}});
    }
    const match=path.match(/^\/api\/production\/([^/]+)(?:\/retry\/([^/]+))?$/);
@@ -79,8 +79,14 @@ export function createMockFreeRoutes(audioKey:(seconds:number,seed:string)=>Prom
    if(f.job.state!=='running')return snapshot(f);
    f.job.stage=stages[Math.min(f.step++,stages.length-1)];
    if(f.job.stage==='planning'&&f.scenario==='planning-failure'){f.job.state='failed';f.job.error='MOCK 规划失败；原工程保留，请重新发起制作'}
+   if(f.job.stage==='planning'&&f.scenario.startsWith('performance-'))f.job.performancePlanning={status:'running'};
+   if(f.job.stage==='validated'&&f.scenario.startsWith('performance-')){
+    const status=f.scenario==='performance-disabled'?'disabled':f.scenario==='performance-skipped'?'skipped':f.scenario==='performance-failure'?'failed':'succeeded';
+    f.job.performancePlanning={status,...(f.scenario==='performance-success'?{trace:{provider:'MOCK fixture',model:'mock-no-inference',promptVersion:'performance_planning/mock/0000000000000000',attempts:1,promptTokens:12,completionTokens:8,milliseconds:20,cost:null,costCurrency:null}}:{})};
+    if(status==='failed'){f.job.state='failed';f.job.errorCode='PERFORMANCE_PLANNING_FAILED';f.job.error='MOCK 演唱表现规划失败';return snapshot(f)}
+   }
    if(f.job.stage==='validated'){
-    try{f.composition=mockComposition(f.input);f.project=validateProject(buildFreeScore(f.composition,uid))}
+    try{const {grooveSettings,...free}=f.input;f.composition=mockComposition(free);f.project=validateProject(buildFreeScore(f.composition,uid));if(grooveSettings)f.project.grooveSettings=structuredClone(grooveSettings)}
     catch{f.job.state='failed';f.job.error='MOCK 夹具无法通过音乐校验；请调整歌词后重新发起制作';return snapshot(f)}
     // Browser synth accompaniment is the existing local renderer; vocals are explicit test tones.
     f.project.instrumentMode='synth';

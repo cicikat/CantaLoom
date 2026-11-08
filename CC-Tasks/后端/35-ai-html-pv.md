@@ -160,3 +160,6 @@ P0（`be95902`）：`CC-Tasks/后端/35-ai-html-pv.md`、`CROSS-END-HANDOFF.md`�
 P1/交接（随本轮后续提交）：`CC-Tasks/后端/35-ai-html-pv.md`、`CROSS-END-HANDOFF.md`、`README.md`、`docs/ARCHITECTURE.md`、`docs/ENGINES.md`、`docs/INTERFACES.md`、`docs/iteration-log.md`、`scripts/verify-html-pv.mjs`、`server/admin-config.mjs`、`server/admin.mjs`、`server/routes/export.mjs`、`server/services/export.mjs`、`server/services/loudness.mjs`、`server/services/pv-render.mjs`、`shared/contracts/CHANGELOG.md`、`shared/contracts/index.d.mts`、`shared/contracts/index.mjs`、`tests/pv.test.mjs`、`scripts/check-html-pv.mjs`、`shared/pv-render.mjs`、`shared/pv-render.d.mts`、`tests/browser/pv.spec.js`。
 
 2026-11-08 前端汇总：Toge 的统一执行入口为[工单 36](../36-toge-backend-followup.md)，沿用 35-ai-html-pv；本单范围/阶段文件清单与真实成片证据保留，不因文档归并宣称页面完成。
+
+
+2026-11-08 工单 36 前端回执：本单对应前端接线已完成，实际内容、Mock/HTTP 夹具验证及本轮未验边界见[工单 36](../36-toge-backend-followup.md)、[迭代日志](../../docs/iteration-log.md#frontend-interface-36)。不重做本单后端算法，不把本轮前端测试算作真实引擎/MP4或共同听感通过；现场真实页面与听感/观感继续[工单 6](../6-joint-acceptance.md)。

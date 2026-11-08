@@ -16,13 +16,13 @@
 
 | ID | 来源 | 发起方 → 接收方 | 状态 |
 |---|---|---|---|
-| [35-ai-html-pv](#35-ai-html-pv) | 工单 35 | Blacktea → Toge | 后端/动态MP4已交付；页面/共验待接 |
-| [27-phoneme-zero](#27-phoneme-zero) | 工单 27 / 15 P1 | Blacktea → Toge | 核心已修复；待 Toge 清理旧限制提示 |
+| [35-ai-html-pv](#35-ai-html-pv) | 工单 35 | Blacktea → Toge | 前端已接；真实页面/共同观感待验 |
+| [27-phoneme-zero](#27-phoneme-zero) | 工单 27 / 15 P1 | Blacktea → Toge | 前端已完成（2026-11-08，证据见回执） |
 | [24-test-review](#24-test-review) | 工单 24 | Blacktea → Toge | 测试审计交付；待浏览器测试语义 review |
-| [5-C-synth-mix](#5-c-synth-mix) | 工单 5 C | Toge → Blacktea | 核心已修复；待 Toge 解禁 Synth 伴奏控件 |
-| [20-groove-render](#20-groove-render) | 工单 20 | Blacktea → Toge | 核心/API 已实现；页面与人工听评待安排 |
+| [5-C-synth-mix](#5-c-synth-mix) | 工单 5 C | Toge → Blacktea | 前端已完成（2026-11-08，证据见回执） |
+| [20-groove-render](#20-groove-render) | 工单 20 | Blacktea → Toge | 前端已接；真实页面/人工听评待验 |
 | [15-P2A-contracts](#15-p2a-contracts) | 工单 15 P2-A | Blacktea → Toge | 等待本任务共享范围确认 |
-| [15-P2B-routing](#15-p2b-routing) | 工单 15 P2-B | Blacktea → Toge | 后端已推送；等待接入 review 与安排 |
+| [15-P2B-routing](#15-p2b-routing) | 工单 15 P2-B | Blacktea → Toge | 工单34前端已回执；其余历史review保留 |
 | [15-P3-mixgraph](#15-p3-mixgraph) | 工单 15 P3 | Blacktea → Toge | 等待共享契约及渲染归属确认 |
 | [21-harmony-contracts](#21-harmony-contracts) | 工单 21 | Blacktea → Toge | 等待和声/拍号契约提案评审 |
 
@@ -31,6 +31,8 @@
 <a id="27-phoneme-zero"></a>
 
 ### 27-phoneme-zero · 核心已修复，待清理前端旧限制说明
+
+- **2026-11-08 工单 36 回执：前端已完成，短暂保留供历史引用核对。** 提示清理、0/空值及保存/重开/实际渲染请求已通过页面验证；该前端交接已完成。 证据：[工单 36](CC-Tasks/36-toge-backend-followup.md)、[日志](docs/iteration-log.md#frontend-interface-36)、[共同验收](CC-Tasks/6-joint-acceptance.md)。以下为原交付时记录，其「待接/未推送」不代表当前状态。
 
 - 2026-11-08 接收方执行入口：[工单36 · A1](CC-Tasks/36-toge-backend-followup.md#quick-fixes)。本轮31–35的前端剩余checkbox统一在36；用户已授权31–36统一推送PR合并，接收方开工需同步main核验d550b9c；下文“未推送”为历史阶段状态。完成后按36回执再关闭本ID。
 
@@ -51,6 +53,8 @@
 <a id="5-c-synth-mix"></a>
 
 ### 5-C-synth-mix · 核心已修复，待前端解禁与回归
+
+- **2026-11-08 工单 36 回执：前端已完成，短暂保留供历史引用核对。** Synth 控件已解禁，busy/enabled/元音人声保护保留；页面/实际 PCM/stem/mute/单轨/保存/WAV/PV 输入已验证，该前端交接已完成。 证据：[工单 36](CC-Tasks/36-toge-backend-followup.md)、[日志](docs/iteration-log.md#frontend-interface-36)、[共同验收](CC-Tasks/6-joint-acceptance.md)。以下为原交付时记录，其「待接/未推送」不代表当前状态。
 
 - 2026-11-08 接收方执行入口：[工单36 · A2/A3](CC-Tasks/36-toge-backend-followup.md#quick-fixes)。本轮31–35的前端剩余checkbox统一在36；用户已授权31–36统一推送PR合并，接收方开工需同步main核验d550b9c；下文“未推送”为历史阶段状态。完成后按36回执再关闭本ID。
 
@@ -73,9 +77,11 @@
 
 ### 15-P2B-routing · 模型路由后端交付
 
+- **2026-11-08 工单 36 回执：工单 34 前端已回执；其他历史 review 不扩权。** 表现规划五态/错误/可选 trace 与 Mock 已接，规划失败不绕过，费用未知如实显示；仅回执工单 34/36 范围，其他历史路由提案未接管。 证据：[工单 36](CC-Tasks/36-toge-backend-followup.md)、[日志](docs/iteration-log.md#frontend-interface-36)、[共同验收](CC-Tasks/6-joint-acceptance.md)。以下为原交付时记录，其「待接/未推送」不代表当前状态。
+
 - 2026-11-08 接收方执行入口：[工单36 · C](CC-Tasks/36-toge-backend-followup.md#planning-trace)。本轮31–35的前端剩余checkbox统一在36；用户已授权31–36统一推送PR合并，接收方开工需同步main核验d550b9c；下文“未推送”为历史阶段状态。完成后按36回执再关闭本ID。
 
-- 更新：2026-11-07；来源：[工单 15](CC-Tasks/后端/15-p0.md) P2-B；Blacktea → Toge；状态：后端已推送；等待接入 review 与安排。
+- 更新：2026-11-07；来源：[工单 15](CC-Tasks/后端/15-p0.md) P2-B；Blacktea → Toge；状态：工单34前端已回执；其余历史review保留。
 - 已交付：已推送分支 `feature/backend-p1-phoneme` 的 `9718420` 提供 lyrics_planning / melody_composition / performance_planning，Admin 的 `LLM_ROUTES` 配置与 `GET /api/admin/llm` 脱敏追溯。未新增公共创作端点或共享工程字段；该实现通过 [PR #9](https://github.com/cicikat/CantaLoom/pull/9) 交付，页面接入仍需 Toge review。
 - 2026-11-08 工单 34 续接：[制作追溯契约](CC-Tasks/已完成/34-production-trace-contract.md)后端/共享响应已完成；本会话用户确认限定范围。GET/retry 白名单序列化，新增可选 performancePlanning 与 PERFORMANCE_PLANNING_FAILED；现有 Client 共享 Zod 保留字段。分支 feature/backend-production-trace，本地提交，未推送；实际回归与夹具边界见[日志](docs/iteration-log.md#production-trace-34)。
 - Toge 下一步：按[契约与夹具](docs/ARCHITECTURE.md#production)决定轻量状态/错误展示并补 Mock；disabled/skipped/无 trace 不伪装 LLM 调用，费用 null 显示未知，失败仍不进入演唱。没有新增 URL、路由设置或永久工程追溯；本条仍保留等前端 review/接线回执。
@@ -106,6 +112,8 @@
 
 ### 20-groove-render · 可选器乐渲染律动
 
+- **2026-11-08 工单 36 回执：前端已接；真实共同听评待工单 6。** Client/Hook/工程/Mock/创作设置/Synth 接线已完成，关闭恢复/保护/稳定 PCM/WAV/PV 已验；剩余仅真实资源页面与共同听评，不再待前端实施。 证据：[工单 36](CC-Tasks/36-toge-backend-followup.md)、[日志](docs/iteration-log.md#frontend-interface-36)、[共同验收](CC-Tasks/6-joint-acceptance.md)。以下为原交付时记录，其「待接/未推送」不代表当前状态。
+
 - 2026-11-08 接收方执行入口：[工单36 · B](CC-Tasks/36-toge-backend-followup.md#groove-31)。本轮31–35的前端剩余checkbox统一在36；用户已授权31–36统一推送PR合并，接收方开工需同步main核验d550b9c；下文“未推送”为历史阶段状态。完成后按36回执再关闭本ID。
 
 - 更新：2026-11-07；来源：[工单 20](CC-Tasks/后端/20-groove-and-humanization.md)；Blacktea → Toge；状态：音乐核心/API 已实现，页面/Mock 与人工听评待安排。
@@ -119,6 +127,8 @@
 <a id="35-ai-html-pv"></a>
 
 ### 35-ai-html-pv · AI HTML PV 后端/共享渲染已交付，页面与共验待接
+
+- **2026-11-08 工单 36 回执：前端已接；真实页面与共同观感待工单 6。** 工程/Client/Mock/LOOP! 可选入口/隔离预览/seek/指纹失效/导出已接，Mock 与 HTTP 夹具通过；真实模型/HTML MP4/字体/听感观感仍待工单 6。 证据：[工单 36](CC-Tasks/36-toge-backend-followup.md)、[日志](docs/iteration-log.md#frontend-interface-36)、[共同验收](CC-Tasks/6-joint-acceptance.md)。以下为原交付时记录，其「待接/未推送」不代表当前状态。
 
 - 2026-11-08 接收方执行入口：[工单36 · D/E](CC-Tasks/36-toge-backend-followup.md#html-pv)。本轮31–35的前端剩余checkbox统一在36；用户已授权31–36统一推送PR合并，接收方开工需同步main核验d550b9c；下文“未推送”为历史阶段状态。完成后按36回执再关闭本ID。
 

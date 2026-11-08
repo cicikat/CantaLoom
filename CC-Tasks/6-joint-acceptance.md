@@ -22,3 +22,10 @@ Toge 操作接线后的 LOOP! 原型页面并核对交互；Blacktea 提供资�
 ## 完成与交接
 
 完成一项后立即勾选本工单；在 [迭代日志](../docs/iteration-log.md) 顶部记录日期、实际结果、验证边界、工单及相关文档地址，再按范围本地提交。推送和 PR 按 [团队工作流](../docs/TEAM_WORKFLOW.md)及当前任务授权执行，不自动合并 main。
+
+
+## 2026-11-08 · 工单 36 前端接线交接
+
+[工单 36](36-toge-backend-followup.md)已接零偏移提示、Synth 伴奏音量、器乐 Groove、表现规划五态/追溯及 AI HTML PV。入口：首屏创作设置 → 器乐律动；逐句演唱 → 高级调教/音素；歌词区混音；制作状态区可选追溯；第三章 → AI 视觉导演（可选）。完整快速验证与测试边界见[日志](../docs/iteration-log.md#frontend-interface-36)，本单真实 checkbox 不变。
+
+有授权资源的主机需从正式页面新建作品：核对首音素 0 与非零句级偏移的实际发音，Groove 与伴奏增益在试听/WAV/MP4 中生效且锁定内容不变；独立 pv_design 实际生成后核对 HTML 预览/进度/重播/存档，以及指定帧、字幕/署名和实际 MP4 音频/时长。前提包括独立模型配置、声库/FluidSynth、FFmpeg、可启动的 Chromium 与匹配中文字体；pvStatus.available 仅路径探测。未配置时允许明确选择 Canvas；不得把 HTML 失败自动换成成功。人工听感/观感、手机和 Safari 仍待双方验收。

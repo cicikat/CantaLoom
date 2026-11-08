@@ -1,4 +1,5 @@
 import {vocalBus,trackPan,mixParameters,phraseEdgeFades} from './audio-mix';
+import {projectInstrumentInput,performedNotes} from '../shared/groove.mjs';
 import {api} from './api/client';
 import {type SongProject,type TrackKind,type Note,duration,beatsToSeconds} from './model';
 import {instrumentAudio,currentVocalAsset} from './external-audio';
@@ -35,7 +36,10 @@ export async function renderAudio(p:SongProject,options:{trackId?:string;lyricId
  else for(const t of p.tracks.filter(t=>!t.muted&&(!options.trackId||t.id===options.trackId)&&(!options.stem||options.stem==='mix'||(options.stem==='instrumental'?t.kind!=='vocal':t.kind==='vocal')))){
   if(t.kind==='vocal'&&p.vocalMode==='external'){for(const l of p.lyrics.filter(l=>l.sectionId===t.sectionId))await addLyric(l)}
   else if(t.kind!=='vocal'&&p.instrumentMode==='fluidsynth'){if(t.notes.length){const a=await instrumentAudio(p,t);await addWav(a.audioUrl,0,t.kind)}}
-  else t.notes.forEach(n=>schedule(ctx,t.kind==='vocal'?master:band,n,t.kind,beatsToSeconds(p,n.beat)-from,beatsToSeconds(p,n.duration),p.vocalPreset));
+  else if(t.kind!=='vocal'&&p.grooveSettings&&Object.values(p.grooveSettings).some(v=>v!==0)&&!t.locked&&!t.manuallyEdited&&!t.notes.some(n=>n.locked)){
+   const input=projectInstrumentInput(p,t);
+   for(const event of performedNotes({...input,notes:t.notes},input.endBeat))schedule(ctx,band,{...event.note,velocity:event.velocity},t.kind,beatsToSeconds(p,event.start/480)-from,beatsToSeconds(p,(event.end-event.start)/480),p.vocalPreset);
+  }else t.notes.forEach(n=>schedule(ctx,t.kind==='vocal'?master:band,n,t.kind,beatsToSeconds(p,n.beat)-from,beatsToSeconds(p,n.duration),p.vocalPreset));
  }
  const buffer=await ctx.startRendering();if(processed){let peak=0;for(let c=0;c<buffer.numberOfChannels;c++)for(const sample of buffer.getChannelData(c))peak=Math.max(peak,Math.abs(sample));if(peak>.98)for(let c=0;c<buffer.numberOfChannels;c++){const data=buffer.getChannelData(c);for(let i=0;i<data.length;i++)data[i]*=.98/peak}}return {buffer,from};
 }

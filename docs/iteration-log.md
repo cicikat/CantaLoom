@@ -1,3 +1,19 @@
+<a id="frontend-interface-36"></a>
+
+## 2026-11-08 · 补齐 Groove、Synth 音量、制作追溯与 AI HTML PV 前端
+
+关联：[工单 36](../CC-Tasks/36-toge-backend-followup.md)、[接口清单](INTERFACES.md)、[架构](ARCHITECTURE.md#frontend-interface-36)、[限定共享授权](../shared/contracts/CHANGELOG.md#frontend-interface-36)、[真实共同验收](../CC-Tasks/6-joint-acceptance.md)。toge 在接口核对后明确要求「可以，直接一口气做完」。沿用既有前端分支与后端 31–35 基线，未改后端/模型路由/声库/音乐算法，未推送。
+
+实际结果：移除首音素显式 0 的过期限制提示，保留 0 与空值区别；解禁 Synth 伴奏音量，元音人声保护不变。制作输入/Client/Hook/Mock 采用既有 ProductionInput，Groove 三参数由工程统一保存、制作提交并完整应用；Synth 复用 shared/groove 的稳定事件，锁定/手工保护与 FluidSynth 一致，不改谱面。制作状态区显示表现规划五态、独立错误及可选脱敏追溯，费用未知如实显示，规划失败不开放单句重试绕过。
+
+AI HTML PV：第三章折叠入口显式调用独立视觉模型；新增可选 pvVisual/pvVisualMode 存储，严格快照/设计/来源校验，旧 v1 不迁移。生成/应用/预览/导出核对指纹，改词/变速等使旧设计失效；保留旧设计并提示重生成或主动选 Canvas。共用可信 pvDocument、opaque sandbox 和毫秒 seek，避免额外字幕/署名；HTML 导出走既有 union 请求、不带 scenes、沿用同一混音 WAV/Blob/响度回调。错误/取消/迟到/资源缺失不覆盖当前工程，不下载假 MP4；Mock 设计固定、source=mock/mock=true、无模型 trace，视频仍下载 JSON 回执。
+
+验证：build 通过；全量 Node 144 项中 136 通过、8 项外部验收跳过；全套 Mock 页面 59/59 通过，含新增 7 项。定向真实模式 HTTP/浏览器 6 通过、1 跳过：正式页面 HTTP 视觉设计夹具/隔离预览/保存重开/HTML 导出 503 后零下载且保留设计，可信 runtime 动态/seek/文本边界，Synth 增益/人声保留/stem/mute/单轨与 WAV/PV 输入，旧响度头报告。真实 MP4 用例因本机条件不可用跳过。末次补强 Groove 实际下载 WAV 与 PV 上传音频对照单项通过，关闭混响下最大 s16 差 1 刻度、平均差 <0.0001；同设置 Synth 器乐 PCM 稳定、非零差异/全零恢复/三类保护均通过。测试入口：[页面](../tests/browser/interface-sync.spec.js)、[HTTP](../tests/browser/pv-frontend.spec.js)、[单元](../tests/frontend-interface36.test.ts)。
+
+首次新增用例暴露了 Mock trace.promptVersion 不符合既有格式，修正夹具后通过；单元中显式设置 Mock 边界，避免把测试资产按真实资产使用；进度用例按滑杆 0.05 秒步长取值。补强导出曾因 WAV 哈希不同失败，进一步逐采样量化证明是最多 1 个 s16 刻度的差异，改以明确误差界验收，不改混音核心或放宽 Groove 事件保护。无重复全量回归，新增导出断言仅重跑对应单项。
+
+未验/交接：本轮未调用真实 LLM、绮萱或 FluidSynth，未执行真实 HTML/Canvas MP4 编码、跨机器字体、手机/Safari 或人工听感/观感。[工单 6](../CC-Tasks/6-joint-acceptance.md)已登记入口与资源前提；其真实 checkbox 未勾选。工单 36 前端阶段完成、真实共验仍待，保留根目录；原 31/32/33/34/35 回执和相关交接已同步，已完成提示/控件条目短暂保留标注证据，Groove/视觉的共同验收继续保留。工作区既有改词说明、启动脚本与 .claude/ 保留，未纳入本次提交。
+
 <a id="bench-title-reveal-order"></a>
 
 ## 2026-11-08 · 工作台过渡先播完文字，新下滑后才缩小与揭幕

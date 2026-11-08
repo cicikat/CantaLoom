@@ -60,3 +60,6 @@ Owner：Blacktea / Backend & Music Engine；共享契约、工程模型与跨层
 - 交接 ID：20-groove-render；Toge 仍须接 ProductionInput Client 类型/Mock/页面与浏览器 Synth，不改组件和 Hook。工程 JSON 可存参数不代表已有页面编辑入口。
 
 2026-11-08 前端汇总：本单剩余 Toge 接线/提示清理及页面验证统一在[工单 36](../36-toge-backend-followup.md)维护 checkbox；沿用原交接 ID，本文保留后端历史证据，不复制前端清单。
+
+
+2026-11-08 工单 36 前端回执：本单对应前端接线已完成，实际内容、Mock/HTTP 夹具验证及本轮未验边界见[工单 36](../36-toge-backend-followup.md)、[迭代日志](../../docs/iteration-log.md#frontend-interface-36)。不重做本单后端算法，不把本轮前端测试算作真实引擎/MP4或共同听感通过；现场真实页面与听感/观感继续[工单 6](../6-joint-acceptance.md)。

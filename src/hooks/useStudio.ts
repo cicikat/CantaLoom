@@ -19,7 +19,7 @@ export function useStudio(){
  const plan=effectivePlan(p);
  const llmLabel=api.mock?'MOCK 固定测试方案 · 未调用 LLM':health.llmStatus==='verified'?'真实 LLM · 最近一次方案已校验':health.llm?'LLM 已配置 · 真实调用未验证':'本地规则 · 未调用 LLM';
  const importRef=useRef<HTMLInputElement>(null),toastTimer=useRef<ReturnType<typeof setTimeout>|undefined>(undefined),lastTap=useRef(0),requestToken=useRef(0);
- const production=useProduction(next=>{change(next);setIdea(next.metadata.idea);setStyle(next.style);setSection('');notify('自由作品已应用，可以试听了')},()=>{requestToken.current++},p.metadata.idea);
+ const production=useProduction(next=>{change(next);setIdea(next.metadata.idea);setStyle(next.style);setSection('');notify('自由作品已应用，可以试听了')},()=>{requestToken.current++},p.metadata.idea,p.grooveSettings);
  const readiness=useProductionReadiness(health,setHealth);
  const latest=useRef(p);latest.current=p;
  const draft=useRef(production.lyrics);draft.current=production.lyrics;
