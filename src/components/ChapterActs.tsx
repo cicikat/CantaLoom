@@ -1,5 +1,5 @@
 import {memo,useEffect,useRef,type CSSProperties,type RefObject} from 'react';
-import {actProgress,BENCH_REVEAL_MS,cascade,CIRCLE_ENTRY_MS,easeInOut,easeOut,lerp,mvExitFrame,phraseFrame,span,timedProgress,WORKBENCH_REST_MS,workbenchGestureAction} from './chapter-motion';
+import {actProgress,BENCH_REVEAL_MS,cascade,chapterGestureGate,CIRCLE_ENTRY_MS,easeInOut,easeOut,lerp,mvExitFrame,phraseFrame,span,timedProgress,WORKBENCH_REST_MS,workbenchGestureAction} from './chapter-motion';
 
 // Two scroll "acts" sit between the three content chapters:
 //   hero → BenchAct ("Music Blocks") → workbench → MvAct ("Let's …") → MV theatre.
@@ -67,6 +67,7 @@ function useScrollAct(trackRef:RefObject<HTMLDivElement|null>,build:(track:HTMLD
   const guardsBottom=track.classList.contains('act-mv');
   let leaveAllowed=false,lastInput=performance.now(),lastMotion=lastInput,previousBounds=workbenchBounds();
   let touchY:number|null=null,touchFresh=false;
+  const intent=chapterGestureGate();
   const read=():Act=>{const t=track.getBoundingClientRect();return actProgress(t.top,t.height,stage.offsetHeight,pin.getBoundingClientRect().top,reveal)};
   const tick=(now:number)=>{
    frame=0;
@@ -127,20 +128,52 @@ function useScrollAct(trackRef:RefObject<HTMLDivElement|null>,build:(track:HTMLD
    }
    schedule();
   };
-  const wheel=(e:WheelEvent)=>{if(Math.abs(e.deltaY)>.5)guardInput(e,Math.sign(e.deltaY),Math.abs(e.deltaY)*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1))};
+  const deliberateInput=(event:Event,direction:number,delta:number,threshold=220)=>{
+   if(motion.matches||event.defaultPrevented)return true;
+   if(entryClock!==null&&direction===(entryTarget?1:-1)){
+    intent.reset();if(event.cancelable)event.preventDefault();return false;
+   }
+   const bounds=workbenchBounds(),act=read(),top=track.getBoundingClientRect().top+scrollY,end=pin.getBoundingClientRect().top+scrollY+reveal;
+   // Reaching a transition from normal content first stops at its edge; that scroll is never a chapter command.
+   if(direction>0&&scrollY<top-1&&scrollY+delta>=top||direction<0&&scrollY>end+1&&scrollY-delta<=end){
+    intent.reset();if(event.cancelable)event.preventDefault();scrollTo({top:direction>0?Math.ceil(top):Math.floor(end),behavior:'instant'});return false;
+   }
+   const atContentEdge=bounds&&Math.abs(scrollY-(guardsBottom?bounds.bottom:bounds.top))<=1&&direction===(guardsBottom?1:-1);
+   const inTransition=scrollY>top+1&&scrollY<end-1||Math.abs(scrollY-top)<=1&&direction>0||Math.abs(scrollY-end)<=1&&direction<0;
+   if(innerCanScroll(event.target,direction)||(!atContentEdge&&!inTransition)){
+    intent.reset();return true;
+   }
+   if(isControl(event.target)){
+    intent.reset();if(event.cancelable)event.preventDefault();return false;
+   }
+   const phase=entryClock!==null?'entry':track.classList.contains('is-exiting')?'reveal':act.reveal>=1?'content':act.intro>=1?'title':'intro';
+   if(intent.accept(direction,delta,performance.now(),phase,threshold))return true;
+   if(event.cancelable)event.preventDefault();return false;
+  };
+  const wheel=(e:WheelEvent)=>{
+   if(e.ctrlKey||Math.abs(e.deltaY)<=.5||Math.abs(e.deltaX)>Math.abs(e.deltaY))return;
+   const direction=Math.sign(e.deltaY),delta=Math.abs(e.deltaY)*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1);
+   if(deliberateInput(e,direction,delta))guardInput(e,direction,delta);
+  };
   const key=(e:KeyboardEvent)=>{
    if(isControl(e.target)||e.altKey||e.ctrlKey||e.metaKey)return;
    const direction=['ArrowDown','PageDown','End'].includes(e.key)||(e.key===' '&&!e.shiftKey)?1:['ArrowUp','PageUp','Home'].includes(e.key)||(e.key===' '&&e.shiftKey)?-1:0;
-   if(direction)guardInput(e,direction,e.key.startsWith('Arrow')?40:innerHeight,e.repeat||e.key==='Home'||e.key==='End');
+   if(direction){
+    const delta=e.key.startsWith('Arrow')?40:innerHeight;
+    if(e.repeat){if(!deliberateInput(e,direction,0,120))return}
+    else if(!deliberateInput(e,direction,delta,120))return;
+    guardInput(e,direction,delta,e.repeat||e.key==='Home'||e.key==='End');
+   }
   };
   const touchStart=(e:TouchEvent)=>{
    const now=performance.now();touchY=e.touches.length===1?e.touches[0].clientY:null;
+   intent.reset();
    touchFresh=workbenchGestureAction(0,1,now,lastInput,lastMotion)==='leave';lastInput=now;navigation=null;
   };
   const touchMove=(e:TouchEvent)=>{
    if(touchY===null||e.touches.length!==1)return;
    const y=e.touches[0].clientY,delta=touchY-y;touchY=y;
-   if(Math.abs(delta)>1){guardInput(e,Math.sign(delta),Math.abs(delta),false,touchFresh);touchFresh=false}
+   if(Math.abs(delta)>1&&deliberateInput(e,Math.sign(delta),Math.abs(delta),90)){guardInput(e,Math.sign(delta),Math.abs(delta),false,touchFresh);touchFresh=false}
   };
   const touchEnd=()=>{touchY=null;touchFresh=false;lastInput=performance.now()};
   const measure=()=>{reveal=pinReveal(pin);introLength=Math.min(Math.max(1,track.offsetHeight-stage.offsetHeight-reveal),stage.offsetHeight*1.8);scene.measure();schedule()};

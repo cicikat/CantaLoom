@@ -1,9 +1,21 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {actProgress,BENCH_REVEAL_MS,cascade,CIRCLE_ENTRY_MS,easeBack,MV_EXIT_MS,mvExitFrame,PHRASE_HOLD_MS,PHRASE_SWAP_MS,phraseFrame,span,timedProgress,workbenchGestureAction} from '../src/components/chapter-motion';
+import {actProgress,BENCH_REVEAL_MS,cascade,chapterGestureGate,CIRCLE_ENTRY_MS,easeBack,MV_EXIT_MS,mvExitFrame,PHRASE_HOLD_MS,PHRASE_SWAP_MS,phraseFrame,span,timedProgress,workbenchGestureAction} from '../src/components/chapter-motion';
 
 // Ticket 29: pin the scroll geometry and the entry-triggered phrase playback.
 const V=800,REVEAL=760,INTRO=V*1.8,TRACK=V+INTRO+REVEAL;
+
+test('chapter intent filters exploratory nudges, stale input and direction changes',()=>{
+ const gate=chapterGestureGate();
+ assert.equal(gate.accept(1,80,0,'title'),false);
+ assert.equal(gate.accept(1,80,400,'title'),false,'separate small nudges do not accumulate forever');
+ assert.equal(gate.accept(-1,160,450,'title'),false,'changing direction starts over');
+ assert.equal(gate.accept(-1,60,500,'title'),true);
+ assert.equal(gate.accept(-1,20,550,'title'),false,'accepted input is consumed');
+ assert.equal(gate.accept(-1,210,600,'content'),false,'arrival at another phase starts over');
+ gate.reset();assert.equal(gate.accept(-1,20,650,'content'),false);
+ assert.equal(gate.accept(1,90,700,'title',90),true,'touch uses a smaller physical distance');
+});
 
 test('workbench reaches its edge first and leaves only after a new gesture following a settled pause',()=>{
  assert.equal(workbenchGestureAction(200,100,1000,0,0),'content');

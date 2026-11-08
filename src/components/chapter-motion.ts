@@ -12,6 +12,19 @@ export const easeBack=(t:number,s=1.6)=>t<=0?0:t>=1?1:1+(s+1)*(t-1)**3+s*(t-1)**
 
 export const CIRCLE_ENTRY_MS=1200,BENCH_REVEAL_MS=1000;
 export const WORKBENCH_REST_MS=450;
+/** Ignore short exploratory scrolls. Only a sustained gesture in one direction changes chapters. */
+export function chapterGestureGate(){
+ let direction=0,total=0,lastAt=-Infinity,phase='';
+ return {
+  reset(){direction=0;total=0;lastAt=-Infinity;phase=''},
+  accept(nextDirection:number,delta:number,now:number,nextPhase:string,threshold=220){
+   if(nextDirection!==direction||now-lastAt>300||nextPhase!==phase)total=0;
+   direction=nextDirection;lastAt=now;phase=nextPhase;total+=Math.abs(delta);
+   if(total<threshold)return false;
+   total=0;return true;
+  },
+ };
+}
 /** Reaching a content edge is not permission to leave it. Require a separate gesture after the page settles. */
 export function workbenchGestureAction(distance:number,delta:number,now:number,lastInput:number,lastMotion:number,interactive=false,repeat=false){
  if(distance>Math.max(1,delta))return 'content';
