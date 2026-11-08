@@ -378,3 +378,10 @@ MP4 导出使用 loudnorm（I=-14 LUFS、TP=-1.5 dBTP、LRA=11），48kHz AAC 19
 `shared/groove.mjs` 的 `projectInstrumentInput(project,track)` 由工程/轨道 ID、版本与设置构造稳定种子，并透传真实保护状态及音符。production 和 external-audio 共用该入口；MIDI 沿用 `performedNotes`（480 tick/beat 的 start/end、原 note 引用和演奏 velocity）。未来 Synth 应复用同一事件入口，按 tick/480 转回 beat，再按 BPM 转秒，不能另写随机算法；工程音符保持原 beat。
 
 验证与剩余跨端接线见[工单 31](../CC-Tasks/已完成/31-production-groove-integration.md)、[20-groove-render](../CROSS-END-HANDOFF.md#20-groove-render)。本阶段未修改稳定混音/字幕/FFmpeg 路径。
+
+
+#### 首音素显式零偏移（工单 32）
+
+`overrides[].phonemes[{index:0,offsetMs:0}]` 明确覆盖本音符的句级 `consonantMs`。需要阻止非零默认偏移时生成 `phoneme_overrides:[{index:0,offset:0}]`；其他无替换零偏移维持旧省略规则，不给历史工程批量补字段。没有首位覆盖时继续使用原 consonantMs；发音替换仍优先，BPM→tick 换算不变。
+
+只有首位显式 offsetMs:0 且无发音替换的请求使用 `resolvePerformance.renderRevision=4` / Qixuan 缓存 revision=6，避免复用修复前错误音频；原手动、自动以及无 Performance 请求保持各自旧版本。已有工程的该句资产经原依赖策略过期，其他句与器乐不变。真实 USTX/WAV 与缓存对照及验证边界见[工单 32](../CC-Tasks/已完成/32-phoneme-explicit-zero.md)和[日志](iteration-log.md#phoneme-explicit-zero-32)。

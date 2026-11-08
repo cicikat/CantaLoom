@@ -1,5 +1,12 @@
 # 公共契约变更
 
+## 工单 32 · 显式首音素零偏移修复（2026-11-08）
+
+- Owner Blacktea；用户明确要求完成工单 32，限定 shared/performance 既有字段优先级修复，不新增 Schema、HTTP、工程字段或 UI。先补失败回归后修复。
+- offsetMs=0 以字段存在性识别：首位显式覆盖阻止 legacy consonantMs 回填；仅在需要压过非零句级偏移时输出 offset:0，其他无替换零值维持旧省略行为。旧工程、非零换算、发音替换不改。
+- 缓存兼容：仅含首音素 offsetMs=0 且无发音替换的 Performance 使用 resolvePerformance.renderRevision=4，对应 Qixuan revision=6，以失效修复前错误缓存；其他 Performance 仍为原 revision。本句已有资产通过既有依赖策略失效，其他句和器乐不改。
+- 测试 Owner Blacktea：Schema/映射、USTX、依赖和真实引擎对照；Toge 只需移除原限制提示，Mock/UI 本轮不改。证据见[工单 32](../../CC-Tasks/已完成/32-phoneme-explicit-zero.md)与[迭代日志](../../docs/iteration-log.md)。
+
 ## 工单 31 · 制作 Groove 参数（2026-11-08）
 
 - Owner：Blacktea；本会话已就下列具体范围提问，用户明确回复「确认上述限定范围」。本次限定确认覆盖共享契约、工程模型校验、纯音乐转换入口与 external-audio 非 UI 透传；不修改 Client、Mock、组件、Hook 或浏览器混音。

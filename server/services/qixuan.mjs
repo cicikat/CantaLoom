@@ -1,4 +1,4 @@
-import {notePerformance,performanceCurves} from '../../shared/performance.mjs';
+import {notePerformance,performanceCurves,resolvePerformance} from '../../shared/performance.mjs';
 import {inspectWav} from './wav-quality.mjs';
 import {readFile,writeFile,mkdir,access,rename,rm} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
@@ -26,7 +26,7 @@ let tail=Promise.resolve();const pending=new Map();
 export async function renderQixuan(raw){const input=qixuanInput.parse(raw),voice=await qixuanStatus();if(!voice.available)throw Error(voice.message);if(input.engineVersion!==voice.engineVersion)throw Error('歌声引擎已更新，请刷新后重新生成');
  const replaced=[...new Set((input.performance?.overrides??[]).flatMap(o=>(o.phonemes??[]).map(p=>p.phoneme)).filter(Boolean))];if(replaced.length){const vocab=await phonemeVocabulary(),bad=replaced.filter(p=>!vocab.has(p));if(bad.length)throw Error(`音素不在绮萱词表中：${bad.join(' ')}`)}
  const project=qixuanProject(input);
- const {lyricId,...dependencies}=input;const key=digest(JSON.stringify({dependencies,voiceVersion:voice.version,parameters:voice.parameters,revision:input.performance?.mode==='auto'&&input.performance.preset!=='natural'?5:input.performance?4:2}));if(pending.has(key))return pending.get(key);
+ const {lyricId,...dependencies}=input;const key=digest(JSON.stringify({dependencies,voiceVersion:voice.version,parameters:voice.parameters,revision:input.performance&&resolvePerformance(input.performance).renderRevision===4?6:input.performance?.mode==='auto'&&input.performance.preset!=='natural'?5:input.performance?4:2}));if(pending.has(key))return pending.get(key);
  const execute=async()=>{await mkdir(cacheRoot,{recursive:true});const file=path.join(cacheRoot,key+'.wav'),meta=path.join(cacheRoot,key+'.json');try{await access(file);const result=JSON.parse(await readFile(meta,'utf8'));return {...result,cached:true}}catch{}
   const ustx=path.join(cacheRoot,key+'.ustx');await writeFile(ustx,stringify(project));const dotnet=path.join(externalRoot,'runtime/dotnet/dotnet.exe');
   // Render to a pending file first: a failed or timed-out inference never leaves a partial WAV at the published cache path, and the previous cached take stays intact.

@@ -1,6 +1,6 @@
 import {performanceSchema,pitchCurveSchema} from './contracts/melody.mjs';
 export const performancePresets={natural:{transitionMs:60,vibratoDepth:18,dynamics:0,consonantMs:0},soft:{transitionMs:95,vibratoDepth:12,dynamics:-35,consonantMs:12},strong:{transitionMs:35,vibratoDepth:30,dynamics:22,consonantMs:-12}};
-export function resolvePerformance(input){const p=performanceSchema.parse(input);return {renderRevision:p.mode==='auto'&&p.preset!=='natural'?3:2,...performancePresets[p.preset],...p}}
+export function resolvePerformance(input){const p=performanceSchema.parse(input);return {renderRevision:p.overrides?.some(o=>o.phonemes?.some(e=>e.index===0&&e.offsetMs===0&&!e.phoneme))?4:p.mode==='auto'&&p.preset!=='natural'?3:2,...performancePresets[p.preset],...p}}
 export function notePerformance(notes,index,bpm,input){
  const n=notes[index],previous=notes[index-1],p=plannedNote(notes,index,bpm,input),connected=previous&&Math.abs(previous.beat+previous.duration-n.beat)<.001;
  // USTX pitch x is milliseconds, y is tenths of a semitone. A custom per-note curve replaces the automatic transition points for that note only.
@@ -11,8 +11,14 @@ export function notePerformance(notes,index,bpm,input){
  const seconds=n.duration*60/bpm,autoLength=seconds>=.65?(input.mode==='auto'?Math.min(40,15+(seconds-.65)*18):45):0;
  const vibrato={length:p.vibratoLength??autoLength,period:p.vibratoPeriod??185,depth:p.vibratoDepth,in:p.vibratoIn??25,out:p.vibratoOut??35,shift:0,drift:p.vibratoDrift??0,vol_link:p.vibratoVolLink??0};
  // Phoneme overrides: explicit per-phoneme edits (v0.4.0); legacy consonantMs still maps to phoneme 0 when no explicit edit targets it.
- const edits=(p.phonemes??[]).map(e=>({index:e.index,...(e.offsetMs?{offset:Math.round(e.offsetMs*bpm*480/60000)}:{}),...(e.phoneme?{phoneme:e.phoneme}:{})})).filter(o=>o.offset||o.phoneme);
- if(p.consonantMs&&n.syllable!=='+'&&!edits.some(o=>o.index===0))edits.unshift({index:0,offset:Math.round(p.consonantMs*bpm*480/60000)});
+ // Presence controls precedence; zero serialization is needed only to defeat legacy timing.
+ const explicitFirstZero=p.phonemes?.some(e=>e.index===0&&e.offsetMs===0);
+ const edits=(p.phonemes??[]).map(e=>{
+  const offset=e.offsetMs===undefined?undefined:Math.round(e.offsetMs*bpm*480/60000);
+  const keepZero=e.index===0&&e.offsetMs===0&&p.consonantMs&&!e.phoneme;
+  return {index:e.index,...(offset!==undefined&&(offset!==0||keepZero)?{offset}:{}),...(e.phoneme?{phoneme:e.phoneme}:{})};
+ }).filter(o=>o.offset!==undefined||o.phoneme);
+ if(p.consonantMs&&n.syllable!=='+'&&!explicitFirstZero&&!edits.some(o=>o.index===0))edits.unshift({index:0,offset:Math.round(p.consonantMs*bpm*480/60000)});
  return {pitch,vibrato,phoneme_expressions:[],phoneme_overrides:edits.sort((a,b)=>a.index-b.index)};
 }
 export function plannedNote(notes,index,bpm,input){

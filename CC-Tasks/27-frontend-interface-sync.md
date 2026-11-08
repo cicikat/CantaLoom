@@ -36,3 +36,5 @@ Owner：Toge / Frontend & UX。状态：高级调教、历史演唱恢复、产�
 新增交接：[27-phoneme-zero](../CROSS-END-HANDOFF.md#27-phoneme-zero)。首个音素仅设置 offsetMs=0、同时有非零句级 consonantMs 时，现有核心仍继承偏移；界面已说明，不把这项算作真实生效验收。最小复现与期望在交接中，未越界修算法。
 
 2026-11-08 后续更新：[工单 31](已完成/31-production-groove-integration.md)已完成制作与工程参数、统一 FluidSynth 输入；页面/Mock/Client 制作类型及 Synth 仍由 Toge 按 20-groove-render 接入。上文为当时核对边界。
+
+2026-11-08 回执：[工单 32](已完成/32-phoneme-explicit-zero.md)已修复首音素显式零偏移，并通过 USTX/依赖回归和真实绮萱 WAV/缓存对照。上文该项问题为历史状态；Toge 待移除原限制提示，沿用 27-phoneme-zero 交接，人工听评仍未执行。

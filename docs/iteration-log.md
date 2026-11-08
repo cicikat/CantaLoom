@@ -1,5 +1,18 @@
 <a id="lets-mv-entry-autoplay"></a>
 
+<a id="phoneme-explicit-zero-32"></a>
+
+## 2026-11-08 · 工单 32 首音素显式零偏移与旧缓存失效
+
+- 工单：[32](../CC-Tasks/已完成/32-phoneme-explicit-zero.md)；关联[15 P1](../CC-Tasks/后端/15-p0.md)、[27](../CC-Tasks/27-frontend-interface-sync.md)；字段与版本见[契约记录](../shared/contracts/CHANGELOG.md)、[架构](ARCHITECTURE.md#performance)。Owner Blacktea，用户明确要求继续完成本工单，不扩展 UI/Schema/HTTP 范围。
+- 失败复现：先加测试再运行，P1 为 9 通过、2 失败，显式首位 0 实际继承了非零句级偏移。修复后以字段存在性区分人工零覆盖与省略，仅必要时输出 offset:0；保持其他位置零值、舍入零值、非零偏移和发音替换行为。补 auto/locked、USTX 其他音符/曲线不变与兄弟句/器乐保护回归。
+- 缓存：只为首位零覆盖且无发音替换更新 resolvePerformance.renderRevision=4 / Qixuan revision=6；否则同参数请求可能复用历史错误 WAV。既有 renderRevision TS 声明补齐，不引入新工程字段。真实测试独立计算 SHA-256，确认普通旧请求 key 使用原 revision=4，零覆盖使用 6，重复读取 WAV 字节一致。
+- 验证：`npm run build` 通过（已有体积/依赖注释警告）；全量 `npm test` 123 项：115 通过、8 外部验收跳过；定向 `npx tsx --test tests/p1-phoneme.test.ts tests/p0-tuning.test.ts tests/qixuan.test.ts` 20/20 通过。纯音乐/后端修复未重跑页面套件，无 UI 接线完成声明。`git diff --check` 和修改文档本地链接检查通过。
+- 真实资源：显式开启 acceptance，`npx tsx --test tests/qixuan-zero-real.test.mjs` 1/1 通过，CPU 绮萱实际生成 legacy / zero / reference 三组（首次均 cached=false，复跑均命中）。实际 USTX 首音素分别 +12 / 0 / 无覆盖，后续音符均 +12；Bridge 直接 Ustx.Load，无二次 falsy 过滤。平均 PCM 样本差 legacy-zero=1118.31、zero-reference=321.01。reference 使用首音符 consonantMs=0；两种零参考的 WAV 并非逐样本相等，不据此宣称毫秒级音素起点一致或人工听感通过，未直接测量音素起点。
+- 证据：`temp/task32-before.log`、`task32-targeted.log`、`task32-unit.log`、`task32-build.log`、`task32-real.log`、`task32-real-repeat.log`；USTX/WAV/结果在 `temp/task32/`（result.json 为末次缓存复跑回执）。未调用 LLM、未改混音/字幕/FFmpeg，不运行 MP4。
+- 交接：[27-phoneme-zero](../CROSS-END-HANDOFF.md#27-phoneme-zero)核心已回执，保留只等 Toge 清理旧提示后删除；未代改组件/Hook/Mock。工单后端范围完成归档，人工听评继续工单 6。本地 feature/backend-phoneme-explicit-zero，未推送，原两个脚本删除与其他工单保留。
+
+
 <a id="production-groove-31"></a>
 
 ## 2026-11-08 · 工单 31 制作 Groove 工程参数与稳定渲染输入

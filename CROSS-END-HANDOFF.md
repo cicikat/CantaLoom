@@ -16,7 +16,7 @@
 
 | ID | 来源 | 发起方 → 接收方 | 状态 |
 |---|---|---|---|
-| [27-phoneme-zero](#27-phoneme-zero) | 工单 27 / 15 P1 | Toge → Blacktea | 首个音素 0 毫秒覆盖可能继承辅音偏移，核心待修复 |
+| [27-phoneme-zero](#27-phoneme-zero) | 工单 27 / 15 P1 | Toge → Blacktea | 核心已修复；待 Toge 清理旧限制提示 |
 | [24-test-review](#24-test-review) | 工单 24 | Blacktea → Toge | 测试审计交付；待浏览器测试语义 review |
 | [5-C-synth-mix](#5-c-synth-mix) | 工单 5 C | Toge → Blacktea | 前端已接；浏览器伴奏增益核心待接手 |
 | [20-groove-render](#20-groove-render) | 工单 20 | Blacktea → Toge | 核心/API 已实现；页面与人工听评待安排 |
@@ -29,13 +29,12 @@
 
 <a id="27-phoneme-zero"></a>
 
-### 27-phoneme-zero · 首个音素显式零偏移仍继承辅音时机
+### 27-phoneme-zero · 核心已修复，待清理前端旧限制说明
 
-- 更新：2026-11-07；来源：[工单 27](CC-Tasks/27-frontend-interface-sync.md)、[工单 15 P1](CC-Tasks/后端/15-p0.md)；Toge → Blacktea；状态：已复现，核心待修复。本轮不修改共享音乐计算。
-- 证据：`shared/performance.mjs` 的 `notePerformance` 先以 truthy 的 `offsetMs` 生成 offset，再过滤掉无 offset/phoneme 的条目，导致 `{index:0,offsetMs:0}` 消失；后续非零 consonantMs 再插入第 0 音素。不是前端丢参数。
-- 最小复现：`notePerformance([{beat:0,duration:1,midi:60,syllable:'甲'}],0,120,{preset:'natural',consonantMs:12,overrides:[{index:0,phonemes:[{index:0,offsetMs:0}]}]}).phoneme_overrides` 实际返回 `[{index:0,offset:12}]`，预期显式 0 不继承句级偏移。现有测试仅覆盖 0 位替换发音、无句级偏移的其他位置 offset=0，没有覆盖该组合。
-- 对方下一步：修复显式 0 的存在性判断/合并顺序，兼容旧 consonantMs 与不带覆盖的历史依赖；补该组合回归，并核对实际 USTX/演唱结果。前端已在音素表单提示此边界，不自行改算法。
-- 验收/回执：结果回写本工单与[迭代日志](docs/iteration-log.md#frontend-interface-sync)，完成后通知前端移除限制说明，再清除此条。
+- 更新：2026-11-08；[工单 32](CC-Tasks/已完成/32-phoneme-explicit-zero.md)由 Blacktea 完成；原 Toge → Blacktea 修复请求已回执，现 Blacktea → Toge 仅交接提示清理。
+- 已交付：显式首音素 offsetMs:0 不再继承句级 consonantMs；USTX 必要时输出 offset:0；仅相关零覆盖更新歌声依赖/缓存 revision，其他句与器乐不变。源码及缓存边界见[契约记录](shared/contracts/CHANGELOG.md)，证据见[日志](docs/iteration-log.md#phoneme-explicit-zero-32)。本地 feature/backend-phoneme-explicit-zero，未推送。
+- 验证：P1/P0/Qixuan 定向 20/20、全量 115 通过/8 外部验收跳过，真实绮萱三组 USTX/WAV 与重复缓存通过。未测音素起点、未做人工听评；非静音不作为时序或听感结论。
+- Toge 下一步：移除音素表单“0 偏移可能被继承”的旧提示，按正式页面实际复核；完成后将证据回写工单 27/迭代日志，再删除本条与索引。此处保留是因为 UI 清理尚未完成，不是核心仍待修复。
 
 <a id="24-test-review"></a>
 
