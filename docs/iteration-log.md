@@ -1,5 +1,14 @@
 <a id="pr17-integration"></a>
 
+## 2026-11-08 · 工单 38 · 黑客松 MG 视频首版
+
+对应[工单 38](../CC-Tasks/38-hackathon-mg-video.md)与[独立视频工程及录屏替换说明](../video/mg/README.md)。本轮仅建立 video/mg 的 Remotion / React / SVG 工程，保留原 HTML 与产品代码。102 秒、1920×1080、30fps；五段 MG、四段真实 Alpha 窗口，包含文字遮罩、错位纸片、音符至波形形变与开窗/收拢转场。
+
+实际输出位于 `temp/mg-video/`：`cantaloom-mg-preview.mp4`、`cantaloom-mg-alpha.mov` 及 opening / ingredients / singing / showcase / ending 五个 MOV。预览含录屏提示，正式素材没有提示。FFprobe 核实完整文件均 3060 帧、102 秒；透明文件是 ProRes profile 4，解码像素格式 yuva444p12le。直接解码 MOV 在 16/40/65/90 秒的内窗区域 Alpha 极值均为 0，外部 Alpha 为 255；PNG 抽帧与有色下层合成均通过。完整 MP4 全片解码返回 0，blackdetect 未发现整帧黑屏；检查中文、标题安全区、五段构图及转场抽帧。复验脚本在 video/mg/verify.py 和 qa-stills.mjs，本机证据为 `temp/mg-video/verification.json`、`preview-decode.log`、`contact.jpg`。
+
+验证边界：本轮静音，无真实录屏、模型调用或产品验收；波形为程序模拟。未把音画同步、用户审美接受度或不存在的操作演示写成通过。独立工程与素材真实渲染，不运行无关产品构建/引擎测试。交接 [VIDEO-38](../CROSS-END-HANDOFF.md#video-38)：真实录屏、授权配乐、人工观感与后续剪辑；工作区原有启动器删除和未跟踪后端笔记保留。源码本地提交，不推送远端。
+
+
 ## 2026-11-08 · 工单 29 前端 PR #17 合并协调
 
 关联：[工单 29](../CC-Tasks/29-five-chapter-scroll-transitions.md)、[团队流程](TEAM_WORKFLOW.md)、[PR #17](https://github.com/cicikat/CantaLoom/pull/17)。用户授权自行裁定冲突并合并。保留 Toge 四项转场/歌词侧页/停留/创作设置改动与 main 的后端、安装器、测试分层；迭代日志双方记录均保留。浏览器测试保留侧页新路径、确定性 TAP、播放条件轮询和隔离下载路径，删除重复 startMaking 与无条件截图。作品设置 helper 先点击创作侧页「完成」，避免侧页遮住右上角菜单；没有修改产品逻辑来规避失败。

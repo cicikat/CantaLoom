@@ -139,6 +139,7 @@ Synth 伴奏增益核心修复：[工单 33](CC-Tasks/已完成/33-browser-synth
 
 | 需要了解什么 | 阅读入口 |
 |---|---|
+| 黑客松 MG 视频工程 | [独立动画工程与录屏替换说明](video/mg/README.md)；[工单 38](CC-Tasks/38-hackathon-mg-video.md) |
 | Agent 长期规则 | [AGENTS.md](AGENTS.md) |
 | 待对方确认、接线或联调的跨端事项 | [CROSS-END-HANDOFF.md](CROSS-END-HANDOFF.md)，仅相关任务按需读取，完成后清理 |
 | 分工、联调、Git 与验证规则 | [TEAM_WORKFLOW.md](docs/TEAM_WORKFLOW.md) |
