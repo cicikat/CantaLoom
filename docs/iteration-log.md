@@ -1,6 +1,21 @@
 <a id="lets-mv-entry-autoplay"></a>
 
 
+<a id="launcher-restart"></a>
+
+## 2026-11-08 · 两个 BAT 自动关闭旧服务并重启
+
+工单：[31 · 启动重启](../CC-Tasks/已完成/31-launcher-restart.md)；说明：[使用入口](../README.md#launch)、[启动架构](ARCHITECTURE.md)、[管理入口](ENGINES.md#管理调试启动与路由)。
+
+沿用用户工作区已有「打开吱声机.bat」与「打开吱声机管理面板.bat」文件名，两个入口改为 start.bat --restart，管理入口和 start-admin.bat 另传 --admin。关闭经过核实的旧 CantaLoom 服务后等待端口释放、构建最新源码并重启；管理入口打开 /admin。修复 --check 不在第一个参数位置时仍进入 pause 的问题。
+
+新增 scripts/restart-studio.mjs：通过 Windows 监听 PID、Node 可执行文件、服务入口命令及本机管理状态判断归属，停止前重查 PID/进程启动时间/命令与端口，拒绝身份不符、watch 或无法识别的服务；不批量终止 node，不杀整棵进程树。仅本机管理状态 runtime 新增 projectRoot/pid，root 仍指资源根目录，现有 Host/Origin/CSRF 与 DPAPI 限制保留；旧版服务按命令与资源根目录兼容识别。无公开音乐契约或前端接线改动，无新增跨端交接。
+
+验证：两个中文 BAT 分别在隔离端口 3231/3232 对本轮创建的真实旧服务执行 --check，均确认旧 PID 退出、完成 build、页面/JS/API 检查并停止新服务；不关闭用户实际正在使用的服务。定向 launcher 测试 3/3，包括真实 Windows 监听进程停止、进程代次改变时拒绝停止、其他身份/命令/路径拒绝及旧复用入口回归。全量单元 109 通过、6 项资源验收跳过、0 失败；build 由两次 BAT 实测执行通过。文档链接与 diff 检查通过。
+
+边界：重启会清空服务端内存任务，磁盘缓存、浏览器存档与加密配置不删除；未进行真实 LLM、歌声、器乐或 PV 编码验收。本轮本地提交，不推送；用户原有两个旧 BAT 删除保留为未暂存改动，不纳入本轮提交。
+
+
 <a id="cantaloom-brand-integration"></a>
 
 ## 2026-11-08 · 织声机 CantaLoom 更名与未合并 PR 整合

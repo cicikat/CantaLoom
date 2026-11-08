@@ -1,4 +1,5 @@
 import {spawn} from 'node:child_process';
+import {restartExistingStudio} from './restart-studio.mjs';
 import {existsSync,readFileSync} from 'node:fs';
 import {createServer} from 'node:net';
 import {fileURLToPath} from 'node:url';
@@ -33,17 +34,11 @@ async function main(){
  if(existsSync('.env'))process.loadEnvFile(path.join(root,'.env'));
  const port=Number(process.env.PORT||3001);
  if(!Number.isInteger(port)||port<1||port>65535)throw Error('PORT must be an integer from 1 to 65535. Check .env.');
- try{await ensurePortFree(port)}catch(error){
-  if(!process.argv.includes('--admin')||check)throw error;
-  const adminUrl=`http://127.0.0.1:${port}/admin`;
-  let sameProject=false;
-  try{const response=await fetch(`http://127.0.0.1:${port}/api/admin/state`,{signal:AbortSignal.timeout(2000)});const state=await response.json();sameProject=response.ok&&typeof state.csrf==='string'&&typeof state.runtime?.root==='string'&&path.resolve(state.runtime.root).toLowerCase()===root.toLowerCase()}catch{}
-  if(!sameProject)throw error;
-  console.log(`Existing CantaLoom service found: ${adminUrl}`);
-  console.log('Using the running service. Restart its original window to load backend code changes.');
-  if(!noOpen&&process.platform==='win32'){const browser=spawn('rundll32.exe',['url.dll,FileProtocolHandler',adminUrl],{stdio:'ignore',windowsHide:true});browser.once('error',()=>console.log(`Open: ${adminUrl}`))}
-  return;
+ if(process.argv.includes('--restart')){
+  const externalRoot=path.resolve(process.env.SONGYU_EXTERNAL_ROOT||'D:/ai/hacson/external');
+  if(await restartExistingStudio({port,directory:root,externalRoot}))console.log(`Stopped the verified old CantaLoom service on port ${port}.`);
  }
+ await ensurePortFree(port);
  const manifest=JSON.parse(readFileSync('package.json','utf8'));
  const missing=Object.keys({...manifest.dependencies,...manifest.devDependencies}).some(name=>!existsSync(path.join(root,'node_modules',name,'package.json')));
  if(missing){console.log('[1/3] Installing dependencies from package-lock.json...');await runNpm(['ci','--include=dev']);}
@@ -51,7 +46,7 @@ async function main(){
  console.log('[2/3] Building the latest source...');
  await runNpm(['run','build']);
  console.log('[3/3] Starting the studio...');
- const child=spawn(process.execPath,['--env-file-if-exists=.env','server/index.mjs'],{cwd:root,stdio:'inherit',windowsHide:true});
+ const child=spawn(process.execPath,['--env-file-if-exists=.env',path.join(root,'server/index.mjs')],{cwd:root,stdio:'inherit',windowsHide:true});
  let exited=false,spawnError;
  const ended=new Promise(resolve=>{
   child.once('error',e=>{spawnError=e;exited=true;resolve(1)});

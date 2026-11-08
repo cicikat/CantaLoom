@@ -62,6 +62,7 @@
 需要 Node.js 22.12+ 和 npm；MP4 另需 FFmpeg（libx264、libass），可用 `FFMPEG_PATH` 配置。前端 Mock 无需 Python 或任何音库。
 
 - Windows 双击 `start.bat`：定位脚本目录、检查环境/端口、缺依赖时 `npm ci`、构建最新源码、启动单服务，页面/API 就绪后打开浏览器。窗口保留日志，Ctrl+C 停止。
+- 两个中文入口「打开吱声机.bat」/「打开吱声机管理面板.bat」默认使用 `start.bat --restart`，核对旧 CantaLoom 服务身份后关闭并重启；其他进程占用时中止。管理入口加 `--admin` 打开后台。
 - `start.bat --check`：执行同一启动流程，检查页面、构建资产和 API，随后自行停止；不打开浏览器。
 - `start.bat --no-open`：启动并保持服务，但不打开浏览器。
 - 开发：`npm ci` 后 `npm run dev`；独立前端 `npm run dev:mock`（无需引擎）或 `npm run dev:frontend`（真实联调），独立后端 `npm run dev:backend`。前端热更新，服务端 watch 自动重启。

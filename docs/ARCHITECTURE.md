@@ -69,7 +69,7 @@
 
 ## 日常启动与制作准备
 
-「打开织声机.bat」是面向使用者的入口，旧桌面快捷方式仍由兼容入口启动。scripts/reuse-studio.mjs 先检查当前端口的 health、页面标识、与本地 dist 相同的资产路径和 JS 内容哈希；匹配则直接打开正在运行的当前版本，--check / --no-open 不开浏览器，也不停止已有进程。未匹配或服务未运行时，原样传递参数给现有 start.bat；没有第二套构建/服务启动逻辑，也不处理、停止或抢占其他程序。既有启动器负责环境/端口检查、按 lockfile 补依赖、构建、启动同源服务、确认页面与资产后打开浏览器。`--check` 不打开浏览器并在检查后退出，`--no-open` 保持服务但不打开浏览器。双击入口的启动逻辑未变，App 已切换为 LOOP! 接线；原 HTML 提示已改为实际首页入口说明，见[原型边界](#prototype-frontend)。
+「打开吱声机.bat」和「打开吱声机管理面板.bat」调用 start.bat --restart，管理入口另加 --admin。scripts/restart-studio.mjs 通过 Windows 监听 PID、进程启动时间、Node 可执行文件/服务入口及仅本机管理状态确认旧服务；新版管理状态提供 projectRoot/pid，旧版需匹配资源根目录和服务命令。停止前再次核对进程代次与端口归属，拒绝其他应用、其他项目路径、watch 进程或无法确认身份的服务，不按进程名批量终止或杀进程树。等待端口释放后由 scripts/start-local.mjs 检查依赖、构建并启动绝对路径的 server/index.mjs，再打开首页或 /admin。--check 不开浏览器，检查后停止本次服务；--no-open 保持新服务。scripts/reuse-studio.mjs 保留既有独立复用能力，两个中文入口不再经过复用分支。重启清空服务端内存任务，磁盘工程、浏览器存档、缓存与加密配置不删除；真实制作中的任务不会跨进程恢复。启动与重启证据见[工单 31](../CC-Tasks/已完成/31-launcher-restart.md)。
 
 useProductionReadiness 通过既有 health / engines / qixuan Client 只读检查本机配置与资源；在进入页面、回到窗口及点击「重新检查」时刷新，使用代次保护丢弃过期检查结果。它接管原 useStudio 的 health 刷新，不新增 API 或改服务端设置。当前 production 服务要求 LLM、伴奏音源、歌声服务和 FFmpeg；缺项/未连接时「一键开工」仍可点击，打开已有创作设置并聚焦其入口，列出缺项、本机设置与本地积木选项；不提交 production 请求。只有正在操作、任务运行中或主题为空时禁用按钮；不为缺项新增常驻说明栏。
 

@@ -6,7 +6,7 @@
 
 ## 打开织声机
 
-Windows 日常使用：双击项目根目录 **「打开织声机.bat」**。桌面快捷方式可指向该入口；旧名称快捷方式仍可使用兼容入口。首次打开会检查依赖、构建最新应用、启动服务并自动打开工作台；已运行时会核对当前版本并直接打开，避免重复启动。准备窗口保留日志，按 Ctrl+C 可停止自己启动的服务。
+Windows 日常使用：双击项目根目录 **「打开吱声机.bat」**。管理后台使用「打开吱声机管理面板.bat」（或 start-admin.bat）。首次打开会检查依赖、构建最新应用、启动服务并自动打开工作台；已运行时会核对端口进程和本机管理状态，只关闭确认属于 CantaLoom 的旧服务，再构建并重启；其他服务占用端口时中止，不会强行关闭。准备窗口保留日志，按 Ctrl+C 可停止自己启动的服务。
 
 进入后点击 **「一键开工」**：制作环境就绪时开始制作，尚未准备好时打开现有设置面板并显示缺项。面板里可用「本地搭建积木」进行本地创作，或通过「打开本机设置」配置后「重新检查」。配置检查不调用模型，也不把已配置当成真实生成验收。
 
@@ -34,7 +34,7 @@ LOOP! 首页已完成页面接线、Mock 流程及本地创作验证；历史真
 
 最小页面已可在 Mock 中从新输入制作并试听；钢琴卷帘、局部旋律、调教与现有有效混音控件均已接线。每句调教在「逐句演唱与重唱」中展开，混音在歌词区底部展开；默认不占首屏。高级音高/颤音/音素/表现曲线在「逐音符人工覆盖」内；分轨文件与响度在「导出作品」中，MP4 报告只展示本次响应。见[工单 27](CC-Tasks/27-frontend-interface-sync.md)，Mock 文件和报告不是真实引擎/FFmpeg 验收。浏览器伴奏音量核心问题见[交接 5-C-synth-mix](CROSS-END-HANDOFF.md#5-c-synth-mix)，真实最小闭环仍需工单 4 / 6 验收。详细 checkbox 只维护在对应 CC-Tasks 工单中。
 
-旧名称已废弃，当前产品名统一为 **织声机 CantaLoom**。旧浏览器存档键、`SONGYU_*` 环境变量、HTTP 头、已安装的 `SongyuBridge` 和旧启动文件保留兼容，避免已有工程、加密配置、引擎或快捷方式失效；新导出工程使用 `.cantaloom.json`，旧 `.songyu.json` 仍可导入。历史工单与迭代证据保留当时名称。
+旧名称已废弃，当前产品名统一为 **织声机 CantaLoom**。旧浏览器存档键、`SONGYU_*` 环境变量、HTTP 头、已安装的 `SongyuBridge` 和已安装的旧启动文件保留兼容，避免已有工程、加密配置、引擎或快捷方式失效；新导出工程使用 `.cantaloom.json`，旧 `.songyu.json` 仍可导入。历史工单与迭代证据保留当时名称。
 
 ## 开始开发
 
@@ -62,7 +62,7 @@ npm run dev:mock
 
 ## 本地演示
 
-Windows 双击「打开织声机.bat」（内部复用 `start.bat`）：检查环境、缺依赖时执行 `npm ci`、构建源码、启动同源页面/API，再打开浏览器。`--no-open` 不打开浏览器，`--check` 完成启动检查后自行停止。不会替换 `.env` 或关闭占用端口的其他服务。
+Windows 双击「打开吱声机.bat」（内部复用 `start.bat`）：检查环境、缺依赖时执行 `npm ci`、构建源码、启动同源页面/API，再打开浏览器。`--no-open` 不打开浏览器，`--check` 完成启动检查后自行停止。两个中文入口默认传入 `--restart`，管理入口另传入 `--admin`；`start.bat` 也可显式使用 `--restart`。不会替换 `.env` 或关闭未确认身份的其他服务。
 
 手动方式：
 
@@ -116,6 +116,8 @@ npm start
 | 历史方案 | [1 · 动态旋律](CC-Tasks/1-dynamic-melody-and-performance.md)、[9 · 初始工作台](CC-Tasks/9-initial-workbench.md)、[10 · P2.1 后续建议](CC-Tasks/10-guided-composition.md)、[11 · 解耦迁移](CC-Tasks/11-frontend-backend-decoupling.md)；恢复的原文：[2 · 自由创作](CC-Tasks/2-free-composition-original.md)、[3 · 自动调教](CC-Tasks/3-auto-performance-original.md)，当前进度以工单 4/5/6 为准 |
 
 本轮品牌与 PR 整合：[工单 30](CC-Tasks/已完成/30-cantaloom-brand-and-pr-integration.md)。
+
+本轮启动重启功能：[工单 31](CC-Tasks/已完成/31-launcher-restart.md)。
 
 ## 文档与验证入口
 
