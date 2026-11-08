@@ -73,7 +73,7 @@ export default function App(){
    </section></div>
 
   </main>
-  <footer className="footer"><span>LOOP! MUSIC PLAYGROUND / SONGYU</span><span>BUILT FOR LITTLE IDEAS, 2026</span></footer>
+  <footer className="footer"><span>LOOP! MUSIC PLAYGROUND / CantaLoom</span><span>BUILT FOR LITTLE IDEAS, 2026</span></footer>
 
   <dialog ref={exportRef} className="export-modal" aria-label="导出作品" onCancel={()=>s.setExportOpen(false)} onClose={()=>{s.setExportOpen(false);exportTrigger.current?.focus()}} onClick={e=>{if(e.target===e.currentTarget)s.setExportOpen(false)}}><div className="pvtop"><h2>把声音，带走。</h2><button aria-label="关闭导出" onClick={()=>s.setExportOpen(false)}>×</button></div><p>工程只保存在当前浏览器。导出 JSON 可在以后恢复。</p><button className="btn" disabled={!!busy} onClick={()=>void s.exportWav()}>混音音频 · {api.mock?'MOCK 测试音 ':''}WAV ↓</button><button className="btn" disabled={!!busy||(!api.mock&&!s.health.ffmpeg)} onClick={()=>void s.exportPV()}>歌词视频 PV · {api.mock?'MOCK JSON 回执':'MP4'} ↓</button><button className="btn" onClick={s.saveProject}>完整工程 · JSON ↓</button><button className="minibtn" onClick={()=>s.importRef.current?.click()}>导入工程</button><button className="minibtn" onClick={()=>{if(window.confirm('新建会替换当前浏览器存档，请先导出需要保留的工程。')){setEditor(undefined);s.newProject();go('compose')}}}>新建作品</button><p>{s.llmLabel} · {api.mock?'测试音，未运行歌声模型':p.vocalMode==='external'?'当前有效演唱':'元音演示，不会读出中文歌词'}</p><ExportLoudnessReport report={s.exportReport}/><ArtifactDownloads project={p} busy={!!busy}/><p className="dialog-status" role="status">{busy||s.toast}</p></dialog>
   <input type="file" ref={s.importRef} accept=".json" hidden onChange={e=>void s.importProject(e.target.files?.[0])}/>

@@ -1,4 +1,4 @@
-# SONGYU 引擎、后台与资源
+# CantaLoom 引擎、后台与资源
 
 这里维护引擎调用、外部资源、配置、缓存与许可边界。页面/API 接入见 [ARCHITECTURE](ARCHITECTURE.md)，协作见 [TEAM_WORKFLOW](TEAM_WORKFLOW.md)；实际推理、安装清单和验收数字统一在[迭代日志](iteration-log.md)。本机是否安装须用实际诊断确认。
 
@@ -106,7 +106,7 @@ dotnet build scripts/openutau-bridge/SongyuBridge.csproj -p:OpenUtauDirectory="$
 
 渲染先写 `key.pending.wav`，完成时长 / 音量 / 削波校验后原子改名为正式缓存与元数据；推理失败或超时只留下 pending 残留并被下一次渲染清理，不污染既有缓存，旧 take 文件保留。真实引擎回归 `tests/qixuan-real.test.mjs`（渲染、缓存命中与失效、PCM 差异、无 pending 残留）在本机有引擎时随 `npm test` 自动运行，可用 `SONGYU_REAL_TESTS=0` 关闭。
 
-渲染 WAV 保留前后各 0.2 秒余量，startSeconds 对应其真实时间轴起点，单句试听也包含辅音预发声。浏览器统一重采样到 24000 Hz；试听 / WAV / PV 共用 `renderAudio`。MP4 与预览展示「AI 合成内容 / 歌声合成：绮萱 / 合成技术：DiffSinger」，背景为 SONGYU 自有程序化画面。
+渲染 WAV 保留前后各 0.2 秒余量，startSeconds 对应其真实时间轴起点，单句试听也包含辅音预发声。浏览器统一重采样到 24000 Hz；试听 / WAV / PV 共用 `renderAudio`。MP4 与预览展示「AI 合成内容 / 歌声合成：绮萱 / 合成技术：DiffSinger」，背景为 CantaLoom 自有程序化画面。
 
 <a id="licensing"></a>
 
