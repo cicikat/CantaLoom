@@ -1,3 +1,13 @@
+<a id="local-deepseek-configuration"></a>
+
+## 2026-11-08 · 本机音乐后台配置 DeepSeek Flash 并通过真实作曲
+
+关联：[工单 38](../CC-Tasks/已完成/38-local-deepseek-configuration.md)、[后台配置](ENGINES.md#admin)、[后续真实共同验收](../CC-Tasks/6-joint-acceptance.md)。toge 明确要求配置音乐后台并优先选择便宜的 DeepSeek。本机原已配置加密密钥，但 Base URL 误填账户管理站点，检查返回 405；使用现有管理 API 改为 `https://api.deepseek.com`、`deepseek-flash`，歌词规划、旋律作曲及演唱表现显式路由到同一模型。保留原加密密钥与其他引擎配置；热生效，无重启、充值、源码修改或远端推送，可选 HTML PV 保持未启用。
+
+验证：厂商模型列表返回 Flash/Pro，最小聊天 reachable（1181ms）。真实 `/api/compose` 用新主题及两句手写歌词返回 200，完整 `freeResultSchema` 校验通过，生成《窗台初光》，四段结构、规划与旋律 source=llm，手写歌词逐字保留，耗时 49304ms。服务追溯显示 lyrics_planning 和 melody_composition 各一次成功，输入合计 3063 tokens、输出合计 7215 tokens；未配置固定单价，后台 cost 继续为 null，不伪造账单。配置与密钥在仓库外由既有 DPAPI 存储，本次 Git 只记录无密钥文档。
+
+边界：演唱表现仅配置完成，未做真实调用；未运行正式页面创作、真实演唱、音频导出或人工听感。本次接口验证不关闭工单 6 的共同验收项。既有工单 5、架构文档与 .claude/ 工作区修改保留，不纳入本次提交。
+
 <a id="frontend-interface-36"></a>
 
 ## 2026-11-08 · 补齐 Groove、Synth 音量、制作追溯与 AI HTML PV 前端
