@@ -1,5 +1,16 @@
 <a id="pr17-integration"></a>
 
+## 2026-11-08 · 工单 38 V2 · 空间镜头升级与真实 Alpha
+
+对应[工单 38](../CC-Tasks/38-hackathon-mg-video.md)、[视频工程 V2 说明](../video/mg/README.md#v2--空间镜头与导出)。沿用 V1 配色、102 秒时间轴和渲染链路，新增独立 spatial 模块，用 Three.js 摄像机执行 Dolly / Truck / Roll / Tilt 与小角度 Orbit；SVG 投影多景深图元、逐字挤出近似、音轨和三层波形。实现穿环推进、字片到音轨/音符到波形的连续形变、透视卡片归正，以及有序汇聚后静止落版。V1 源码入口及产物保留，没有改核心前后端。
+
+先实渲 8 秒开场与 6 秒录屏卡片预览，发现并修正侧向文字接近边缘、预览底图与透视四边形不贴合，再推广到完整输出。局部修正版实测约 25.2 / 15.7 秒；全片预览 143.8 秒，全片 Alpha 191.4 秒（本机四路并发）。产物统一在 `temp/mg-video-v2/`：cantaloom-mg-v2-preview.mp4、cantaloom-mg-v2-alpha.mov、五段独立 MG、两段局部 MP4 和 PilotScreenV2.mov。稳定录屏区间不变，开窗提前量改为 2.1 秒，尾余量仍 1.15 秒；替换视频通过四角透视映射跟随卡片，不把平放视频称为空间贴图。
+
+FFprobe 核实全长 1920×1080、30fps、102 秒 / 3060 帧，所有正式 MOV 为 ProRes profile 4、yuva444p12le。最终 MOV 直接解码的 7/7.7/16/29.3/40/56.4/65/90 秒中心 Alpha 均为 0，四段稳定区内窗 Alpha 全为 0；倾斜卡片下层颜色合成已检查。全片与两段局部 MP4 全部解码正常，blackdetect 无整帧黑屏，平均亮度范围 26.48–212.60，无整帧白屏。逐帧映射检查四角最大误差 4.69e-13 像素；同幅摄像机横移的近/远景位移 312.0 / 122.1 像素，确认不是整画面缩放。脚本：video/mg/verify-spatial.ts、verify-v2.py；本机证据：verification-v2.json、encoding-verification.json、spatial-verification.json、contact-v2.jpg。
+
+验证边界：文字的 2.5D 挤出是投影近似，不是实体字网格；视觉抽帧与技术检查不代替用户创意接受度。本轮仍静音，波形程序模拟，无真实录屏、无产品功能验收、无真实音画同步结论。后续通过 [VIDEO-38](../CROSS-END-HANDOFF.md#video-38) 接真实素材、配乐与人工审阅。仅本地提交，保留并行中的后端与启动器改动，未推送。
+
+
 ## 2026-11-08 · 工单 38 · 黑客松 MG 视频首版
 
 对应[工单 38](../CC-Tasks/38-hackathon-mg-video.md)与[独立视频工程及录屏替换说明](../video/mg/README.md)。本轮仅建立 video/mg 的 Remotion / React / SVG 工程，保留原 HTML 与产品代码。102 秒、1920×1080、30fps；五段 MG、四段真实 Alpha 窗口，包含文字遮罩、错位纸片、音符至波形形变与开窗/收拢转场。

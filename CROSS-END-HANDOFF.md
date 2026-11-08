@@ -135,6 +135,6 @@
 ### VIDEO-38 · 黑客松视频真实素材
 
 - 更新时间：2026-11-08；来源：[工单 38](CC-Tasks/38-hackathon-mg-video.md)。发起方：视频制作 Agent；接收方：Toge / 黑客松剪辑协作者；状态：MG 工程交付后待提供素材。
-- 交付：`feature/frontend-mg-demo-video` 的 [独立工程](video/mg/README.md)，102 秒时间轴与透明窗口；产物位于本机 `temp/mg-video/`，未上传远端。
+- 交付：`feature/frontend-mg-demo-video` 的 [独立工程](video/mg/README.md)，102 秒时间轴与透明窗口；V1 产物位于本机 `temp/mg-video/`，V2 空间镜头产物在 `temp/mg-video-v2/`，未上传远端。V2 素材需要首 2.1 秒 / 尾 1.15 秒余量，空间透视替换见工程说明。
 - 下一步：按工程素材清单提供四段真实录屏及授权配乐，保留首尾余量，再做实际功能核对、音画同步与人工观感验收。
 - 不涉及共享业务契约，不授权修改产品代码；回执与实际素材验证写回工单 38 和迭代日志。

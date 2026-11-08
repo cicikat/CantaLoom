@@ -41,3 +41,31 @@
 ## 本轮实际检查
 
 完整 MP4：102 秒 / 3060 帧 / 1920×1080 / 30fps，全片解码正常，未发现整帧黑屏。透明 MOV：ProRes 4444，解码 yuva444p12le；在四段主区间直接解码，内窗 Alpha 全为 0、外部为 255。完整检查图与 JSON 证据在根目录 temp/mg-video。运行 `node qa-stills.mjs` 可用复用浏览器快速抽帧；`verify.py --ffmpeg <带 alphaextract/blackdetect 的 FFmpeg>` 可复核透明 MOV（需要 Pillow）。Remotion 捆绑 FFmpeg 负责渲染，本次完整解码检测使用本机 imageio-ffmpeg，未将该 Python 环境作为工程渲染依赖。视觉抽帧未发现中文缺字或主标题溢出；未替代用户对动画节奏的最终审阅。
+
+
+## V2 · 空间镜头与导出
+
+V1 的 Composition、脚本与产物全部保留。V2 的 [spatial.tsx](src/spatial.tsx) 复用色卡、slots、shots、音频和字体，以 Three.js PerspectiveCamera / Vector3 计算投影，SVG 绘制各景深的文字、厚度侧面、轨道、波形与卡片。评估后没有引入 R3F / WebGL Canvas：本项目以文字和透明叠加为主，同一套投影坐标能直接控制 SVG Alpha 遮罩，并避免增加异步纹理/着色器渲染层。文字采用逐字投影基向量加七层挤出近似，属于 2.5D 字体，不是实体字体网格。
+
+- `npm run render:v2 -- pilots`：先输出 PilotOpeningV2.mp4（0–8 秒）、PilotScreenV2.mp4（26–32 秒），以及抽帧图。
+- `npm run render:v2 -- all`：V2 全长预览、全长透明 MOV 与五个独立 MG。
+- `npm run render:v2 -- PreviewV2` / `AlphaV2`：单独重导整片。
+- `npm run render:v2 -- openingV2`：独立开场；其他是 ingredientsV2、singingV2、showcaseV2、endingV2。
+- `npm run render:v2 -- stills`：主镜头、透视阶段和 Alpha 抽帧。
+
+V2 产物在项目根目录 `temp/mg-video-v2/`。全长文件名为 cantaloom-mg-v2-preview.mp4 / cantaloom-mg-v2-alpha.mov，编码延续 V1。Studio 中选择带 V2 的 Composition。V2 没有更改主录屏区间和 102 秒总长。
+
+镜头语言：开场的撞击、停顿与快速 Dolly 穿环；歌词字片按固定顺序散开并变成纵深音轨；音符的宽高、位置连续变成三层空间波形；侧向视差跟拍后进入漂浮卡片。片尾先收字片、再收音符与波形柱，按明确次序归位，随后停止运镜、只保留干净品牌落版。没有随机旋转或随机数。可配置重拍标记在 spatial.tsx 的 cues；camera、SpatialScene、screenGeometry 分别管理空间投影、镜头路径和屏幕路径。波形仍为程序模拟，未加入真实配乐。
+
+### V2 录屏替换与剪辑
+
+V2 开窗提前量为 2.1 秒，收拢为主录屏结束后 1.15 秒，素材须提供表内主时长加 3.25 秒余量。slots.file 与 trim 用法沿用 V1，trim 指向含余量的素材开头。内置 Video 使用 matrix3d 透视映射，四角逐帧跟随与 Alpha 窗口共用的投影顶点；实际有素材时预览提示自动移除。
+
+在外部剪辑软件中，稳定区间可以直接在全长 Alpha 下叠录屏；运动中的空间卡片须使用 Corner Pin / 透视变换匹配，或优先用本工程设置 file 后重渲 PreviewV2，由内置变换准确映射。单纯在下层平放录屏会透出画面，但不会自动产生正确的卡片透视。正式 Alpha 始终没有底图、提示和实录内容。
+
+### V2 验证边界
+
+先完成两段实渲并检查，修正侧向文字接近画框与预览底图越出透视四边形的问题，再进入完整导出。局部开场约 25 秒、6 秒卡片转场约 16 秒（本机四路并发，非性能承诺）。verify-spatial.ts 可由项目根目录的 tsx 执行：逐帧比较视频透视映射与遮罩四角，并验证近远视差。此检查不替代真实素材、人工动效审阅、配乐重音和音画同步验收。
+
+
+V2 最终实测：全片预览约 143.8 秒，Alpha 约 191.4 秒；全片和两个局部 MP4 均完整解码、无检测到的整帧黑屏/白屏。最终 MOV 已直接解码验证倾斜阶段及四段稳定区的 Alpha。证据见 temp/mg-video-v2/verification-v2.json 和 encoding-verification.json；复验 `python verify-v2.py --ffmpeg <完整 FFmpeg>`。独立 6 秒透明卡片转场为 PilotScreenV2.mov（对应全片 26–32 秒），可用 `npm run render:v2 -- screen-alpha` 重导；pilots 模式同时输出该透明版本。后续配乐、真实素材和用户观感仍待验收。

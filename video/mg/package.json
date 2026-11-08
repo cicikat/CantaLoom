@@ -1,1 +1,19 @@
-{"name":"cantaloom-mg","private":true,"type":"module","scripts":{"studio":"remotion studio src/index.tsx","render":"node render.mjs"},"dependencies":{"remotion":"4.0.541","@remotion/cli":"4.0.541","@remotion/bundler":"4.0.541","@remotion/renderer":"4.0.541","react":"19.2.0","react-dom":"19.2.0"}}
+{
+  "name": "cantaloom-mg",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.tsx",
+    "render": "node render.mjs",
+    "render:v2": "node render-v2.mjs"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.541",
+    "@remotion/cli": "4.0.541",
+    "@remotion/renderer": "4.0.541",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.541",
+    "three": "0.187.0"
+  }
+}
