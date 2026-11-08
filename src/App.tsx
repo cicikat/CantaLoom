@@ -23,7 +23,7 @@ export default function App(){
  useEffect(()=>{const close=(e:PointerEvent)=>{if(projectMenu.current&&!projectMenu.current.contains(e.target as Node))projectMenu.current.open=false};document.addEventListener('pointerdown',close);return()=>document.removeEventListener('pointerdown',close)},[]);
  const tracks=p.tracks.filter(t=>t.sectionId===selected.id),beat=time*p.bpm/60;
  useEffect(()=>{if(s.exportOpen)exportRef.current?.showModal();else exportRef.current?.close()},[s.exportOpen]);
- function go(id:string){if(projectMenu.current)projectMenu.current.open=false;production.invalidate('已切换创作区域，上次制作结果不会覆盖当前工程。');setEditor(undefined);setNav(id);scrollTo({top:id==='compose'?0:chapterScrollTop(id),behavior:'smooth'})}
+ function go(id:string){if(projectMenu.current)projectMenu.current.open=false;production.invalidate('已切换创作区域，上次制作结果不会覆盖当前工程。');setEditor(undefined);setNav(id);scrollTo({top:chapterScrollTop(id),behavior:'smooth'})}
  function openExport(){exportTrigger.current=projectMenu.current?.querySelector('summary')??document.activeElement as HTMLElement;if(projectMenu.current)projectMenu.current.open=false;s.setExportOpen(true)}
  function openEditor(id:string){production.invalidate();setEditor(id);setVoiceOpen(true);setTimeout(()=>document.getElementById('phrase-editor')?.scrollIntoView({behavior:'smooth',block:'start'}),0)}
  function moveTrack(id:string,to:string){if(id===to)return;s.mutate('调整积木顺序',next=>{const from=next.tracks.findIndex(t=>t.id===id),target=next.tracks.findIndex(t=>t.id===to);if(from<0||target<0||next.tracks[from].sectionId!==next.tracks[target].sectionId)return;const [track]=next.tracks.splice(from,1);next.tracks.splice(target,0,track)})}

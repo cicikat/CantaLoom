@@ -12,6 +12,8 @@ Windows 日常使用：双击项目根目录 **「打开声屿.bat」**。本机
 
 **当前首页已按 `03_patchlab_playful.html` 的 LOOP! 原型重新接线**：保留首屏、四个主题按钮、积木区、TAP、歌词便利贴和 PV 预览，替换原先四页工作台入口。整页按三个视觉章节连续滚动：首屏入场动画 → `Music Blocks` 过渡与音乐工作台 → MV 放映页（PV 预览就在第三章，见[工单 23](CC-Tasks/23-three-chapter-page.md)）。点击输入框左侧的铅笔可打开「创作设置」，输入 1–8 行歌词；自由作品点击歌词卡片下的「编辑旋律」展开钢琴卷帘，下方可逐句重唱。详见[原型接线](docs/ARCHITECTURE.md#prototype-frontend)。
 
+章节之间的四段转场均为下滑触发后自动播完并落到下一页，不必一直滚动；标题页可停留，再下滑进入工作台或 MV。上滑可返回，内容页内保持正常滚动，导航可直接跳过转场。见[工单 29](CC-Tasks/29-five-chapter-scroll-transitions.md)。
+
 默认页面已收回原稿版式：不再常驻显示制作说明、作品信息栏、引擎区或底部悬浮播放器。播放进度在积木底栏；右上角「保存 / 导出」（手机为「⋯」）打开作品设置。详见[本轮收简记录](docs/iteration-log.md#loop-layout-restoration)。
 
 双击入口仍复用原启动器，构建后打开上述 LOOP! 首页。HTML 文件保留原始设计与演示脚本，并提示进入正式首页；实际工程、请求、试听和保存由 React 接线。浏览器存档格式及旧工程保持兼容，未清空已有作品。接线与本轮验证见[工单 5](CC-Tasks/5-toge-free-creation.md)、[迭代记录](docs/iteration-log.md#loop-prototype-wiring)。

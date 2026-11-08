@@ -1,5 +1,5 @@
 import {memo,useEffect,useRef,type CSSProperties,type RefObject} from 'react';
-import {actProgress,cascade,easeInOut,easeOut,lerp,mvExitFrame,phraseFrame,span} from './chapter-motion';
+import {actProgress,BENCH_REVEAL_MS,cascade,CIRCLE_ENTRY_MS,easeInOut,easeOut,lerp,mvExitFrame,phraseFrame,span,timedProgress} from './chapter-motion';
 
 // Two scroll "acts" sit between the three content chapters:
 //   hero → BenchAct ("Music Blocks") → workbench → MvAct ("Let's …") → MV theatre.
@@ -10,7 +10,11 @@ import {actProgress,cascade,easeInOut,easeOut,lerp,mvExitFrame,phraseFrame,span}
 // one text block's size change per frame; nothing in the content chapters is covered once its curtain is gone.
 
 type Act=ReturnType<typeof actProgress>;
-interface Scene{measure():void;draw(act:Act|null,now:number):boolean}
+type Gesture={down:boolean;up:boolean;entering:boolean;navigating:boolean};
+interface Scene{measure():void;draw(act:Act|null,now:number,gesture:Gesture):boolean}
+
+const NAVIGATION_EVENT='songyu:chapter-navigation';
+let navigation:{top:number;until:number}|null=null;
 
 /** Writes a style value only when it changed, so idle scroll frames touch nothing. */
 function writer(){
@@ -43,15 +47,39 @@ function useScrollAct(trackRef:RefObject<HTMLDivElement|null>,build:(track:HTMLD
   const track=trackRef.current,stage=track?.firstElementChild as HTMLDivElement|null,pin=track?.nextElementSibling as HTMLElement|null;
   if(!track||!stage||!pin?.classList.contains('act-pin'))return;
   const motion=matchMedia('(prefers-reduced-motion: reduce)'),scene=buildRef.current(track,stage,pin);
-  let frame=0,reveal=0;
+  let frame=0,reveal=0,introLength=0,lastScroll=scrollY,entryProgress=0,entryTarget:0|1=0,entryClock:number|null=null;
   const read=():Act=>{const t=track.getBoundingClientRect();return actProgress(t.top,t.height,stage.offsetHeight,pin.getBoundingClientRect().top,reveal)};
   const tick=(now:number)=>{
-   frame=0;const act=motion.matches?null:read();
+   frame=0;let act=motion.matches?null:read();
+   if(navigation&&(Math.abs(scrollY-navigation.top)<.01||now>=navigation.until))navigation=null;
+   const navigating=!!navigation;
+   const down=scrollY>lastScroll+.5,up=scrollY<lastScroll-.5;
+   let entering=false,entryRunning=false;
+   if(navigating||!act||act.story>.002||act.reveal>.002||(act.intro===0&&up))entryClock=null;
+   else{
+    const wasRunning=entryClock!==null;
+    if(!wasRunning)entryProgress=act.intro;
+    const forward=down&&act.intro>0&&act.intro<1;
+    const backward=up&&(wasRunning||(act.intro>0&&act.story<=.002&&act.reveal<=.002));
+    if(forward)entryTarget=1;else if(backward)entryTarget=0;
+    if(wasRunning||forward||backward){
+     entering=true;
+     const step=timedProgress(entryProgress,entryTarget,entryClock===null?0:now-entryClock,CIRCLE_ENTRY_MS);
+     entryProgress=step.progress;entryRunning=step.running;entryClock=entryRunning?now:null;
+     const top=track.getBoundingClientRect().top+scrollY;
+     scrollTo({top:Math.ceil(top+introLength*entryProgress),behavior:'instant'});
+     act=read();
+    }
+   }
+   track.classList.toggle('is-entering',entryRunning);
    pin.classList.toggle('is-open',!act||act.reveal>=1);
-   if(scene.draw(act,now))schedule();
+   const running=scene.draw(act,now,{down:down&&!entering&&!navigating,up:up&&!entering&&!navigating,entering,navigating});
+   lastScroll=scrollY;
+   if(entryRunning||running)schedule();
   };
   const schedule=()=>{if(!frame)frame=requestAnimationFrame(tick)};
-  const measure=()=>{reveal=pinReveal(pin);scene.measure();schedule()};
+  const interruptNavigation=()=>{navigation=null};
+  const measure=()=>{reveal=pinReveal(pin);introLength=Math.min(Math.max(1,track.offsetHeight-stage.offsetHeight-reveal),stage.offsetHeight*1.8);scene.measure();schedule()};
   // Keyboard focus landing on a page that is still under its curtain jumps to the end of the reveal.
   const focus=(e:FocusEvent)=>{
    const page=pin.firstElementChild;if(motion.matches||!page?.contains(e.target as Node)||read().reveal>=1)return;
@@ -60,8 +88,9 @@ function useScrollAct(trackRef:RefObject<HTMLDivElement|null>,build:(track:HTMLD
   const size=new ResizeObserver(measure);size.observe(stage);
   measure();
   addEventListener('scroll',schedule,{passive:true});addEventListener('resize',measure);motion.addEventListener('change',measure);document.addEventListener('focusin',focus);
+  addEventListener(NAVIGATION_EVENT,schedule);addEventListener('wheel',interruptNavigation,{passive:true});addEventListener('touchstart',interruptNavigation,{passive:true});addEventListener('keydown',interruptNavigation);
   void document.fonts?.ready.then(measure);
-  return()=>{cancelAnimationFrame(frame);size.disconnect();removeEventListener('scroll',schedule);removeEventListener('resize',measure);motion.removeEventListener('change',measure);document.removeEventListener('focusin',focus);scene.dispose?.()};
+  return()=>{cancelAnimationFrame(frame);size.disconnect();removeEventListener('scroll',schedule);removeEventListener('resize',measure);motion.removeEventListener('change',measure);document.removeEventListener('focusin',focus);removeEventListener(NAVIGATION_EVENT,schedule);removeEventListener('wheel',interruptNavigation);removeEventListener('touchstart',interruptNavigation);removeEventListener('keydown',interruptNavigation);scene.dispose?.()};
  },[trackRef]);
 }
 
@@ -69,10 +98,11 @@ function useScrollAct(trackRef:RefObject<HTMLDivElement|null>,build:(track:HTMLD
 export function chapterScrollTop(id:string){
  const el=document.getElementById(id);if(!el)return 0;
  const pin=el.closest<HTMLElement>('.act-pin'),top=(n:Element)=>n.getBoundingClientRect().top+scrollY;
- if(!pin)return top(el);
- const page=pin.firstElementChild!,reveal=pinReveal(pin);
+ const page=pin?.firstElementChild,reveal=pin?pinReveal(pin):0;
  // Rounded up so the browser's whole-pixel scroll never stops a hair before the curtain is fully open.
- return Math.ceil(top(pin)+reveal+(el.getBoundingClientRect().top-page.getBoundingClientRect().top));
+ const target=id==='compose'?0:pin&&page?Math.ceil(top(pin)+reveal+(el.getBoundingClientRect().top-page.getBoundingClientRect().top)):top(el);
+ navigation={top:target,until:performance.now()+3000};dispatchEvent(new Event(NAVIGATION_EVENT));
+ return target;
 }
 
 // ---------- Act 1 · original Music Blocks opener, then the violet page pulls down off the workbench ----------
@@ -81,17 +111,35 @@ const DISCS_1=['var(--yellow)','var(--orange)','var(--mint)','var(--blue)','var(
 
 export const BenchAct=memo(function BenchAct(){
  const track=useRef<HTMLDivElement>(null);
- useScrollAct(track,(_el,stage)=>{
+ useScrollAct(track,(el,stage,pin)=>{
   const curtain=stage.querySelector<HTMLElement>('.bench-curtain')!;
-  const put=writer(),ring=discs(stage,put);let H=0;
+  const put=writer(),ring=discs(stage,put);let H=0,revealLength=0,titleAt:number|null=null,progress=0,target:0|1=0,clock:number|null=null,requested=false;
   return {
-   measure(){H=stage.offsetHeight},
-   draw(act){
-    const {intro:p,reveal:r}=act??{intro:1,reveal:0};
-    ring.draw(p,r);
-    // Only the final pull-down is new; the original opener and one-screen hold stay intact.
-    put(curtain,'transform',move(0,easeInOut(r)*(H+120)));
-    return false;
+   measure(){H=stage.offsetHeight;revealLength=pinReveal(pin)},
+   draw(act,now,{down,up,navigating}){
+    const {intro:p,reveal:r}=act??{intro:1,reveal:0},revealTop=pin.getBoundingClientRect().top+scrollY;
+    if(!act||p<=.34){progress=0;target=0;clock=null;titleAt=null;requested=false}
+    else if(navigating){progress=r;target=r>=1?1:0;clock=null;requested=false}
+    else{
+     if(p>.42)titleAt??=now;
+     if(r>=1&&(target===1||progress===0||down)){progress=1;target=1;clock=null;requested=false}
+     else{
+      if(up){target=0;requested=false}
+      else if(down&&p>=1)requested=true;
+      // Let the original staggered title finish before another gesture opens the workbench.
+      if(requested&&titleAt!==null&&now-titleAt>=1100){target=1;requested=false}
+     }
+    }
+    const previous=progress,step=navigating?{progress,running:false}:timedProgress(progress,target,clock===null?0:now-clock,BENCH_REVEAL_MS);
+    progress=step.progress;clock=step.running?now:null;
+    const drop=easeInOut(progress);
+    ring.draw(p,drop);el.classList.toggle('is-exiting',step.running);
+    put(curtain,'transform',move(0,drop*(H+120)));
+    if(act){
+     if(step.running||progress!==previous)scrollTo({top:Math.ceil(revealTop+revealLength*drop),behavior:'instant'});
+     pin.classList.toggle('is-open',progress>=1);
+    }
+    return !!act&&!navigating&&(step.running||requested);
    },
   };
  });
@@ -145,7 +193,7 @@ export const MvAct=memo(function MvAct(){
   const outChars=Array.from(from.querySelectorAll<HTMLElement>('.say-ch')),inChars=Array.from(to.querySelectorAll<HTMLElement>('.say-ch'));
   let W=0,H=0,revealLength=0,f=100,stacked=false,letsW=0,wB=0,lineH=0,edgeA:number[]=[],edgeB:number[]=[];
   let startedAt:number|null=null,shown=-1;
-  let lastScroll=scrollY,exitRequested=false,exitStart:number|null=null,exitProgress=0,exitTarget:0|1=0,exitClock:number|null=null;
+  let exitRequested=false,exitStart:number|null=null,exitProgress=0,exitTarget:0|1=0,exitClock:number|null=null;
   return {
    measure(){
     W=stage.clientWidth;H=stage.offsetHeight;revealLength=pinReveal(pin);
@@ -161,16 +209,17 @@ export const MvAct=memo(function MvAct(){
     text.style.fontSize=`${f.toFixed(2)}px`;
     const k=f/100;letsW=l*k;wB=b*k;lineH=h*k;edgeA=rawA.map(x=>x*k);edgeB=rawB.map(x=>x*k);shown=-1;
    },
-   draw(act,now){
+   draw(act,now,{down,up,navigating}){
     const live=!!act,{story:P,reveal:r,intro:q}=act??{story:.5,reveal:0,intro:1};
-    const currentScroll=scrollY,down=currentScroll>lastScroll+.5,up=currentScroll<lastScroll-.5;
+    const currentScroll=scrollY;
     const pageTop=el.getBoundingClientRect().top+currentScroll,revealTop=pin.getBoundingClientRect().top+currentScroll;
-    lastScroll=currentScroll;
-    const playback=phraseFrame(q,now,startedAt,!live||P>=.66||r>0);
+    const playback=phraseFrame(q,now,startedAt,!live||navigating||P>=.66||r>0);
     startedAt=playback.startedAt;
     const m=playback.progress;
     if(!live||q<=.34){
      exitRequested=false;exitStart=null;exitProgress=0;exitTarget=0;exitClock=null;
+    }else if(navigating){
+     exitRequested=false;exitStart??=1.8;exitProgress=.56+.44*r;exitTarget=1;exitClock=null;
     }else if(r>=1&&(exitTarget===1||exitProgress===0||down)){
      // Navigation/focus can skip directly to MV. It must not leave a timer or an invisible curtain behind.
      exitRequested=false;exitStart??=1.8;exitProgress=1;exitTarget=1;exitClock=null;
@@ -184,6 +233,7 @@ export const MvAct=memo(function MvAct(){
      }
     }
     const previousExit=exitProgress,exit=mvExitFrame(exitProgress,exitTarget,exitClock===null?0:now-exitClock);
+    if(navigating)exit.running=false;
     exitProgress=exit.progress;exitClock=exit.running?now:null;
     ring.draw(q,exit.reveal);
     el.classList.toggle('is-exiting',exit.running);
@@ -233,10 +283,9 @@ export const MvAct=memo(function MvAct(){
      // reveal spacer while it opens. This lands on usable MV content instead of leaving an empty scroll track.
      const destination=exit.expand>=1?revealTop+revealLength*exit.reveal:pageTop+exitStart*H;
      if(exit.running||exit.progress!==previousExit)scrollTo({top:Math.ceil(destination),behavior:'instant'});
-     lastScroll=scrollY;
      pin.classList.toggle('is-open',exit.reveal>=1);
     }
-    return live&&(playback.running||exit.running);
+    return live&&!navigating&&(playback.running||exit.running);
    },
    dispose(){[...outs,...ins].forEach(a=>a.cancel())},
   };

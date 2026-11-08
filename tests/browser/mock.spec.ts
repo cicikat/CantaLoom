@@ -354,7 +354,7 @@ test('LOOP keeps the prototype pieces in three chapters on desktop and phone and
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 
-test('both chapter openers restore the original overlapping circles, timed title pop and full-screen hold',async({page})=>{
+test('both chapter openers keep the original circles and finish at the next title after one gesture',async({page})=>{
  await page.goto('/');
  for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
   await page.setViewportSize(viewport);
@@ -368,29 +368,26 @@ test('both chapter openers restore the original overlapping circles, timed title
    await page.evaluate(y=>scrollTo(0,y),metrics.top);
    await expect(stage).not.toHaveClass(/is-titled/);
    expect(await page.evaluate(()=>!!document.elementFromPoint(innerWidth/2,innerHeight*.47)?.closest('.act'))).toBe(false);
-   await page.evaluate(y=>scrollTo(0,y),metrics.top+metrics.h*1.8*.2);
-   await expect.poll(()=>stage.evaluate(el=>parseFloat((el as HTMLElement).style.getPropertyValue('--p')))).toBeCloseTo(.2,2);
+   await page.mouse.wheel(0,100);await expect(track).toHaveClass(/is-entering/);
    const ring=await stage.locator('.act-ring').first().evaluate(el=>{
     const css=getComputedStyle(el),matrix=new DOMMatrixReadOnly(css.transform);
     return {diameter:parseFloat(css.width),scale:matrix.d,y:matrix.f,p:parseFloat((el.parentElement as HTMLElement).style.getPropertyValue('--p'))};
    });
-   const diameter=Math.max(viewport.width,viewport.height*.85)*1.5,e=ring.p/.24;
+   const diameter=Math.max(viewport.width,viewport.height*.85)*1.5,e=Math.min(1,ring.p/.24);
    expect(ring.diameter).toBeCloseTo(diameter,0);
    expect(ring.scale).toBeCloseTo(.55+.45*e,2);
    expect(Math.abs(ring.y-e*(-viewport.height-.15*diameter))).toBeLessThan(1);
-   // Stop scrolling just after the threshold: the final letter must finish popping in on its own clock.
-   await page.evaluate(y=>scrollTo(0,y),metrics.top+metrics.h*1.8*.43);
+   // No more input: the circles and title must finish and land at the stable title page themselves.
+   await expect.poll(()=>stage.evaluate(el=>parseFloat((el as HTMLElement).style.getPropertyValue('--p')))).toBe(1);
+   await expect(track).not.toHaveClass(/is-entering/);
    await expect(stage).toHaveClass(/is-titled/);
    const last=stage.locator(selector==='.act-bench'?'.bridge-blocks>span:last-child':'.say-lets');
    await expect(last).toHaveCSS('opacity','1');
    await expect(last).toHaveCSS('translate','0px');
-   await page.evaluate(y=>scrollTo(0,y),metrics.top+metrics.h*1.8*.5);
    await expect(stage).toHaveClass(/is-covered/);
    const pin=track.locator('xpath=following-sibling::*[1]');
    await expect(pin).not.toHaveClass(/is-open/);
-   await page.evaluate(y=>scrollTo(0,y),metrics.top+metrics.h*1.8);
-   await expect(pin).not.toHaveClass(/is-open/);
-   expect(metrics.h*1.8*(1-.43)).toBeGreaterThan(metrics.h);
+   expect(Math.abs(await page.evaluate(()=>scrollY)-(metrics.top+metrics.h*1.8))).toBeLessThanOrEqual(2);
    await page.evaluate(y=>scrollTo(0,y),metrics.top);
    await expect(stage).not.toHaveClass(/is-titled/);
   }
@@ -422,21 +419,24 @@ test('Lets plays and completes its phrase animation after entry without further 
   await page.evaluate(y=>scrollTo(0,y),enter);
   await expect(stage).toHaveClass(/is-titled/);
   await expect(outgoing).toHaveCSS('opacity','1');
-  const initialWidth=await block.evaluate(el=>el.getBoundingClientRect().width),stoppedAt=await page.evaluate(()=>scrollY);
+  const initialWidth=await block.evaluate(el=>el.getBoundingClientRect().width);
+  await expect.poll(()=>stage.evaluate(el=>parseFloat((el as HTMLElement).style.getPropertyValue('--p')))).toBe(1);
+  await expect(act).not.toHaveClass(/is-entering/);
+  const stoppedAt=await page.evaluate(()=>scrollY);
   await expect(act).toHaveClass(/is-swapped/,{timeout:6000});
   await expect(outgoing).toHaveCSS('opacity','0');await expect(incoming).toHaveCSS('opacity','1');
   await expect(block).toHaveCSS('background-color','rgb(187, 164, 248)');
   expect(await block.evaluate(el=>el.getBoundingClientRect().width)).toBeGreaterThan(initialWidth);
   expect(await page.evaluate(()=>scrollY)).toBe(stoppedAt);
   await expect(stage.locator('.say-hint')).toHaveCSS('opacity','1');
-  // Small movements within the page preserve the completed phrase; leaving and returning starts it again.
-  await page.evaluate(y=>scrollTo(0,y),enter+20);await expect(act).toHaveClass(/is-swapped/);
-  await page.evaluate(y=>scrollTo(0,y),top+viewport.height*1.8*.2);
+  // Leaving and returning starts the complete entry again; the following gesture is reserved for MV.
+  await page.evaluate(y=>scrollTo(0,y),top);
   await expect(act).not.toHaveClass(/is-swapped/);await expect(incoming).toHaveCSS('opacity','0');
   await page.evaluate(y=>scrollTo(0,y),enter);
   await expect(outgoing).toHaveCSS('opacity','1');
+  await expect.poll(()=>stage.evaluate(el=>parseFloat((el as HTMLElement).style.getPropertyValue('--p')))).toBe(1);
   await expect(act).toHaveClass(/is-swapped/,{timeout:6000});
-  expect(Math.abs(await page.evaluate(()=>scrollY)-enter)).toBeLessThanOrEqual(1);
+  expect(Math.abs(await page.evaluate(()=>scrollY)-(top+viewport.height*1.8))).toBeLessThanOrEqual(2);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  }
  await page.getByRole('navigation').getByRole('button',{name:'PV ✦',exact:true}).click();
@@ -457,6 +457,7 @@ test('one downward gesture plays the complete Lets to MV reveal and one upward g
   const top=await act.evaluate(el=>el.getBoundingClientRect().top+scrollY),enter=top+viewport.height*1.8*.5;
   await page.evaluate(y=>scrollTo(0,y),top);await expect(act).not.toHaveClass(/is-swapped/);
   await page.evaluate(y=>scrollTo(0,y),enter);await expect(act).toHaveClass(/is-swapped/,{timeout:6000});
+  const titleTop=await page.evaluate(()=>scrollY);
   // One real wheel input, then no more scrolling until the actual MV is uncovered and usable.
   await page.mouse.wheel(0,100);
   await expect(act).toHaveClass(/is-exiting/);
@@ -478,7 +479,7 @@ test('one downward gesture plays the complete Lets to MV reveal and one upward g
   await expect.poll(()=>curtain.evaluate(el=>new DOMMatrixReadOnly(getComputedStyle(el).transform).m42),{timeout:6000}).toBe(0);
   await expect(act).not.toHaveClass(/is-exiting/);await expect(pin).not.toHaveClass(/is-open/);
   await expect(stage.locator('.say-hint')).toHaveCSS('opacity','1');
-  expect(Math.abs(await page.evaluate(()=>scrollY)-(enter+100))).toBeLessThanOrEqual(2);
+  expect(Math.abs(await page.evaluate(()=>scrollY)-(titleTop+100))).toBeLessThanOrEqual(2);
   // Reversing before the colour block fills the screen also returns to a complete, stable title.
   await page.mouse.wheel(0,100);await expect(act).toHaveClass(/is-exiting/);
   await expect.poll(()=>stage.locator('.say-block').evaluate(el=>el.getBoundingClientRect().height)).toBeGreaterThan(viewport.height*.4);
@@ -488,6 +489,49 @@ test('one downward gesture plays the complete Lets to MV reveal and one upward g
   // A fresh downward gesture replays the exit without needing continuous wheel input.
   await page.mouse.wheel(0,100);await expect(pin).toHaveClass(/is-open/,{timeout:6000});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ }
+ expect(errors).toEqual([]);
+});
+
+test('one gesture finishes Music Blocks to workbench and returns through the circles without trapping content',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.goto('/');
+ const act=page.locator('.act-bench'),stage=act.locator('.act-stage'),pin=page.locator('.bench-pin');
+ for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
+  await page.setViewportSize(viewport);
+  const top=await act.evaluate(el=>el.getBoundingClientRect().top+scrollY);
+  await page.evaluate(y=>scrollTo(0,Math.max(0,y)),top);
+  await page.mouse.wheel(0,100);
+  await expect.poll(()=>stage.evaluate(el=>parseFloat((el as HTMLElement).style.getPropertyValue('--p')))).toBe(1);
+  await expect(stage.locator('.bridge-blocks>span').last()).toHaveCSS('opacity','1');
+  await expect(act).not.toHaveClass(/is-entering/);
+  await page.mouse.wheel(0,100);
+  await expect(act).toHaveClass(/is-exiting/);
+  await expect(pin).toHaveClass(/is-open/,{timeout:6000});await expect(act).not.toHaveClass(/is-exiting/);
+  expect(await page.evaluate(()=>!!document.elementFromPoint(innerWidth/2,innerHeight/2)?.closest('.act'))).toBe(false);
+  const beat=page.locator('#board .beat').first(),pressed=await beat.getAttribute('aria-pressed');
+  await beat.click();await expect(beat).toHaveAttribute('aria-pressed',pressed==='true'?'false':'true');
+  const landed=await page.evaluate(()=>scrollY);
+  await page.mouse.wheel(0,120);await expect.poll(()=>page.evaluate(()=>scrollY)).toBeGreaterThan(landed+50);
+  await page.evaluate(y=>scrollTo(0,y),landed);await page.mouse.wheel(0,-100);
+  await expect(act).toHaveClass(/is-exiting/);
+  await expect.poll(()=>stage.locator('.bench-curtain').evaluate(el=>new DOMMatrixReadOnly(getComputedStyle(el).transform).m42),{timeout:6000}).toBe(0);
+  await expect(act).not.toHaveClass(/is-exiting/);await expect(pin).not.toHaveClass(/is-open/);
+  // The next upward gesture returns all the way through the circles to the previous chapter, then stops.
+  await page.mouse.wheel(0,-100);await expect(act).toHaveClass(/is-entering/);
+  await expect.poll(()=>stage.evaluate(el=>parseFloat((el as HTMLElement).style.getPropertyValue('--p')))).toBe(0);
+  await expect(act).not.toHaveClass(/is-entering/);
+  expect(Math.abs(await page.evaluate(()=>scrollY)-top)).toBeLessThanOrEqual(2);
+  await expect(page.locator('.hero')).toBeInViewport();
+  // Navigation must bypass an in-flight opener instead of being mistaken for another scroll gesture.
+  await page.mouse.wheel(0,100);await expect(act).toHaveClass(/is-entering/);
+  await page.getByRole('navigation').getByRole('button',{name:'PV ✦',exact:true}).click();
+  await expect(page.locator('.mv-pin')).toHaveClass(/is-open/);
+  await expect(page.getByRole('region',{name:'歌词 PV',exact:true})).toBeInViewport({ratio:.5});
+  await page.getByRole('navigation').getByRole('button',{name:'音乐积木',exact:true}).click();
+  await expect(pin).toHaveClass(/is-open/);await expect(act).not.toHaveClass(/is-entering/);
+  await page.getByRole('navigation').getByRole('button',{name:'创作',exact:true}).click();
+  await expect.poll(()=>page.evaluate(()=>scrollY)).toBe(0);await expect(act).not.toHaveClass(/is-entering/);
  }
  expect(errors).toEqual([]);
 });

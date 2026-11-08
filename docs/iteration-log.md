@@ -1,3 +1,13 @@
+<a id="all-chapter-transitions-autoplay"></a>
+
+## 2026-11-08 四段页面转场统一为单次触发后自动落页
+
+关联：[工单 29](../CC-Tasks/29-five-chapter-scroll-transitions.md)、[章节接线](ARCHITECTURE.md#prototype-frontend)、[转场控制器](../src/components/ChapterActs.tsx)、[计时函数](../src/components/chapter-motion.ts)、[首页导航](../src/App.tsx)。toge 反馈其他几处仍依赖手动滑完整段，停止输入就卡在中间。补齐首页 → Music Blocks、Music Blocks → 工作台、工作台 → Let's：两处圆形保留原版几何、错拍与标题弹出，但在边界下滑一次后用 1200ms 自动走完原轨道并停到标题页；Music Blocks 再下滑一次用 1000ms 完整揭开工作台，标题尚未弹完时先等它完成。原先 Let's 自动翻字与 1800ms 自动揭开 MV 保留。
+
+共用控制器跟踪真实手势，动画自己的滚动不当成新输入，不会连锁跳过下一页。每段支持一次上滑后自动倒回，到位停止调度；工作台和 MV 内自然滚动不会被拉回。回归中另发现点击导航的平滑滚动会经过并触发圆形入场，拦截目标跳转：将创作/音乐积木/PV 全部纳入 `chapterScrollTop()` 的直达标记，导航时暂停手势转场，完成后恢复，新手势可打断导航。减少动态效果仍是普通流静止页。仅修改前端与对应文档，无后端、共享契约、音乐/音频或导出改动，无新增跨端交接。
+
+验证：最终 `npm run build` 通过（既有 Zod 注释与大 chunk 提示）；动效单元 **7/7**；定向 Mock 页面最终 **5/5**。1280×800 / 390×844 下，单次真实滚轮触发两处圆形和两处揭幕后停止操作，仍完整落页；检查向上返回、中途倒回、工作台实际格子点击、MV 字幕选择、内容继续正常滚动、入场途中导航 PV/工作台/首页、已有翻字、布局/钢琴卷帘、减少动态效果、无页面错误和无横向溢出。初轮 4 通过/1 失败：旧用例等圆停下才断言旧句子仍完全不动，而自动翻字已同步进行，调整为入场时确认首句后再检查最终句子；随后重跑暴露上述导航拦截问题，修复后最终五项全过。输出 `temp/all-transitions-autoplay-tests/`、`temp/all-transitions-autoplay-final/`、`temp/all-transitions-autoplay-retest/`、`temp/all-transitions-autoplay-navigation/`，使用 `CHOKIDAR_USEPOLLING=true`。未重跑完整 Mock、历史 TAP 失败项、帧率、真实引擎、实机/Safari 或人工手感验收；工单 29 的实机核对继续保留。仅本地提交。
+
 <a id="lets-mv-entry-autoplay"></a>
 
 ## 2026-11-08 Let's 到 MV 改为单次下滑后自动揭幕
