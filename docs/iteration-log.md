@@ -1,3 +1,11 @@
+<a id="pr17-integration"></a>
+
+## 2026-11-08 · 工单 29 前端 PR #17 合并协调
+
+关联：[工单 29](../CC-Tasks/29-five-chapter-scroll-transitions.md)、[团队流程](TEAM_WORKFLOW.md)、[PR #17](https://github.com/cicikat/CantaLoom/pull/17)。用户授权自行裁定冲突并合并。保留 Toge 四项转场/歌词侧页/停留/创作设置改动与 main 的后端、安装器、测试分层；迭代日志双方记录均保留。浏览器测试保留侧页新路径、确定性 TAP、播放条件轮询和隔离下载路径，删除重复 startMaking 与无条件截图。作品设置 helper 先点击创作侧页「完成」，避免侧页遮住右上角菜单；没有修改产品逻辑来规避失败。
+
+验证：build 通过；npm test 129 通过 / 8 外部资源验收跳过；完整 Mock 40/40；最终 HTTP 浏览器 18/18（含 HTTP 夹具、实际 Web Audio 与 FFmpeg 测试，不代表真实模型/歌唱验收）。HTTP 首轮 17/18，规划锁定用例因创作侧页覆盖作品设置超时；减少动效诊断未解决，已撤销，最终按真实关闭路径修复。手机实机、Safari、真实 LLM/演唱与人工手感未验收；工单 29 原待验项保留。合并在 temp 下独立 worktree 执行，主工作区既有两项启动器删除及未跟踪执行说明保留。
+
 <a id="creation-settings-drawer"></a>
 
 ## 2026-11-08 创作设置改为右侧滑出侧页，打开时不再误翻页
@@ -38,7 +46,128 @@
 
 验证：最终 `npm run build` 通过（既有 Zod 注释与大 chunk 提示）；动效单元 **7/7**；定向 Mock 页面最终 **5/5**。1280×800 / 390×844 下，单次真实滚轮触发两处圆形和两处揭幕后停止操作，仍完整落页；检查向上返回、中途倒回、工作台实际格子点击、MV 字幕选择、内容继续正常滚动、入场途中导航 PV/工作台/首页、已有翻字、布局/钢琴卷帘、减少动态效果、无页面错误和无横向溢出。初轮 4 通过/1 失败：旧用例等圆停下才断言旧句子仍完全不动，而自动翻字已同步进行，调整为入场时确认首句后再检查最终句子；随后重跑暴露上述导航拦截问题，修复后最终五项全过。输出 `temp/all-transitions-autoplay-tests/`、`temp/all-transitions-autoplay-final/`、`temp/all-transitions-autoplay-retest/`、`temp/all-transitions-autoplay-navigation/`，使用 `CHOKIDAR_USEPOLLING=true`。未重跑完整 Mock、历史 TAP 失败项、帧率、真实引擎、实机/Safari 或人工手感验收；工单 29 的实机核对继续保留。仅本地提交。
 
+<a id="first-run-installer"></a>
+
+## 2026-11-08 · 工单 37 新用户一键安装启动
+
+- [工单 37](../CC-Tasks/已完成/37-first-run-installer.md)新增 [install-and-start.bat](../install-and-start.bat) 与 [PowerShell 安装器](../scripts/install-local.ps1)，Windows x64、无需全局 Node/管理员权限。基础档下载便携 Node 22 并复用 npm/build/启动；演唱档实现 OpenUtau 0.1.576、绮萱 2.7.0、2025.02 声码器、.NET 10 SDK 下载与桥接编译、FFmpeg。资源默认放项目相邻 CantaLoom-resources；不改系统 PATH、.env、已有后台配置；已有根目录设置明确中止，由用户继续原入口。
+- [首次安装与硬件说明](ENGINES.md#first-install)已注明建议 RAM/显存/磁盘预算、CPU 无独显路线、远程 LLM 无需本地权重、许可确认、可选 FluidSynth/SoundFont/Chromium、下载校验和失败重试方式。建议值不是经设备矩阵验证的最低要求。
+- 实测：Windows PowerShell 5.1 语法及 local Plan 通过；新相邻目录下载 Node v22.23.4 并通过官方 SHA256 校验；原 3001 被占用时安全中止，未停止已有服务；改用隔离 3119 后完整 build、页面、JS 资产与 API 就绪检查通过，检查后停止自有服务。npm 依赖沿用本机既有 node_modules，未在空 npm 缓存/全新 Windows 上跑 npm ci。演唱许可拒绝路径确认在下载前退出；声码器 52.8 MB 包实际下载、SHA256 与官方资产一致、ZIP 内根布局符合目标 Dependencies 目录；其余 release 名称/校验元数据与 .NET SDK 元数据已联网核对。
+- 验证边界：尚未执行整套演唱档下载/桥接编译/真实 CPU 或 DirectML 生成、FFmpeg 新安装导出、低内存和 ARM 设备；不将基础启动成功当作真实演唱验收。既有模型推理/音频/前端/公共契约未改，无新增跨端接线。未跟踪的他人说明与两项既有启动文件删除保留，不纳入本轮提交。
+- 补充：中文入口 [一键安装启动.bat](../一键安装启动.bat)复用同一安装器；`node --test tests/launcher.test.mjs tests/launcher-restart.test.mjs` 3/3 通过，含 Windows 真实监听进程身份与安全停止回归。local/singing Plan、文档相对链接、git diff --check 通过。本轮仅本地提交，未推送远端。
+
 <a id="lets-mv-entry-autoplay"></a>
+
+<a id="toge-followup-36"></a>
+
+## 2026-11-08 · 工单 36 汇总 31–35 的 Toge 剩余接线
+
+- 用户要求把刚完成后端工单中的未完成/前端部分整理给 Toge；新增[工单36](../CC-Tasks/36-toge-backend-followup.md)，Owner Toge、Backend reviewer Blacktea，唯一执行checkbox覆盖：32零偏移提示清理、33 Synth伴奏解禁、31 Groove全链路、34表现规划状态、35 HTML PV存档/Client/Mock/#pv/seek/导出。共享新增字段与音频接线仍须就36范围确认，本次仅整理文档。
+- 已核对实际 owning source：startProduction仍为FreeInput；Synth band bus已存在而Groove尚未接事件；零偏移旧提示和Synth禁用条件仍在组件；PV runtime/接口已交付但SongProject没有设计字段、Client ExportInput仍为Canvas。整理时后端本地完整基线d550b9c、origin/main为889f424；用户随后明确授权统一推送PR并合并，范围含31–35、已有eedadd3启动器提交及36文档。Toge开工应在PR合并后同步main并核验基线，不能用旧main联调。temp产物不随Git同步，资源和DPAPI配置不可当作已迁移。
+- 去重：[27](../CC-Tasks/27-frontend-interface-sync.md)的Groove未完checkbox、[35 P2](../CC-Tasks/后端/35-ai-html-pv.md)的剩余前端/共验入口转到36/工单6；31–34已完成工单、5、README和原五个交接ID指向36。旧后端实现和历史测试证据不改写，不接管其他历史提案；35等待页面/共同回执，继续保留当前目录，不假关闭。
+- 本轮仅Markdown文档，检查本地链接/锚点、待办去重、git diff --check及改动范围；未运行build/引擎/模型测试，未实施前端、未向Toge发消息。用户另授权功能分支推送PR并合并；远端检查/合并回执以该PR和本轮最终答复为准。完成/验收记录以后由Toge回写36与本日志，人工共同验收checkbox仍仅维护在[工单6](../CC-Tasks/6-joint-acceptance.md)。
+
+
+<a id="ai-html-pv-35"></a>
+
+## 2026-11-08 · 工单 35 AI HTML 动态 PV 后端与共享渲染
+
+- 工单：[35](../CC-Tasks/后端/35-ai-html-pv.md)；限定授权和字段见[CHANGELOG](../shared/contracts/CHANGELOG.md)，接口/新旧导出/错误/安全边界见[架构](ARCHITECTURE.md#ai-html-pv)，环境与复现见[引擎](ENGINES.md#html-pv)，前端交接 [35-ai-html-pv](../CROSS-END-HANDOFF.md#35-ai-html-pv)。用户明确确认 shared 快照/设计/runtime、独立模型任务、后台任务设置和既有 export 分支；不修改 SongProject/Client/Mock/React/Hook/CSS。
+- P0 本地 `be95902`：严格四段 PV 设计和最小快照、指纹、数量/数值/ID/未知字段校验、pv_design 路由及密钥枚举/后台清单、POST /api/pv/design、GET /api/pv/status。快速定向9/9、build通过后独立提交，不把数据API当动态PV完成。显式API才调用独立已配置视觉任务，不自动随歌曲制作调用，不失败回退模板。
+- 两首真实新歌词/不同曲风规划：实际 deepseek-v4.1-flash/provider=default，均一次通过。黎明前的纸灯：43,573ms，prompt/completion=2240/8657，四场景层数8/11/10/7；磁暴后的奔跑：53,274ms，2641/10891，层数6/6/6/5；图层、布局、关键帧不同，不是只换颜色。Token为真实响应记录，费用未知null。验收工具仅在进程内明确配置pv_design并复用已有可用歌词路由，不写回后台配置；正式API未配置则503。未上传WAV/密钥/完整工程给模型。
+- P1：共享可信pvDocument/renderAt、HTML/CSS/SVG白名单、textContent及脚本结束符转义、CSP、opaque iframe消息seek；native Chromium sandbox、离线/网络全拒绝，无外部资源或任意模型代码。原/api/export新增HTML判别分支，仍用同一混音WAV/loudnorm/AAC/响度头，字幕/署名由runtime单源绘制，HTML不叠ASS。PNG旧分支保持原行为；编码锁在异步检查前占位，资源/指纹/失败明确400/429/503/500，无伪MP4或静默换旧画面。
+- 真实动态产物：25秒、1280×720、24fps、600帧、MP4 1,368,568字节；FFprobe记录视频/音频轨道与时长。首轮标准截图触发145s预算，失败关闭/清理，无成功回执；改CDP直接捕获后帧阶段73,986ms、全链路77,662ms，PNG临时帧454,268,154字节。Node观测RSS峰值323,776,512字节；2秒采样验收进程树工作集1,221,758,976、私有1,229,746,176字节（包含验收harness，非严格瞬时峰值）。所有临时编码目录在成功/失败后清理。
+- 一致性与实测：12.5秒预览/视频SSIM=0.990783；14秒有效歌词帧SSIM=0.990036；完整FFmpeg解码通过、无检测到的黑场；人工检查首帧和中间截图无意外空白，未据此做人工创意/听感验收。离线preview-harness可拖动seek并显示真实歌词，opaque iframe/CSP网络拒绝及任意seek回到同一时间截图字节一致通过（含粒子重建）。音频为本地规则Web Audio/元音演示，不是中文绮萱歌唱；无AI生图/视频模型。
+- 资源边界：≤840帧、≤512MiB临时帧、145s帧预算/150s浏览器watchdog、170s HTML总预算；响度测量新增可选内部timeout，仅HTML按剩余额度，旧120s默认不改。本机77.7s在现有180s Client范围内，未据此更改Client或保证其他机器/复杂设计同速；可能预算失败。末次native-sandbox/看门狗单帧资源检查通过（1帧/513ms），未重复整片编码。编码后实际响度-13.9 LUFS/-1.4dBTP，保留AAC测量偏差，不把目标值当实测。
+- 回归：build通过（已有体积/依赖注释警告）；全量Node最终135项：127通过、8外部验收跳过；HTTP/浏览器18/18通过；选定Mock无API/混音WAV-PV/产物3/3通过，未重跑Mock全套；末次PV/路由定向13/13通过。禁用HTML Chromium后，旧四PNG/ASS路径的真实FFmpeg页面导出1/1通过；缺Chromium HTML明确503，旧Canvas HTTP夹具成功。Admin PV密钥加密持久化、state/llm不公开systemPrompt，表单省略仍保留原prompt且显式空串可清除，Host/Origin/CSRF/DPAPI边界不变。
+- 证据在temp/task35/：paper-lantern.json、magnet-storm.json、preview.html、preview-harness.html、ai-html-pv.mp4、mix.wav、render-report.json、frame-check.json、first/last/active-preview/active-video/harness截图；日志temp/task35-p0.log、task35-p1-unit.log、task35-targeted-final.log、task35-render-initial.log、task35-real-plan.log、task35-real-render.log、task35-legacy-real.log、task35-unit-complete.log、task35-build-complete.log、task35-e2e-http.log、task35-e2e-mock.log。资源命令见ENGINES；测试模型夹具与两次真实视觉规划分别标明。
+- P2交接已登记完整类型/设计与导出示例、错误/探测/Mock规范、真实产物与Canvas回退。Toge后续接工程设计/指纹存储、Client/Mock、LOOP!可选按钮/隔离预览/seek及失效提示；正式页面共验、跨端字体/手机/Safari与人工观感未完成。工单P2最后一项保留未勾选，整单不归档，不宣称产品端到端完成。分支feature/backend-ai-html-pv本地分阶段提交，未推送；原脚本删除和BACKEND-EXECUTION-NOTE.md保留。
+
+<a id="production-trace-34"></a>
+
+## 2026-11-08 · 工单 34 制作表现规划追溯与安全响应
+
+- 工单：[34](../CC-Tasks/已完成/34-production-trace-contract.md)；关联[15 P2-B](../CC-Tasks/后端/15-p0.md)、[27](../CC-Tasks/27-frontend-interface-sync.md)；字段确认见[CHANGELOG](../shared/contracts/CHANGELOG.md)，请求/响应/错误夹具见[架构](ARCHITECTURE.md#production)、[接口清单](INTERFACES.md)。Owner Blacktea；用户在本会话针对限定共享响应/序列化范围回复「确认上述限定范围」。
+- 实现：新增可选 performancePlanning 五态、可选成功 trace、可选 PERFORMANCE_PLANNING_FAILED；Schema/TS 同步，旧响应和 Mock 标记兼容。进入 planner 时为 running，实际无可规划句的 trace:null 为 skipped；未配置为 disabled；规划/配置失败为 failed，保留原中文错误与谱面，不进入器乐/演唱，retry 不能绕过。前序阶段允许无该新字段。
+- 脱敏：GET/retry 使用统一 serializeProductionJob，只投影既有公开必要字段；内部根级 input/failureContext/performanceTrace、环境、提示词、原始上下游对象均不直接返回。trace 只取 router 已有成功白名单并校验；未知/非法 trace 省略，费用未知为 null，不借用其他任务历史。project.vocalAssets 仅保留原 VocalAsset 工程字段，去除实际引擎附带 sourceProject 缓存路径及额外诊断；内部数据不修改，dependency/voice/renderParameters 和原结果应用/重试保留。composition.input 仍是原 FreeResult 创作输入，不是后台配置。
+- 验证：初轮定向 production-trace/llm-router/production/production-groove 22 项中 21 通过、1 外部验收跳过；`npm run build` 通过（已有体积/依赖注释警告）；全量 `npm test` 128 项中 120 通过、8 外部验收跳过；`npm run test:e2e` 16/16 通过；`npm run test:e2e:mock -- -g 'planning-failure|A2 page retries missing singing'` 2/2 通过（选定制作失败与重试保护，未重跑 Mock 全套）。
+- 末次安全核查补资产路径白名单后，定向 production-trace/production-groove/production 16 项中 15 通过、1 外部验收跳过；覆盖实际 HTTP、新 Client 字段保留、旧 Schema 兼容、全锁定跳过、运行中状态、规划失败无演唱与不可重试、成功结果完整应用、歌声失败单句重试不重规划/不丢兄弟资产，以及私有根字段/trace/资产诊断不可序列化。`git diff --check` 与修改文档本地链接检查通过。
+- 证据：`temp/task34-targeted.log`、`task34-targeted-final.log`、`task34-build.log`、`task34-unit.log`、`task34-e2e-http.log`、`task34-e2e-mock.log`。路由请求及响应均为显式夹具，未调用真实模型、声库或 MP4，不把成功状态/Token 夹具当作真实 LLM 证明，未做人工听评。
+- 交接：[15-P2B-routing](../CROSS-END-HANDOFF.md#15-p2b-routing)增加本轮字段与夹具入口；Toge 后续决定 Mock/页面轻量展示，null 费用显示未知，disabled/skipped 不装作调用过模型。本轮未改 Client/Hook/Mock/UI，也未改后台配置或路由算法；内存 30 条/重启 404 不变，持久化仍归工单 22。工单后端范围完成归档，本地 feature/backend-production-trace，未推送；保留原两个脚本删除和 BACKEND-EXECUTION-NOTE.md。
+
+
+<a id="synth-band-gain-33"></a>
+
+## 2026-11-08 · 工单 33 浏览器 Synth 伴奏总增益
+
+- 工单：[33](../CC-Tasks/已完成/33-browser-synth-band-gain.md)；关联[5 C](../CC-Tasks/5-toge-free-creation.md)、[27](../CC-Tasks/27-frontend-interface-sync.md)；范围确认见[CHANGELOG](../shared/contracts/CHANGELOG.md)，用法见[架构](ARCHITECTURE.md#performance)与[接口清单](INTERFACES.md)。Owner Blacktea；用户在本会话就具体共享音频范围回复「确认上述限定范围」。
+- 实现：src/audio.ts 新增本地器乐 band GainNode，processed 时应用既有 bandGain??1，否则为 1；本地人声不进入该总线，FluidSynth WAV 保留原增益路径，不双乘。原 master/压缩、默认值、stem/mute/单轨、dry、人声处理、最终峰值保护保持原实现；audio-mix、服务器、Schema、UI/Hook/Mock 定义均未修改。
+- 先加失败测试：零增益仍有 Synth 器乐 PCM，WAV/PV 静音断言失败。修复后两项 Chromium Web Audio 夹具用例通过，覆盖 0/1/2、enabled/缺省、free/旧模式、独立元音/外部测试人声不被静音、dry/processed、单句、mute/单轨、强信号叠加峰值保护、工程不变，以及实际 exportWavFile/exportPVFile 的输入与渲染 PCM 一致。gain=1 与旧 Synth PCM 一致。示例 RMS：0 / 0.00790446 / 0.01580891，人声 RMS=0.00810594；gain=2 peak=0.136863。Fixture FluidSynth WAV 增益比 2.0，未重复应用。
+- 测试层归属：新增 `tests/browser/synth-band-gain.spec.js`，复用已有 Playwright 服务/Chromium；真实资源两项标 @acceptance。未给 npm test 增加 Chromium 前置，也未改 CI；现外部层计数为 8 Node、6 browser，团队说明同步。
+- 验证：`npm run build` 通过（已有体积/依赖注释警告）；`npm test` 123 项：115 通过、8 外部验收跳过；`npm run test:e2e` 16/16 通过（含新两项音频核心用例）；`npm run test:e2e:mock -- -g 'C mix controls|frontend alone supports'` 2/2 通过（仅选受影响混音/WAV/PV/无 API 场景，未重跑 Mock 全套）。`git diff --check` 与修改文档本地链接检查通过。
+- 真实资源单独执行：开启 acceptance、SONGYU_REAL_TESTS=1，并显式指定本机 FFMPEG_PATH，运行该文件的 @acceptance 项 2/2 通过：实际 FluidSynth 0/1/2 RMS=0 / 0.000459606 / 0.000919213（比值 2），Synth 经现有 PV 入口生成的 WAV 与前置 PCM 一致，真实 FFmpeg 编码产出 MP4。默认 PATH 无 FFmpeg 时曾明确跳过，配置已有可执行文件后实际通过，未安装/下载引擎。FFmpeg 临时产物清理先验证位于系统临时目录且名称为 songyu-*，再删除。
+- 导出边界：该稀疏 16 秒测试素材的实测 input=-24.8 LUFS/-17.3 dBTP、output=-9.2 LUFS/-1.5 dBTP；归一目标仍是原 -14/-1.5，不把目标值当作实测，也不宣称本素材达到目标 LUFS。PCM/WAV 输入一致与真实编码通过不代表 UI 全流程、绮萱/LLM、手机/Safari或人工听评。
+- 产物：`temp/task33/fluidsynth.wav`、`fluidsynth.json`、`synth-pv-input.wav`、`synth.mp4`、`export.json`；日志 `temp/task33-before.log`、`task33-targeted.log`、`task33-unit.log`、`task33-build.log`、`task33-e2e-http.log`、`task33-e2e-mock.log`、`task33-real.log`、`task33-export-final.log`。测试音与真实资源分别标注，不包装成真实演唱。
+- 交接：[5-C-synth-mix](../CROSS-END-HANDOFF.md#5-c-synth-mix)已回执核心修复，等待 Toge 解禁已有伴奏控件并回归页面后清理；元音人声音量/混响仍禁用，Groove Synth 同步继续工单 31 后续。后端核心工单归档，真实共同听感继续工单 6。本地 feature/backend-synth-band-gain，未推送；原脚本删除与其他工单保留。
+
+
+<a id="phoneme-explicit-zero-32"></a>
+
+## 2026-11-08 · 工单 32 首音素显式零偏移与旧缓存失效
+
+- 工单：[32](../CC-Tasks/已完成/32-phoneme-explicit-zero.md)；关联[15 P1](../CC-Tasks/后端/15-p0.md)、[27](../CC-Tasks/27-frontend-interface-sync.md)；字段与版本见[契约记录](../shared/contracts/CHANGELOG.md)、[架构](ARCHITECTURE.md#performance)。Owner Blacktea，用户明确要求继续完成本工单，不扩展 UI/Schema/HTTP 范围。
+- 失败复现：先加测试再运行，P1 为 9 通过、2 失败，显式首位 0 实际继承了非零句级偏移。修复后以字段存在性区分人工零覆盖与省略，仅必要时输出 offset:0；保持其他位置零值、舍入零值、非零偏移和发音替换行为。补 auto/locked、USTX 其他音符/曲线不变与兄弟句/器乐保护回归。
+- 缓存：只为首位零覆盖且无发音替换更新 resolvePerformance.renderRevision=4 / Qixuan revision=6；否则同参数请求可能复用历史错误 WAV。既有 renderRevision TS 声明补齐，不引入新工程字段。真实测试独立计算 SHA-256，确认普通旧请求 key 使用原 revision=4，零覆盖使用 6，重复读取 WAV 字节一致。
+- 验证：`npm run build` 通过（已有体积/依赖注释警告）；全量 `npm test` 123 项：115 通过、8 外部验收跳过；定向 `npx tsx --test tests/p1-phoneme.test.ts tests/p0-tuning.test.ts tests/qixuan.test.ts` 20/20 通过。纯音乐/后端修复未重跑页面套件，无 UI 接线完成声明。`git diff --check` 和修改文档本地链接检查通过。
+- 真实资源：显式开启 acceptance，`npx tsx --test tests/qixuan-zero-real.test.mjs` 1/1 通过，CPU 绮萱实际生成 legacy / zero / reference 三组（首次均 cached=false，复跑均命中）。实际 USTX 首音素分别 +12 / 0 / 无覆盖，后续音符均 +12；Bridge 直接 Ustx.Load，无二次 falsy 过滤。平均 PCM 样本差 legacy-zero=1118.31、zero-reference=321.01。reference 使用首音符 consonantMs=0；两种零参考的 WAV 并非逐样本相等，不据此宣称毫秒级音素起点一致或人工听感通过，未直接测量音素起点。
+- 证据：`temp/task32-before.log`、`task32-targeted.log`、`task32-unit.log`、`task32-build.log`、`task32-real.log`、`task32-real-repeat.log`；USTX/WAV/结果在 `temp/task32/`（result.json 为末次缓存复跑回执）。未调用 LLM、未改混音/字幕/FFmpeg，不运行 MP4。
+- 交接：[27-phoneme-zero](../CROSS-END-HANDOFF.md#27-phoneme-zero)核心已回执，保留只等 Toge 清理旧提示后删除；未代改组件/Hook/Mock。工单后端范围完成归档，人工听评继续工单 6。本地 feature/backend-phoneme-explicit-zero，未推送，原两个脚本删除与其他工单保留。
+
+
+<a id="production-groove-31"></a>
+
+## 2026-11-08 · 工单 31 制作 Groove 工程参数与稳定渲染输入
+
+- 工单：[31](../CC-Tasks/已完成/31-production-groove-integration.md)；限定契约确认与字段见[CHANGELOG](../shared/contracts/CHANGELOG.md)，调用方式见[架构](ARCHITECTURE.md#groove-render)，跨端继续 [20-groove-render](../CROSS-END-HANDOFF.md#20-groove-render)。Owner Blacktea；本会话用户已明确确认限定跨层范围，不扩大到 Client/Mock/UI/Hook/浏览器混音。
+- 实现：独立 productionInputSchema 扩可选三参数 grooveSettings，HTTP 非法参数 400、服务层重复校验；严格自由创作输入维持原契约，规划前剥离设置，新工程附加并随 GET 返回。SongProject 与 validateProject 支持旧 v1 / JSON 往返，加载不迁移旧工程。
+- production 与 external-audio 复用纯 projectInstrumentInput；种子仅从工程 ID、轨道 ID/version 派生，真实保护标记透传。缺省/全零不加 groove，false 保护字段不额外加入旧输入；MIDI 继续原 performedNotes 算法，并补可复用类型声明。保留原 grooveSchema 字段序列，避免旧已启用 Groove 的缓存因 Schema 重排失效。
+- 验证：`npm run build` 通过（已有体积/依赖注释警告）；`npm test` 120 项：113 通过、7 外部验收跳过；`npm run test:e2e` 14 通过，包含真实 HTTP/Web Audio 与显式夹具，无真实模型验收。`npm run test:e2e:mock` 37/37 通过；该套件沿用已有 Mock，不代表已新增 Groove 页面或 Mock 参数接线。`git diff --check` 与修改文档本地链接检查通过。
+- 真实资源另跑：设置 SONGYU_TEST_TIER=acceptance、SONGYU_REAL_TESTS=1，`npx tsx --test tests/production-groove.test.ts tests/groove.test.mjs`，9/9 通过、0 跳过。真实 FluidSynth/SoundFont WAV 非静音，开关 PCM 与 key 不同、重复命中缓存，缺省/全零缓存相同，locked / manuallyEdited / 音符 locked 三类保护 key 不变。新对照音 `temp/task31/plain.wav`、`groove.wav`；主日志 `temp/task31-unit.log`、`task31-build.log`、`task31-e2e-http.log`、`task31-e2e-mock.log`。
+- 边界与交接：production HTTP 测试的规划/歌声是显式夹具，真实资源项仅 FluidSynth；未运行真实 LLM/绮萱、MP4 或人工听评。未修改稳定混音/字幕/FFmpeg 链路。Toge 继续接 ProductionInput Client 类型、Mock、页面设置和 Synth 事件入口，后端完成不等于浏览器合成试听一致或正式页面全流程验收。
+- Git：本地 feature/backend-production-groove，未推送。保留原两个启动脚本删除及其他未跟踪工单；本轮仅暂存自有变更。工单归档到已完成目录并修正引用，原有同号启动器工单保留原名。
+
+
+
+<a id="launcher-restart"></a>
+
+## 2026-11-08 · 两个 BAT 自动关闭旧服务并重启
+
+工单：[31 · 启动重启](../CC-Tasks/已完成/31-launcher-restart.md)；说明：[使用入口](../README.md#launch)、[启动架构](ARCHITECTURE.md)、[管理入口](ENGINES.md#管理调试启动与路由)。
+
+沿用用户工作区已有「打开吱声机.bat」与「打开吱声机管理面板.bat」文件名，两个入口改为 start.bat --restart，管理入口和 start-admin.bat 另传 --admin。关闭经过核实的旧 CantaLoom 服务后等待端口释放、构建最新源码并重启；管理入口打开 /admin。修复 --check 不在第一个参数位置时仍进入 pause 的问题。
+
+新增 scripts/restart-studio.mjs：通过 Windows 监听 PID、Node 可执行文件、服务入口命令及本机管理状态判断归属，停止前重查 PID/进程启动时间/命令与端口，拒绝身份不符、watch 或无法识别的服务；不批量终止 node，不杀整棵进程树。仅本机管理状态 runtime 新增 projectRoot/pid，root 仍指资源根目录，现有 Host/Origin/CSRF 与 DPAPI 限制保留；旧版服务按命令与资源根目录兼容识别。无公开音乐契约或前端接线改动，无新增跨端交接。
+
+验证：两个中文 BAT 分别在隔离端口 3231/3232 对本轮创建的真实旧服务执行 --check，均确认旧 PID 退出、完成 build、页面/JS/API 检查并停止新服务；不关闭用户实际正在使用的服务。定向 launcher 测试 3/3，包括真实 Windows 监听进程停止、进程代次改变时拒绝停止、其他身份/命令/路径拒绝及旧复用入口回归。全量单元 109 通过、6 项资源验收跳过、0 失败；build 由两次 BAT 实测执行通过。文档链接与 diff 检查通过。
+
+边界：重启会清空服务端内存任务，磁盘缓存、浏览器存档与加密配置不删除；未进行真实 LLM、歌声、器乐或 PV 编码验收。本轮本地提交，不推送；用户原有两个旧 BAT 删除保留为未暂存改动，不纳入本轮提交。
+
+
+<a id="cantaloom-brand-integration"></a>
+
+## 2026-11-08 · 织声机 CantaLoom 更名与未合并 PR 整合
+
+工单：[30 · 品牌与 PR 整合](../CC-Tasks/已完成/30-cantaloom-brand-and-pr-integration.md)；相关说明：[README](../README.md)、[启动与架构](ARCHITECTURE.md)、[团队测试分层](TEAM_WORKFLOW.md#test-tiers)。
+
+用户明确授权合并未合并 PR，并废弃旧产品名。PR 12 已合并：保留后台精确 Key 字段定位、测试分层与进程清理。PR 14 已合并：整合 README/工单/交接和 Mock 测试冲突，保留新增前端场景、工作台导航与精确 TAP 时钟；不以覆盖任一端实现来解决冲突。现有音素零偏移、synth 增益等跨端待办继续保留，无新增接线交接。
+
+当前页面标题、后台品牌、无障碍文案、启动输出、文档、工程/器乐下载命名、USTX 元数据、Canvas 与 ASS 视频署名统一为织声机 CantaLoom；包名为 cantaloom-studio，GitHub 仓库简介同步更新。新增根目录「打开织声机.bat」，原启动文件继续兼容旧快捷方式；新工程为 .cantaloom.json，导入仍按 JSON 内容校验。旧 localStorage 键、SONGYU_* 配置、HTTP 头及已安装 SongyuBridge 保留兼容；历史工单与旧验收证据保留当时名称。未修改 Schema、存档结构、音乐算法或渲染参数。
+
+整合证据：PR 12 本地 build、96 项单元通过/6 项资源跳过、快速浏览器 12/12，远端 checks 通过。PR 14 更新后远端 checks 通过：107 项单元通过/6 跳过、Mock 37/37、快速浏览器 13 通过；本地快速浏览器 14/14，包含真实 MP4/AAC 响度。首次本地并行完整 Mock 为 36 通过/1 下载等待超时（60 秒）；更名版本串行重跑同一场景通过（31.4 秒），未放宽超时或断言，不能据此认定所有高负载情况均稳定。
+
+更名版本验证：build 通过；单元 107 通过、6 项资源验收跳过；「打开织声机.bat --check」在隔离端口 3199 通过构建页面、资产与 API 检查；文档本地链接与 diff 检查通过。定向 Mock 3/3（含新工程下载、旧扩展名导入、旧存档恢复），后台与导出浏览器 3/3（含真实 MP4、AAC 响度）；新入口启动检查同样通过。
+
+边界：HTTP/LLM 测试含明确夹具，真实 MP4 仅证明现有本地编码路径；未进行真实 LLM、绮萱/FluidSynth 新作品制作、人工听感、实际手机或 Safari 验收，继续按[共同工单 6](../CC-Tasks/6-joint-acceptance.md)执行。
 
 ## 2026-11-08 Let's 到 MV 改为单次下滑后自动揭幕
 
@@ -144,6 +273,49 @@ toge 明确授权后补 Client 的只读产物/响度方法与兼容的导出报
 
 # SONGYU 迭代日志
 
+<a id="test-system-audit"></a>
+
+## 2026-11-07 · 测试体系审计、去重与快速/真实验收分层
+
+工单：[24 · 测试体系审计](../CC-Tasks/已完成/24-test-system-audit.md)；运行说明：[团队测试分层](TEAM_WORKFLOW.md#test-tiers)；前端基线：[工单 5](../CC-Tasks/5-toge-free-creation.md)、[工单 23](../CC-Tasks/23-three-chapter-page.md)。用户授权测试与必要 CI 配置、完成后提交推送；生产 src/server/shared 与音乐算法没有改动，项目规则要求的工单/日志/索引同步更新。
+
+### 指定失败与时序结论
+
+main `9a6b7da` 的原 mock.spec.ts:103 位于 A2 五行歌词制作流程。未修改基线以完整原用例 repeat-each=3 执行，3/3 通过（1.1 分钟，temp/test-audit-baseline/），没有无条件重试或忽略失败；最新 [main CI](https://github.com/cicikat/CantaLoom/actions/runs/42363379948) 也成功。本轮无法复现该历史失败，不能将其根因断言为路径或产品状态更新错误。启动器绝对临时路径在 main 已修复，当前浏览器用例本身不含该路径。
+
+调用核对：useProductionReadiness 异步检查期间按钮仍可点击，但会打开准备面板；原分支已有 startMaking 等 title 消失的修复，本轮提到共用测试 helper，没有改业务 hook。制作阶段可见不等于工程应用的同步边界；A2 通过只延迟终态响应的完成闸门，保留“处理中旧工程 ID 不变”及成功后新 ID/五行原词/速度/存档隔离断言。没有删除断言、放宽范围、增加原有超时或设置 retries。
+
+### 删改与等价覆盖
+
+| 审计对象 | 处理 | 等价/保留证据 |
+|---|---|---|
+| new Mock API builds/restores/mixes 浏览器独立用例 | 合入 A2，Mock 数量 29 → 28 | API→工程校验与 ready-for-mix：production-page.test.ts、mock-free.test.ts；浏览器 initialProject/readProject/canAutoSave、draft Mock 来源与实际 renderAudio RMS>0.001 迁入 A2；A2 原有歌词/播放/重载/独立存档/零 API 与控制台错误断言保留 |
+| 旧模式完整 Mock 流程与自由 A2 | 均保留 | 前者覆盖旧工程、兄弟句缓存/历史、批量缺失歌声和文件命名；后者覆盖新任务事务与来源隔离，非等价 |
+| 4 种 production 迟到结果与 4 种 melody 迟到结果 | 全保留 | 输入、工程、导航/乐句、主动取消走不同失效入口，不能合并为同一保护路径 |
+| 锁定/缓存/失败回滚/来源/公开 Client 与 HTTP 契约 | 全保留 | core/plan/phrase-edit/melody/api/mock-free/production 等 Node 测试与对应浏览器事务验证各有层间职责；不以 unit 代替页面失败保护 |
+| 真实 Qixuan 两组 Node 与页面演唱/P0 拼接，真实器乐/PCM/MP4 | 全保留，仅显式分层 | 6 项 Node 外部验收、4 项 @acceptance 浏览器用例；纯合同/音素/曲线/依赖测试仍属快速层 |
+| LOOP 静态样稿入口与歌词卡几何参考 | 保留 | README、ARCHITECTURE 仍引用样稿；launch.spec.ts 访问其正式入口说明，mock.spec.ts 仍用其卡片高度参考。未证明失效，不删除 |
+| 旧 FreeCreation/Notes 与现用 Panel | 不删业务文件或测试 | FreeCreation/Notes 在当前 App/测试无调用，也没有独立遗留组件测试可移除；production-page 测的是 useProduction 调用的 production-result，不是旧组件；App 仍挂 EnginePanel/QixuanPanel/PianoRoll，相关测试有效 |
+| 19 处全页 + 2 处面板成功截图 | 去掉无条件输出 | 原来没有 snapshot/image diff 断言，只是诊断文件；所有 DOM、几何、390px 无溢出与动效章节断言保留；Playwright 统一 only-on-failure 截图 |
+
+TAP 两套测试保留真实点击，用 Playwright 虚拟时钟输入五次 500ms；Mock 增加逐间隔等值和 BPM=120 断言，代替依赖 CI 调度的 90–130 宽范围。播放固定 1200ms 等待改为同样 >0.8s 的进度条件；后台启动有界健康轮询替代散落 sleep，并检查子进程退出；业务超时注入/异步响应闸门有真实语义，未删除。此前 5-browser-timing 的墙钟 TAP 问题已处理，本轮 Mock 与 HTTP 并行回归通过，不据此承诺所有负载条件永无波动。
+
+### 路径与 CI
+
+Qixuan 输入工程改用 SONGYU_ACCEPTANCE_PROJECT，显式指定的缺失文件直接报错；测试输出不覆盖输入。器乐验收不再写死特定 SoundFont 文件名，使用服务端已配置/已安装的默认资源。浏览器音频/视频走 testInfo.outputPath，默认 temp/test-results/http/ 或 mock/，Node 管理夹具在基于 import.meta.url 定位的 temp/unit/，自动清理；截图不再散落到 temp/、test-results/、mock-test-results/。tests 内机器专属盘符路径与 waitForTimeout 检索无结果。
+
+CI 保留 checks 名称，改为 PR + main push + workflow_dispatch，取消功能分支 push/PR 双跑；同 PR 新提交取消旧任务，main 不取消。build/unit 提前到浏览器安装前，失败更早结束。快速层显式禁用外部渲染，不再按 FluidSynth/FFmpeg/real Qixuan 标题字符串过滤（旧过滤漏过 P0 fine tuning）。真实 HTTP/后台安全/夹具/Web Audio 继续执行。快速与资源验收 list 分别为 12/4 项、互斥且总数 16；资源层只能由授权主机显式运行，不会在快速 CI 静默消失。
+
+### 本机验证与边界
+
+- build 通过，保留既有 Zod 注释及 bundle 大小提示。
+- unit 101 项：95 通过、6 项外部资源验收跳过、0 失败；不删除 unit。快速层过去会视本机资源额外跑 FluidSynth，本轮改成显式资源层，所以通过数变化不是删除回归。
+- Mock E2E 28/28，通过（2.6 分钟）；快速真实 HTTP 浏览器 12/12，通过（45 秒）。覆盖真实 DPAPI、HTTP 管理台与显式上游夹具、浏览器离线 PCM，不等于真实模型制作。
+- A2/虚拟 TAP 定向 2/2，通过；快速/验收浏览器 list 核对 12/4；最终小改后台进程退出清理后另跑 admin 定向 1/1 通过（9.9 秒）；最终 build 通过。git diff --check、文档本地文件链接/工单引用及业务目录未改检查通过。
+- 本轮未执行真实 LLM/绮萱/FluidSynth/FFmpeg 外部验收、人工听感、手机实机或 Safari；新真实工程输入/资源默认选择仅完成编译与用例发现校验，不声称实际引擎通过。快速 CI 成本减少来自触发去重、早失败与诊断输出清理，未以不同机器单次耗时声称精确节省比例。
+
+本轮沿用 feature/backend-test-audit 本地提交并按用户授权推送、创建 PR 供 review，不自动合并；前端测试语义 review 登记 [24-test-review](../CROSS-END-HANDOFF.md#24-test-review)，真实验收保持[工单 6](../CC-Tasks/6-joint-acceptance.md)原边界。
+
 <a id="pr11-integration"></a>
 
 ## 2026-11-07 · 前端 PR #11 合并回归
@@ -243,7 +415,7 @@ Windows 本机真实 FluidSynth、现有 SoundFont、FFmpeg（本机配置）和
 - 交付：[后端 PR #9](https://github.com/cicikat/CantaLoom/pull/9)，推送 feature/backend-p1-phoneme 的 P1 音素/表现参数与 P2-B LLM 三任务路由。整合 main 7bee0eb，README 保留后端能力状态与最新 LOOP 前端进度，迭代日志保留双方全部历史记录；契约自动合并后通过构建和单元回归，未改动前端实现。
 - 路径修复：tests/launcher.test.mjs 移除写死的其他电脑临时路径，依据 import.meta.url 定位项目根目录，先建 temp/ 再 mkdtemp，并由 t.after 清理本次夹具；路由配置测试也从 .local 改用项目 temp/。启动器单项 1/1 通过；在全新含空格目录、缺少 temp 父目录且 cwd 不同的隔离环境运行同一测试，1/1 通过并验证清理。证据在本机 temp/launcher-portability-result.json。
 - 验证：整合后 build 通过（保留既有 Zod 注释与 bundle 大小警告）；npm test（SONGYU_REAL_TESTS=0）92 项，89 通过、3 跳过。单独真实绮萱 P0/P1 两项回归 2/2 通过（234.2 秒），覆盖真实 WAV 差异、缓存精准失效与原子文件；输出见本机 temp/backend-p1-p2b-real-audio.log。本轮没有重新调用真实 LLM，路由真实双模型 ID 证据沿用前一轮并保留其日期和边界。
-- 页面边界：Mock 首跑 25 通过/1 失败，真实 HTTP/页面筛选套件首跑 12 通过/1 失败。高负载 TAP 时间断言在未改动 main 基线也失败；音频任务结束后串行重跑两项均 1/1 通过。不能写成整套首跑全绿；具体错误、基线与重跑日志在 temp/，稳定性问题登记 [5-browser-timing](../CROSS-END-HANDOFF.md#5-browser-timing) 由 Toge 核对，未顺手修改前端用例。
+- 页面边界：Mock 首跑 25 通过/1 失败，真实 HTTP/页面筛选套件首跑 12 通过/1 失败。高负载 TAP 时间断言在未改动 main 基线也失败；音频任务结束后串行重跑两项均 1/1 通过。不能写成整套首跑全绿；具体错误、基线与重跑日志在 temp/，稳定性问题登记 [5-browser-timing](#test-system-audit) 由 Toge 核对，未顺手修改前端用例。
 - 保全：此前 17 个未提交草稿仍保留在 stash 65cc8c0dc1ad9dd80eddf85a9add6bb4deb3a11b 与 backup/cross-end-handoff-2026-11-07/，不混入稳定后端交付。按用户授权提交后端 PR 并直接合入 main；PR/合并结果通过 Git 历史与 PR 入口核对，工作区不恢复草稿。
 
 <a id="cross-end-handoff"></a>

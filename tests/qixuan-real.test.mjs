@@ -1,3 +1,4 @@
+import {realAcceptance} from './support/tier.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,readdir,access} from 'node:fs/promises';
@@ -6,16 +7,16 @@ import {qixuanStatus,renderQixuan} from '../server/services/qixuan.mjs';
 import {cacheRoot} from '../server/services/instruments.mjs';
 
 // Real OpenUtau/Qixuan regression: actual inference, cache precision and atomic files.
-// Skips when the engine is not installed; set SONGYU_REAL_TESTS=0 to disable explicitly.
-const voice=await qixuanStatus();
-const enabled=voice.available&&process.env.SONGYU_REAL_TESTS!=='0';
+// Opt in with SONGYU_TEST_TIER=acceptance; missing engines skip, SONGYU_REAL_TESTS=0 disables.
+const voice=realAcceptance?await qixuanStatus():{available:false};
+const enabled=realAcceptance&&voice.available;
 // A fresh take per run keeps the first render uncached even on repeat executions; take is a cache dependency by design.
 const take=Math.floor(Math.random()*10000);
 const phrase=(midiShift=0,performance)=>({lyricId:'p0-real-a',lyrics:'海浪轻轻摇晃',start:4,end:12,bpm:120,
  notes:[{beat:4,duration:1,midi:60+midiShift,velocity:.5,syllable:'海'},{beat:5,duration:1,midi:62+midiShift,velocity:.5,syllable:'浪'},{beat:6,duration:2,midi:64+midiShift,velocity:.5,syllable:'轻'},{beat:8,duration:1,midi:62+midiShift,velocity:.5,syllable:'轻'},{beat:9,duration:1,midi:60+midiShift,velocity:.5,syllable:'摇'},{beat:10,duration:2,midi:57+midiShift,velocity:.5,syllable:'晃'}],
  runner:'CPU',take,engineVersion:voice.available?voice.engineVersion:'x',...(performance?{performance}:{})});
 
-test('real Qixuan engine renders phrase WAV with padding, precise cache invalidation and atomic cache files',{skip:!enabled&&'需要已安装的绮萱引擎；SONGYU_REAL_TESTS=0 可显式关闭',timeout:1500000},async()=>{
+test('real Qixuan engine renders phrase WAV with padding, precise cache invalidation and atomic cache files',{skip:!enabled&&'需要已安装的绮萱引擎；设置 SONGYU_TEST_TIER=acceptance 启用，SONGYU_REAL_TESTS=0 可关闭',timeout:1500000},async()=>{
  const a=await renderQixuan(phrase());
  assert.equal(a.cached,false);assert.equal(a.isDemo,false);
  assert.ok(Math.abs(a.startSeconds-(4*60/120-.2))<.001,'startSeconds 对应时间轴起点减去前置 padding');

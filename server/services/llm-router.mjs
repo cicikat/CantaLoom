@@ -1,7 +1,7 @@
 import {z} from 'zod';
 import {createHash} from 'node:crypto';
 
-export const taskNames=['lyrics_planning','melody_composition','performance_planning'];
+export const taskNames=['lyrics_planning','melody_composition','performance_planning','pv_design'];
 const endpoint=z.string().url().refine(value=>{const u=new URL(value);return !u.username&&!u.password&&!u.search&&!u.hash&&(u.protocol==='https:'||(u.protocol==='http:'&&['localhost','127.0.0.1','[::1]'].includes(u.hostname)))});
 export const taskRouteSchema=z.object({provider:z.string().min(1).max(80),baseUrl:endpoint,model:z.string().min(1).max(100),keyRef:z.string().regex(/^[A-Z][A-Z0-9_]{0,79}$/),systemPrompt:z.string().max(8000).optional(),temperature:z.number().min(0).max(2).default(.7),inputPerMillion:z.number().nonnegative().max(10000).optional(),outputPerMillion:z.number().nonnegative().max(10000).optional()}).strict();
 export const routesSchema=z.object(Object.fromEntries(taskNames.map(task=>[task,taskRouteSchema.optional()]))).strict();

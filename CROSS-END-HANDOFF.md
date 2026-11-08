@@ -16,12 +16,13 @@
 
 | ID | 来源 | 发起方 → 接收方 | 状态 |
 |---|---|---|---|
-| [27-phoneme-zero](#27-phoneme-zero) | 工单 27 / 15 P1 | Toge → Blacktea | 首个音素 0 毫秒覆盖可能继承辅音偏移，核心待修复 |
-| [5-C-synth-mix](#5-c-synth-mix) | 工单 5 C | Toge → Blacktea | 前端已接；浏览器伴奏增益核心待接手 |
+| [35-ai-html-pv](#35-ai-html-pv) | 工单 35 | Blacktea → Toge | 后端/动态MP4已交付；页面/共验待接 |
+| [27-phoneme-zero](#27-phoneme-zero) | 工单 27 / 15 P1 | Blacktea → Toge | 核心已修复；待 Toge 清理旧限制提示 |
+| [24-test-review](#24-test-review) | 工单 24 | Blacktea → Toge | 测试审计交付；待浏览器测试语义 review |
+| [5-C-synth-mix](#5-c-synth-mix) | 工单 5 C | Toge → Blacktea | 核心已修复；待 Toge 解禁 Synth 伴奏控件 |
 | [20-groove-render](#20-groove-render) | 工单 20 | Blacktea → Toge | 核心/API 已实现；页面与人工听评待安排 |
 | [15-P2A-contracts](#15-p2a-contracts) | 工单 15 P2-A | Blacktea → Toge | 等待本任务共享范围确认 |
 | [15-P2B-routing](#15-p2b-routing) | 工单 15 P2-B | Blacktea → Toge | 后端已推送；等待接入 review 与安排 |
-| [5-browser-timing](#5-browser-timing) | 工单 5 页面回归 | Blacktea → Toge | 待核对高负载下的测试时序稳定性 |
 | [15-P3-mixgraph](#15-p3-mixgraph) | 工单 15 P3 | Blacktea → Toge | 等待共享契约及渲染归属确认 |
 | [21-harmony-contracts](#21-harmony-contracts) | 工单 21 | Blacktea → Toge | 等待和声/拍号契约提案评审 |
 
@@ -29,23 +30,35 @@
 
 <a id="27-phoneme-zero"></a>
 
-### 27-phoneme-zero · 首个音素显式零偏移仍继承辅音时机
+### 27-phoneme-zero · 核心已修复，待清理前端旧限制说明
 
-- 更新：2026-11-07；来源：[工单 27](CC-Tasks/27-frontend-interface-sync.md)、[工单 15 P1](CC-Tasks/后端/15-p0.md)；Toge → Blacktea；状态：已复现，核心待修复。本轮不修改共享音乐计算。
-- 证据：`shared/performance.mjs` 的 `notePerformance` 先以 truthy 的 `offsetMs` 生成 offset，再过滤掉无 offset/phoneme 的条目，导致 `{index:0,offsetMs:0}` 消失；后续非零 consonantMs 再插入第 0 音素。不是前端丢参数。
-- 最小复现：`notePerformance([{beat:0,duration:1,midi:60,syllable:'甲'}],0,120,{preset:'natural',consonantMs:12,overrides:[{index:0,phonemes:[{index:0,offsetMs:0}]}]}).phoneme_overrides` 实际返回 `[{index:0,offset:12}]`，预期显式 0 不继承句级偏移。现有测试仅覆盖 0 位替换发音、无句级偏移的其他位置 offset=0，没有覆盖该组合。
-- 对方下一步：修复显式 0 的存在性判断/合并顺序，兼容旧 consonantMs 与不带覆盖的历史依赖；补该组合回归，并核对实际 USTX/演唱结果。前端已在音素表单提示此边界，不自行改算法。
-- 验收/回执：结果回写本工单与[迭代日志](docs/iteration-log.md#frontend-interface-sync)，完成后通知前端移除限制说明，再清除此条。
+- 2026-11-08 接收方执行入口：[工单36 · A1](CC-Tasks/36-toge-backend-followup.md#quick-fixes)。本轮31–35的前端剩余checkbox统一在36；用户已授权31–36统一推送PR合并，接收方开工需同步main核验d550b9c；下文“未推送”为历史阶段状态。完成后按36回执再关闭本ID。
+
+- 更新：2026-11-08；[工单 32](CC-Tasks/已完成/32-phoneme-explicit-zero.md)由 Blacktea 完成；原 Toge → Blacktea 修复请求已回执，现 Blacktea → Toge 仅交接提示清理。
+- 已交付：显式首音素 offsetMs:0 不再继承句级 consonantMs；USTX 必要时输出 offset:0；仅相关零覆盖更新歌声依赖/缓存 revision，其他句与器乐不变。源码及缓存边界见[契约记录](shared/contracts/CHANGELOG.md)，证据见[日志](docs/iteration-log.md#phoneme-explicit-zero-32)。本地 feature/backend-phoneme-explicit-zero，未推送。
+- 验证：P1/P0/Qixuan 定向 20/20、全量 115 通过/8 外部验收跳过，真实绮萱三组 USTX/WAV 与重复缓存通过。未测音素起点、未做人工听评；非静音不作为时序或听感结论。
+- Toge 下一步：移除音素表单“0 偏移可能被继承”的旧提示，按正式页面实际复核；完成后将证据回写工单 27/迭代日志，再删除本条与索引。此处保留是因为 UI 清理尚未完成，不是核心仍待修复。
+
+<a id="24-test-review"></a>
+
+### 24-test-review · 测试精简与运行方式
+
+- 更新：2026-11-07；来源：[工单 24](CC-Tasks/已完成/24-test-system-audit.md)；Blacktea → Toge；本轮用户授权修改测试/必要 CI，不修改页面或音乐业务逻辑。
+- 交付：Mock 浏览器 API 独立场景合入 A2 页面闭环，其 PCM/导入恢复/来源断言迁入，Node Mock/契约测试保留；TAP 虚拟时钟、完成响应闸门与失败截图统一配置。全部锁定/缓存/回滚/隔离/真实演唱场景保留。详见[审计证据](docs/iteration-log.md#test-system-audit)。
+- 接收方：review 测试语义与新的[快速/真实验收入口](docs/TEAM_WORKFLOW.md#test-tiers)。默认浏览器不执行 4 项 @acceptance，真实验收显式设置 SONGYU_TEST_TIER=acceptance；Qixuan 工程输入由 SONGYU_ACCEPTANCE_PROJECT 指定，不再依赖某台机器路径。
+- 边界：本轮不代表真实声库/模型、人工听感或手机/Safari 验收完成。回执后先留工单/日志证据，再移除此条。
 
 <a id="5-c-synth-mix"></a>
 
-### 5-C-synth-mix · 浏览器伴奏增益与前端接线边界
+### 5-C-synth-mix · 核心已修复，待前端解禁与回归
 
-- 更新：2026-11-07；来源：[工单 5 C](CC-Tasks/5-toge-free-creation.md#c局部编辑与调教)；Toge → Blacktea；状态：等待音乐核心接手。toge 明确选择「只接前端，核心问题交接红茶」，本条不授权前端修改混音核心。
-- 已交付：`feature/frontend-free-creation-mock` 本轮调教/混音前端提交（主题 `feat: connect phrase expression and supported mix controls`）。默认折叠的句级/音符级调教、锁定/历史、现有单句重唱、四种 stem 试听与 mixSettings 持久化；证据见[迭代日志](docs/iteration-log.md#expression-mix-controls)。没有修改公开 Schema / Client / `src/audio.ts` / `src/audio-mix.ts`。
-- 已定位：`src/audio.ts` 的 addWav/processed 分支给 FluidSynth 应用 bandGain，但浏览器 synth 直接 schedule 到 master，未应用 bandGain；元音演示亦未接 vocalBus。默认 Mock 自由制作的伴奏是 synth，直接开放伴奏滑杆会无效。前端当前仅在 fluidsynth 启用伴奏音量；人声音量/混响仅在 external 启用；有明确禁用说明，不自动切引擎。
-- 对方下一步：在共同混音边界内确认并修复 synth 的伴奏增益路径，保持静音/独奏、现有 stem、WAV/PV、旧工程 enabled 默认和未处理干人声语义；提供实际 PCM/导出回归后回执，前端再解除相应禁用。顺带核对表达锁元数据进入 singingDependency 导致锁切换保守失效的预期；本轮按既有依赖处理，不伪造音频有效性。
-- 验收与回执：前端已验证 external 人声增益归零、混响 PCM 变化、FluidSynth Mock 两路归零后 WAV 与 PV 输入静音；这些是测试音，不是实际 FluidSynth/绮萱引擎验收。真实资源、制作闭环和人工听感继续[工单 6](CC-Tasks/6-joint-acceptance.md)。完成后证据写回工单/迭代日志，再移除本条。
+- 2026-11-08 接收方执行入口：[工单36 · A2/A3](CC-Tasks/36-toge-backend-followup.md#quick-fixes)。本轮31–35的前端剩余checkbox统一在36；用户已授权31–36统一推送PR合并，接收方开工需同步main核验d550b9c；下文“未推送”为历史阶段状态。完成后按36回执再关闭本ID。
+
+- 更新：2026-11-08；[工单 33](CC-Tasks/已完成/33-browser-synth-band-gain.md)由 Blacktea 完成；本会话用户已确认限定共享音频范围。原 Toge → Blacktea 请求已回执，现 Blacktea → Toge 交接解禁。分支 feature/backend-synth-band-gain，本地提交，未推送。
+- 已交付：renderAudio 内 Synth 器乐经独立 band bus，处理时应用既有 bandGain；人声仍走原路径，FluidSynth 沿用原增益且不重复。保留 enabled/default、stem/mute/单轨、dry 与峰值保护；WAV/PV 共用同一 PCM。
+- 验证：Chromium PCM 夹具、实际 WAV/PV 入口透传、真实 FluidSynth 增益 0/1/2、真实 FFmpeg MP4 通过；证据见[日志](docs/iteration-log.md#synth-band-gain-33)。夹具不是实际声库听评，真实 MP4 编码不是正式页面全流程验收。
+- Toge 下一步：在 MixControls 解除 Synth 伴奏音量禁用与旧说明，核对当前页面保存/重载、试听与导出；不要连带解禁元音演示的人声音量/混响。完成后先写工单 5/27 与日志证据，再删除本条和索引。
+- 原表达锁元数据进入 singingDependency 的保守失效行为维持原策略，本单不改人声依赖。Groove 浏览器事件同步仍归工单 31 后续接线，真实制作/人工听感仍归工单 6。
 
 <a id="15-p2a-contracts"></a>
 
@@ -60,8 +73,12 @@
 
 ### 15-P2B-routing · 模型路由后端交付
 
+- 2026-11-08 接收方执行入口：[工单36 · C](CC-Tasks/36-toge-backend-followup.md#planning-trace)。本轮31–35的前端剩余checkbox统一在36；用户已授权31–36统一推送PR合并，接收方开工需同步main核验d550b9c；下文“未推送”为历史阶段状态。完成后按36回执再关闭本ID。
+
 - 更新：2026-11-07；来源：[工单 15](CC-Tasks/后端/15-p0.md) P2-B；Blacktea → Toge；状态：后端已推送；等待接入 review 与安排。
 - 已交付：已推送分支 `feature/backend-p1-phoneme` 的 `9718420` 提供 lyrics_planning / melody_composition / performance_planning，Admin 的 `LLM_ROUTES` 配置与 `GET /api/admin/llm` 脱敏追溯。未新增公共创作端点或共享工程字段；该实现通过 [PR #9](https://github.com/cicikat/CantaLoom/pull/9) 交付，页面接入仍需 Toge review。
+- 2026-11-08 工单 34 续接：[制作追溯契约](CC-Tasks/已完成/34-production-trace-contract.md)后端/共享响应已完成；本会话用户确认限定范围。GET/retry 白名单序列化，新增可选 performancePlanning 与 PERFORMANCE_PLANNING_FAILED；现有 Client 共享 Zod 保留字段。分支 feature/backend-production-trace，本地提交，未推送；实际回归与夹具边界见[日志](docs/iteration-log.md#production-trace-34)。
+- Toge 下一步：按[契约与夹具](docs/ARCHITECTURE.md#production)决定轻量状态/错误展示并补 Mock；disabled/skipped/无 trace 不伪装 LLM 调用，费用 null 显示未知，失败仍不进入演唱。没有新增 URL、路由设置或永久工程追溯；本条仍保留等前端 review/接线回执。
 - 对方下一步：确定是否及如何接入后台路由控件和任务追溯；如需将追溯写入工程，另提共享契约确认。不要把当前进程最近 100 次记录当作持久化工程历史；未配置单价或费用未知时显示未知。
 - 验收与回执：已交付分支的独立快照记录为构建通过、72 项通过/3 项跳过，真实三任务使用不同模型 ID 的调用 1/1 通过；这些是前一轮路由证据；本轮整合的回归结果另记迭代日志。review 后补 Mock/页面接入工单及实际验证结果；不把模型输出成功标为页面、真实歌声或人工听感通过。
 
@@ -83,21 +100,31 @@
 - 对方下一步：与 [15-P2A-contracts](#15-p2a-contracts) 一并评审对 SongPlan 字段与旧工程兼容的影响（chordProgression 结构变化、validateMelody 弱拍放宽、三处 4/4 硬编码统一）；确认后先在 shared/contracts/CHANGELOG.md 写清关联工单与授权范围，再由 Owner 实施。
 - 验收与回执：见工单 21 验收节；本条目不构成跨区授权，工单 15/19/20/22 的实施也不以本条为前置。
 
-<a id="5-browser-timing"></a>
-
-### 5-browser-timing · 页面测试的高负载时序稳定性
-
-- 更新：2026-11-07；来源：[工单 5](CC-Tasks/5-toge-free-creation.md)；Blacktea → Toge；状态：待核对测试稳定性，不代表低负载下功能失败。
-- 证据：本轮真实音频与页面并行回归时，Mock 的 LOOP tap 检查期望 BPM >90，实际 76；未改动的 main 7bee0eb 同一检查也失败（89）。低负载串行重跑该用例 1/1 通过。无 API 播放检查首跑在 5 秒内未见暂停按钮，main 基线及本分支串行重跑均通过。
-- 对方下一步：核对浏览器测试对真实墙钟点击间隔和异步离线混音的依赖；区分机器负载影响与产品行为，评估可重复的节奏输入/播放器就绪等待策略，不靠放宽断言掩盖节奏错误。涉及 tests/browser/mock.spec.ts 与 tests/browser/plan.spec.ts，本轮后端交付未改这些文件。
-- 验收与回执：在工单 5 记录测试环境、复现和稳定性验证，完整功能断言仍需保留；完成后按维护规则清除此条及索引。原始日志保存在本机 temp/backend-p1-p2b-mock.log、temp/backend-p1-p2b-http.log、temp/baseline-loop-tap.log 及对应 retry 日志。
 
 
 <a id="20-groove-render"></a>
 
 ### 20-groove-render · 可选器乐渲染律动
 
+- 2026-11-08 接收方执行入口：[工单36 · B](CC-Tasks/36-toge-backend-followup.md#groove-31)。本轮31–35的前端剩余checkbox统一在36；用户已授权31–36统一推送PR合并，接收方开工需同步main核验d550b9c；下文“未推送”为历史阶段状态。完成后按36回执再关闭本ID。
+
 - 更新：2026-11-07；来源：[工单 20](CC-Tasks/后端/20-groove-and-humanization.md)；Blacktea → Toge；状态：音乐核心/API 已实现，页面/Mock 与人工听评待安排。
 - 已交付：自由模式新鼓组、TAP 保护、可选 groove 和保护标记契约；分支 feature/backend-music-quality-tickets，交付 [PR #10](https://github.com/cicikat/CantaLoom/pull/10)。本轮未修改 UI/Client/Mock/SongPlan/工程 Schema；字段与兼容边界见[契约记录](shared/contracts/CHANGELOG.md)及[接入说明](docs/ARCHITECTURE.md#groove-render)。
+- 2026-11-08 工单 31 后端续接：限定跨层范围已由本会话用户明确确认；[工单 31](CC-Tasks/已完成/31-production-groove-integration.md)已接 productionInputSchema、SongProject.grooveSettings、生产与 external-audio 的统一输入。新提交在 feature/backend-production-groove（本地提交，未推送），验证见[日志](docs/iteration-log.md#production-groove-31)。
+- Toge 下一步：Client 制作输入改用 ProductionInput；Mock 保留设置并显式标记夹具；页面只保存三参数；Synth 复用 shared/groove 的 performedNotes，并透传锁定/手工保护，核对预览与导出一致。不要将本轮真实 FluidSynth PCM 当作 Synth、真实 LLM/绮萱或人工听感验收。
 - 对方下一步：需要开放 swing/人性化时，先确认保存/Client/Mock/production/浏览器预览与导出的统一参数来源和保护状态；不能只给服务端一次性参数，使浏览器重新渲染时丢失。按项目 ID、轨道 ID、版本构造稳定种子，不使用时间戳。
 - 验收/回执：本机对照音在 temp/task20/，工单与迭代日志有客观验证；人工抽听 backbeat 与段落推进尚未执行。前端接线核对与当前缺口继续由[工单 27](CC-Tasks/27-frontend-interface-sync.md)维护，未因其他接口补接将本条标为完成。本条不构成代改前端的授权。
+
+
+<a id="35-ai-html-pv"></a>
+
+### 35-ai-html-pv · AI HTML PV 后端/共享渲染已交付，页面与共验待接
+
+- 2026-11-08 接收方执行入口：[工单36 · D/E](CC-Tasks/36-toge-backend-followup.md#html-pv)。本轮31–35的前端剩余checkbox统一在36；用户已授权31–36统一推送PR合并，接收方开工需同步main核验d550b9c；下文“未推送”为历史阶段状态。完成后按36回执再关闭本ID。
+
+- 更新 2026-11-08，Blacktea → Toge；本会话用户已确认限定范围。P0 `be95902`，P1/验收同 feature/backend-ai-html-pv 本地后续提交；未推送。工单：[35](CC-Tasks/后端/35-ai-html-pv.md)，[实际日志](docs/iteration-log.md#ai-html-pv-35)。
+- 共享入口：shared/contracts/pv.mjs/.d.mts 的快照、PvDesign/PvResult、pvFingerprint；shared/pv-render.mjs 的 pvDocument。POST /api/pv/design 需显式配置 pv_design；GET /api/pv/status 是 Chromium 探测。完整字段、成功/失败/Mock夹具、HTML与旧PNG导出示例见[架构](docs/ARCHITECTURE.md#ai-html-pv)、[资源](docs/ENGINES.md#html-pv)、[测试夹具](tests/support/pv-fixture.mjs)。
+- Toge 下一步：另行确认并接 SongProject 的设计/快照指纹存储与重开、统一Client/Mock、LOOP! #pv 可选按钮与状态；生成/应用/导出时投影当前工程并比对指纹，歌词或BPM变化使旧设计过期；iframe只给sandbox=allow-scripts，无allow-same-origin，父页仅给持有的frame发送cantaloom-pv-seek毫秒消息；共用runtime，不重写随机/动画算法。保持原Canvas默认与可选回退，不在制作后自动扣视觉Token。
+- 导出：原/api/export旧四PNG/WAV不变；新HTML分支带visualMode、pvProject、pvDesign、inputFingerprint与同一renderAudio混音WAV，不带scenes，不再加ASS。400校验/失效、429占用、503资源缺失、500编码/预算失败；Blob/响度头保留，180s既有Client在本机77.7s基准内足够，复杂设计仍可能触发512MiB/170s预算。Mock设计必须source=mock/mock=true，不伪造trace或MP4。
+- 资源/证据：temp/task35/preview-harness.html、ai-html-pv.mp4、两首设计JSON、render-report.json/frame-check.json；实际模型两次、新设计真实600帧MP4、seek字节稳定、活动歌词视频SSIM约0.9900、FFprobe、黑帧/完整解码、旧Canvas真实导出均通过。两秒采样进程树约1.22GB、临时帧454MB，仅为本机基准。音频是本地规则/元音演示，不是真实中文演唱。
+- 未验边界：产品页面/工程保存接线、跨端字体差异、手机/Safari和人工观感尚未共同验收。请在工单35 P2/工单6留下实际前端证据后再关闭交接；不要因后端动态成片已产出宣布产品端到端完成。

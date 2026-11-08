@@ -1,3 +1,4 @@
+import {realAcceptance} from './support/tier.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
@@ -59,6 +60,7 @@ test('MIDI applies integer swing and seeded humanization without mutating beats 
 });
 
 test('real FluidSynth groove and energy change PCM and keys while repeat requests hit identical caches',async t=>{
+ if(!realAcceptance)return t.skip('需要 SONGYU_TEST_TIER=acceptance；快速回归不调用外部引擎');
  const renderer=new InstrumentRenderer();if(!(await renderer.status()).ready)return t.skip('FluidSynth/SoundFont unavailable');
  await mkdir('temp/task20',{recursive:true});
  const inputs=[{bpm:120,...track,endBeat:4},{bpm:120,...track,endBeat:4,groove},... [.2,.9].map(energy=>({bpm:120,kind:'drums',notes:arrangement(energy,'busy'),endBeat:8}))];

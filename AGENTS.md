@@ -1,4 +1,4 @@
-# SONGYU 开发约定
+# CantaLoom 开发约定
 
 远端仓库：[cicikat/CantaLoom](https://github.com/cicikat/CantaLoom)；Git 拉取地址：`https://github.com/cicikat/CantaLoom.git`。
 
@@ -33,7 +33,7 @@
 
 ## 产品与范围
 
-声屿 SONGYU 是面向零音乐基础的本地音乐创作 Web Demo，保留 V3 创意积木视觉。旧模式维持四段/六轨和约 24 秒流程；自由作曲模式保留四段，但支持 1–8 行歌词、20–30 秒目标时长，不能把四句固定模板限制套到新模式。
+织声机 CantaLoom 是面向零音乐基础的本地音乐创作 Web Demo，保留 V3 创意积木视觉。旧模式维持四段/六轨和约 24 秒流程；自由作曲模式保留四段，但支持 1–8 行歌词、20–30 秒目标时长，不能把四句固定模板限制套到新模式。
 
 当前能力、版本含义与证据入口见 `README.md`；任务进度见 README 索引的当前工单。已有真实 LLM、绮萱演唱与导出历史记录，不得继续写成“尚未接入”；也不得把历史记录当成本机刚刚通过的验收。最新后端能力不等于正式新页面已接通，Mock、真实引擎、人工听感必须分别报告。
 
@@ -62,6 +62,7 @@
 需要 Node.js 22.12+ 和 npm；MP4 另需 FFmpeg（libx264、libass），可用 `FFMPEG_PATH` 配置。前端 Mock 无需 Python 或任何音库。
 
 - Windows 双击 `start.bat`：定位脚本目录、检查环境/端口、缺依赖时 `npm ci`、构建最新源码、启动单服务，页面/API 就绪后打开浏览器。窗口保留日志，Ctrl+C 停止。
+- 两个中文入口「打开吱声机.bat」/「打开吱声机管理面板.bat」默认使用 `start.bat --restart`，核对旧 CantaLoom 服务身份后关闭并重启；其他进程占用时中止。管理入口加 `--admin` 打开后台。
 - `start.bat --check`：执行同一启动流程，检查页面、构建资产和 API，随后自行停止；不打开浏览器。
 - `start.bat --no-open`：启动并保持服务，但不打开浏览器。
 - 开发：`npm ci` 后 `npm run dev`；独立前端 `npm run dev:mock`（无需引擎）或 `npm run dev:frontend`（真实联调），独立后端 `npm run dev:backend`。前端热更新，服务端 watch 自动重启。

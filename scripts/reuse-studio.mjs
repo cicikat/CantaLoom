@@ -15,7 +15,7 @@ export async function reuseStudio({directory=root,port,check=false,noOpen=false,
   const [page,health]=await Promise.all([request(url,{signal:AbortSignal.timeout(1500)}),request(url+'api/health',{signal:AbortSignal.timeout(1500)})]);
   if(!page.ok||!health.ok)return false;
   const html=await page.text(),status=await health.json();
-  if(!html.includes('id="root"')||!html.includes('声屿 SONGYU')||asset(html)!==localAsset||typeof status.llm!=='boolean'||typeof status.ffmpeg!=='boolean')return false;
+  if(!html.includes('id="root"')||!html.includes('织声机 CantaLoom')||asset(html)!==localAsset||typeof status.llm!=='boolean'||typeof status.ffmpeg!=='boolean')return false;
   const js=await request(new URL(localAsset,url),{signal:AbortSignal.timeout(3000)});
   if(!js.ok||hash(Buffer.from(await js.arrayBuffer()))!==hash(await readFile(path.join(directory,'dist',localAsset.slice(1)))))return false;
   if(!check&&!noOpen)open(url);
@@ -28,7 +28,7 @@ if(entry&&(process.platform==='win32'?entry.toLowerCase()===fileURLToPath(import
   try{await access(path.join(root,'.env'));process.loadEnvFile(path.join(root,'.env'))}catch{/* The original starter handles absent or invalid configuration. */}
   const port=Number(process.env.PORT||3001);
   const reused=Number.isInteger(port)&&port>0&&port<=65535&&await reuseStudio({port,check:process.argv.includes('--check'),noOpen:process.argv.includes('--no-open')});
-  if(reused)console.log(`SONGYU is ready: http://127.0.0.1:${port}/ (reused current app; no process stopped)`);
+  if(reused)console.log(`CantaLoom is ready: http://127.0.0.1:${port}/ (reused current app; no process stopped)`);
   process.exitCode=reused?0:10;
  }catch{process.exitCode=10}
 }

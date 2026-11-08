@@ -22,7 +22,7 @@ test('no API: inspiration changes audible PCM at the same seed, and six tracks r
   const a=(await renderAudio(lonely)).buffer.getChannelData(0),b=(await renderAudio(q)).buffer.getChannelData(0);let diff=0,ea=0,eb=0;for(let i=0;i<a.length;i++){diff+=Math.abs(a[i]-b[i]);ea+=a[i]*a[i];eb+=b[i]*b[i]}return {diff,quietRms:Math.sqrt(ea/a.length),brightRms:Math.sqrt(eb/b.length)};
  },{lonely,bright});
  expect(result.diff).toBeGreaterThan(100);expect(result.quietRms).toBeGreaterThan(.005);expect(result.brightRms).toBeGreaterThan(.005);
- await page.screenshot({path:'test-results/p21-intent-desktop.png',fullPage:true});
+
  await page.getByRole('navigation').getByRole('button',{name:/音乐积木/}).click();await page.getByRole('button',{name:'播放全曲',exact:true}).click();await expect(page.getByRole('button',{name:'暂停全曲',exact:true})).toBeVisible({timeout:20000});
 });
 
@@ -44,5 +44,5 @@ test('LLM statuses and failures are honest; invalid response cannot overwrite sa
  await page.goto('/');await projectSettings(page);await page.locator('.plan-details summary').click();await expect(page.locator('.honesty')).toContainText('真实调用未验证');await page.getByRole('button',{name:'生成积木方案'}).click();await expect(page.locator('.honesty')).toContainText('最近一次方案已校验');const valid=await stored(page);expect(valid.planning.source).toBe('llm');
  for(mode of ['invalid','http']){await page.getByRole('button',{name:'生成积木方案'}).click();await expect(page.getByRole('alert')).toContainText('当前工程完整保留');expect(await stored(page)).toEqual(valid);await expect(page.locator('.honesty')).toContainText('真实调用未验证');}
  await page.getByRole('button',{name:'使用本地规则生成',exact:true}).click();await expect(page.getByRole('alert')).toHaveCount(0);expect((await stored(page)).planning.source).toBe('local-rules');
- await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();await page.screenshot({path:'test-results/p21-intent-mobile.png',fullPage:true});
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
 });

@@ -1,4 +1,34 @@
-# SONGYU 引擎、后台与资源
+# CantaLoom 引擎、后台与资源
+
+<a id="first-install"></a>
+
+## 新电脑一键安装与硬件预算
+
+Windows x64 双击根目录 [install-and-start.bat](../install-and-start.bat)。PowerShell 5.1 随 Windows 提供，无需预装 Node、Python、CUDA 或管理员权限。首次联网下载；下载失败保留 `.partial`，重试重新下载该文件；已校验压缩包可复用，不支持断点续传。已完成目录有安装标记；遇到没有标记的同名目录会中止，由用户保留/改名后重试，避免覆盖手动安装。
+
+| 选项 | 自动准备 | 仍需用户配置 |
+|---|---|---|
+| 1 本地创作 | 便携 Node.js 22 当前维护版、npm 锁定依赖、构建并启动工作台 | 可用本地搭建与浏览器合成；自由 AI 制作需要后台 LLM 服务/模型/Key |
+| 2 中文演唱 | 选项 1 + OpenUtau 0.1.576、绮萱 v2.7.0、2025.02 声码器、.NET 10 SDK、编译无窗口桥接、FFmpeg essentials | 先阅读并接受各资源条款；后台配置 LLM；真正生成后才算引擎验收 |
+
+资源统一放项目相邻 `../CantaLoom-resources/`：`tools/` 为 Node/FFmpeg，`OpenUtau/` 为引擎及 Dependencies，`voicebanks/` 为声库，`runtime/dotnet/` 为 SDK，`runtime/` 为配置/缓存，`downloads/` 为复用下载包。项目内仅保留 `node_modules/` 与构建产物。可移动整套仓库与相邻资源目录；已有安装通过 start.bat 继续使用原资源位置。
+
+安装入口只给本次进程设置 `SONGYU_EXTERNAL_ROOT`、PATH、DOTNET_ROOT，不写系统环境变量，不改 `.env`、后台 DPAPI 配置或工程。若 `.env` 已指定资源根目录，或进程指定了不同根目录，安装入口明确停止，继续使用原 start.bat；不要混用两套配置。新安装后日常仍使用 install-and-start.bat 并选 1，可复用已装 Node/歌声/FFmpeg；原 start.bat 需要自行提供 Node 与资源根目录。已有 Node 安装不会自动升级，后续安全更新需维护便携工具版本。
+
+| 使用场景 | 内存建议 | 显卡/显存建议 | 空间预算 |
+|---|---|---|---|
+| 本地积木、浏览器合成、云端 LLM | 8 GB 系统内存 | 集显即可，无独显硬性要求 | 预留 3 GB，含 npm、构建与便携 Node |
+| 绮萱 CPU 中文演唱 | 16 GB 系统内存，避免同时运行其他重负载程序 | 无需独显，默认 CPU | 预留 8 GB，含工具、解压副本、下载包与初期缓存 |
+| 可选 DirectML | 16 GB，32 GB 更宽裕 | 建议至少 4 GB 可用显存，8 GB 更宽裕；实际取决于设备与任务 | 同上，作品缓存持续增长 |
+| HTML PV（可选） | 16 GB 更稳妥 | 不要求 CUDA | 另预留 Chromium 与临时帧空间，见 [HTML PV](#html-pv) |
+
+以上是容量规划建议，**不是已测定最低门槛或速度保证**。低内存/不同显卡未跑矩阵验收。使用云端 LLM 不下载本地大语言模型；用户另部署本地 LLM 的硬件需求由所选模型决定。中文演唱档约 1.1 GB 下载加 npm，版本更新可能变化；硬盘空间包含下载包与解压结果，歌声缓存/导出不限于此预算。
+
+下载使用官方 Node 校验列表、GitHub release asset SHA256、Microsoft .NET SHA512 校验；缺少校验值会停止。来源：[Node.js](https://nodejs.org/dist/latest-v22.x/)、[OpenUtau 兼容版](https://github.com/openutau/OpenUtau/releases/tag/0.1.576)、[绮萱](https://github.com/yqzhishen/qixuan-diffsinger/releases/tag/v2.7.0)、[声码器](https://github.com/openvpi/vocoders/releases/tag/pc-nsf-hifigan-44.1k-hop512-128bin-2025.02)、[.NET](https://builds.dotnet.microsoft.com/dotnet/release-metadata/10.0/releases.json)、[FFmpeg Windows 构建](https://github.com/GyanD/codexffmpeg/releases)。演唱档先显示许可链接并要求输入 YES；声码器含 CC BY-NC-SA 4.0 条款，商用需另核对，详见[许可](#licensing)。不启动 OpenUtau GUI。
+
+FluidSynth 与 SoundFont 为可选器乐路线，未自动安装，浏览器伴奏仍可用；可选 HTML PV 的 Playwright Chromium 也未自动下载，需要时执行 `npx playwright install chromium`。WAV 不依赖 FFmpeg；演唱档安装的 FFmpeg 用于 MP4。LLM Key 不随安装包提供、不写进前端。
+
+维护检查：`powershell -NoProfile -File scripts/install-local.ps1 -Mode local -Plan` 只显示计划；`-Mode local -Check` 安装基础依赖后验证页面/API/构建资产并停止；`-Mode singing -Check` 仍会要求许可确认并下载/安装演唱资源，然后执行同一启动检查。启动检查成功不等于模型推理或人工听感通过。
 
 这里维护引擎调用、外部资源、配置、缓存与许可边界。页面/API 接入见 [ARCHITECTURE](ARCHITECTURE.md)，协作见 [TEAM_WORKFLOW](TEAM_WORKFLOW.md)；实际推理、安装清单和验收数字统一在[迭代日志](iteration-log.md)。本机是否安装须用实际诊断确认。
 
@@ -106,7 +136,7 @@ dotnet build scripts/openutau-bridge/SongyuBridge.csproj -p:OpenUtauDirectory="$
 
 渲染先写 `key.pending.wav`，完成时长 / 音量 / 削波校验后原子改名为正式缓存与元数据；推理失败或超时只留下 pending 残留并被下一次渲染清理，不污染既有缓存，旧 take 文件保留。真实引擎回归 `tests/qixuan-real.test.mjs`（渲染、缓存命中与失效、PCM 差异、无 pending 残留）在本机有引擎时随 `npm test` 自动运行，可用 `SONGYU_REAL_TESTS=0` 关闭。
 
-渲染 WAV 保留前后各 0.2 秒余量，startSeconds 对应其真实时间轴起点，单句试听也包含辅音预发声。浏览器统一重采样到 24000 Hz；试听 / WAV / PV 共用 `renderAudio`。MP4 与预览展示「AI 合成内容 / 歌声合成：绮萱 / 合成技术：DiffSinger」，背景为 SONGYU 自有程序化画面。
+渲染 WAV 保留前后各 0.2 秒余量，startSeconds 对应其真实时间轴起点，单句试听也包含辅音预发声。浏览器统一重采样到 24000 Hz；试听 / WAV / PV 共用 `renderAudio`。MP4 与预览展示「AI 合成内容 / 歌声合成：绮萱 / 合成技术：DiffSinger」，背景为 CantaLoom 自有程序化画面。
 
 <a id="licensing"></a>
 
@@ -163,6 +193,32 @@ dotnet build scripts/openutau-bridge/SongyuBridge.csproj -p:OpenUtauDirectory="$
 
 在连接与密钥页为歌词规划、旋律作曲、演唱表现分别启用路由，填写服务商、OpenAI 兼容 Base URL、模型 ID 与 API Key，然后保存。接口追加 `/chat/completions`。独立密钥以 Windows DPAPI 保存，留空保留；未设置独立密钥的新路由使用默认密钥。关闭覆盖恢复默认连接。连接检查目前只测试歌词规划路由，不代表三个任务都已通过真实调用。
 
-管理启动器遇到同一项目的现有服务时，核对管理状态中的项目根目录后直接打开现有后台，不重复启动。其他进程占用仍报错。复用不会加载新后端代码，更新后须在原服务窗口 Ctrl+C 并重新启动。`--check` 始终验证独立启动，不复用服务。
+管理启动器（「打开吱声机管理面板.bat」或 start-admin.bat）默认先确认并关闭旧 CantaLoom 服务，重新构建、启动后打开 /admin；首页入口「打开吱声机.bat」使用同一重启逻辑。新版管理状态返回 projectRoot/pid 用于精确核对，旧服务需同时匹配 Node 服务命令与资源根目录；停止前再次校验监听 PID/启动时间，其他服务占用时中止。--check 会执行该重启流程并在验证后停止新服务；不改写密钥、资源或工程。详见[启动流程](ARCHITECTURE.md)和[工单 31](../CC-Tasks/已完成/31-launcher-restart.md)。
 
 模型连接和三任务路由统一在资源管理台。填写 URL 和 API Key 后点击“获取模型列表”，选择模型并保存；通过服务端请求兼容的 `/models`，不向浏览器返回密钥。厂商不支持此接口时可手填模型 ID。顶部列出已保存的有效路由；表单修改保存后生效。
+
+
+<a id="html-pv"></a>
+
+## 可选 AI HTML PV 资源
+
+独立 `pv_design` 路由从现有本机后台配置（provider/model/baseUrl/keyRef），仅点击/显式 API 请求调用，不改变制作默认费用。配置探测不调用模型。该任务输出视觉数据，不能执行模型 HTML/JS/CSS；不下载图片/字体。接口及资源错误见[架构](ARCHITECTURE.md#ai-html-pv)。
+
+HTML 导出需 FFmpeg（仍要求 libx264/libass，音频沿用 loudnorm/AAC）与已安装的 Playwright Chromium。当前项目开发依赖已有 @playwright/test，按需执行 `npx playwright install chromium`；生产裁剪依赖后该可选包可能不存在，HTML 明确 503，Canvas 仍不需要该包。`GET /api/pv/status` 探测 Chromium 路径；`SONGYU_HTML_PV_DISABLED=1` 可禁用 HTML 渲染资源，不禁用旧 Canvas。Chromium 使用 sandbox，不通过 --no-sandbox 绕过环境问题；需要本机可用中文字体，预览/导出需使用相同字体环境。
+
+本机 25 秒、600 帧验收约 77.7 秒，临时 PNG 约 454 MB，Node 观测峰值约 324 MB；2 秒采样的验收进程树工作集约 1.22 GB（包括验收 harness，不是严格瞬时峰值）。预算：≤512 MiB 临时帧，145s 帧阶段、150s watchdog、170s HTML 总预算；复杂或更长设计可能触发预算失败，不能将单个基准当作所有机器保证。现有 180s Client 时限在本机测试内足够，本阶段未改 Client；接线后仍应按实际资源回归。
+
+资源验收命令（只在显式授权模型调用时设置第一项）：
+
+```powershell
+$env:SONGYU_PV_REAL='1'
+npx tsx scripts/verify-html-pv.mjs --plan
+# --plan 从已加密本机设置读取模型；仅在验证进程里临时指定 pv_design，不写回配置
+# 没有显式 pv_design 时验收工具复用现有歌词路由；正式 API 不回退
+# 按本机实际位置设置 FFMPEG_PATH 后：
+npx tsx scripts/verify-html-pv.mjs --render
+npx tsx scripts/verify-html-pv.mjs --preview
+node scripts/check-html-pv.mjs
+```
+
+输出在 `temp/task35/`：两首真实设计/最小上下文/本地规则工程、离线 sandbox seek harness、实际混音 WAV、动态 MP4、FFprobe/SSIM/耗时/资源报告。音频是当前 Web Audio 本地作曲与元音演示，不是真实中文演唱。真实模型、真实动态编码、快速夹具分别记[日志](iteration-log.md#ai-html-pv-35)；人工观感与正式页面共同验收仍归工单 6。

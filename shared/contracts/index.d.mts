@@ -1,3 +1,4 @@
+import type {PvProject,PvDesign} from './pv.mjs';
 import type {Groove} from './groove.mjs';
 export {grooveSchema} from './groove.mjs';
 export type {Groove} from './groove.mjs';
@@ -20,7 +21,13 @@ export interface QixuanInput {lyricId:string;lyrics:string;start:number;end:numb
 export interface QixuanResult extends AudioResult {voiceId:string;voiceVersion:string;providerId:'openutau-diffsinger';engineVersion:string;renderParameters:VoiceParameters&{runner:Runner};take:number;isDemo:boolean;cached:boolean;startSeconds:number;durationSeconds:number;createdAt:string;phonemes?:string[]}
 export interface Engines extends MockTag {instruments:{installed:boolean;ready:boolean;soundfonts:string[];version?:string};singing:string}
 export interface ImportInput {wav:string;voice:{id:string;version:string;providerId:'openutau-exchange'|'diffsinger';label:string}}
-export interface ExportInput {wav:string;scenes:{png:string;duration:number}[];duration:number;lyrics:{text:string;start:number;end:number}[];style:'cinema'|'poster'|'minimal';title:string;singingCredit?:'demo'|'qixuan'|'external'}
+export interface CanvasExportInput {visualMode?:'canvas';wav:string;scenes:{png:string;duration:number}[];duration:number;lyrics:{text:string;start:number;end:number}[];style:'cinema'|'poster'|'minimal';title:string;singingCredit?:'demo'|'qixuan'|'external'}
+export type HtmlExportInput=Omit<CanvasExportInput,'scenes'|'visualMode'>&{visualMode:'html';pvProject:PvProject;pvDesign:PvDesign;inputFingerprint:string};
+// Existing Client remains Canvas-only until the Toge integration.
+export type ExportInput=CanvasExportInput;
+export type VideoExportInput=CanvasExportInput|HtmlExportInput;
+export const htmlExportInput:z.ZodType<HtmlExportInput>;
+export const canvasExportInput:z.ZodType<CanvasExportInput>;
 export interface GenerationTask {kind:'plan'|'instrument'|'singing'|'export';state:'running'|'succeeded'|'failed';mock:boolean;error?:string}
 export const errorSchema:z.ZodType<{error:string}>;
 export const healthSchema:z.ZodType<Health>;
@@ -35,7 +42,7 @@ export const qixuanResultSchema:z.ZodType<QixuanResult>;
 export const enginesSchema:z.ZodType<Engines>;
 export const dictionarySchema:z.ZodType<Record<string,string>>;
 export const importInput:z.ZodType<ImportInput>;
-export const exportInput:z.ZodType<ExportInput>;
+export const exportInput:z.ZodType<VideoExportInput>;
 export const taskSchema:z.ZodType<GenerationTask>;
 
 export interface LoudnessReport {integratedLufs:number|null;truePeakDbtp:number|null}

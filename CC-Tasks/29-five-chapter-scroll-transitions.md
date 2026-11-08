@@ -37,3 +37,5 @@ Owner：Toge（toge / Frontend / UX）。状态：实现与 Mock 回归完成，
 - [ ] toge 在自己的浏览器（电脑与手机）核对自动播放与歌词页横滑的手感与配色；原版 180vh 轨道及圆形样式保留，入场时长为 `chapter-motion.ts` 的 `CIRCLE_ENTRY_MS`，工作台揭幕为 `BENCH_REVEAL_MS`；Let's 翻字用 `PHRASE_HOLD_MS` / `PHRASE_SWAP_MS`，MV 收拢/揭幕用 `MV_EXIT_MS` 与 `mvExitFrame()` 区间。
 
 实现与验证记录见[迭代日志](../docs/iteration-log.md#five-chapter-scroll-transitions)，结构说明见[原型接线边界](../docs/ARCHITECTURE.md#prototype-frontend)。
+
+2026-11-08 PR #17 合并协调：用户授权裁定冲突，保留双方必要实现与测试改进。build、单元 129 通过/8 跳过、完整 Mock 40/40、HTTP 18/18；实机与人工体验待验项不关闭。证据见[迭代日志](../docs/iteration-log.md#pr17-integration)。

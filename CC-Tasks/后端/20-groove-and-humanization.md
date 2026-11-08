@@ -34,3 +34,5 @@ swing/律动字段若进入 SongPlan 属共享契约，先写 [CHANGELOG](../../
 - 生产与浏览器当前不自动携带可选 groove，参数由 API/MIDI 调用方显式指定；UI 开关/Mock/保存接线需要后续跨层确认，未代改 Toge 文件。鼓组与 energy 则已在自由制作核心默认生效。
 - 实测对照音在 `temp/task20/variant-0.wav`（直拍器乐）、`variant-1.wav`（swing+人性化）、`variant-2.wav`（低能量鼓组）、`variant-3.wav`（高能量鼓组）。真实引擎渲染、重复缓存与 PCM 差异断言通过，未作人工抽听。
 - 交接 ID：[20-groove-render](../../CROSS-END-HANDOFF.md#20-groove-render)。结果与验证证据见[迭代日志](../../docs/iteration-log.md#groove-humanization-20)。实施清单完成不代表人工听感验收，暂不归档。
+
+2026-11-08 后续更新：[工单 31](../../CC-Tasks/已完成/31-production-groove-integration.md)已完成制作与工程参数、统一 FluidSynth 输入；页面/Mock/Client 制作类型及 Synth 仍由 Toge 按 20-groove-render 接入。上文为当时核对边界。

@@ -1,12 +1,14 @@
-# 声屿 SONGYU / CantaLoom
+# 织声机 CantaLoom
 
 面向零音乐基础的本地音乐创作工作台：输入灵感或歌词，编曲、编辑、试听，由绮萱演唱并导出作品。仓库：[cicikat/CantaLoom](https://github.com/cicikat/CantaLoom)。
 
 <a id="launch"></a>
 
-## 打开声屿
+## 打开织声机
 
-Windows 日常使用：双击项目根目录 **「打开声屿.bat」**。本机桌面已创建 **「声屿」** 快捷方式，指向同一个入口。首次打开会检查依赖、构建最新应用、启动服务并自动打开工作台；已运行时会核对当前版本并直接打开，避免重复启动。准备窗口保留日志，按 Ctrl+C 可停止自己启动的服务。
+**新电脑首次使用（Windows x64）：双击 [一键安装启动.bat](一键安装启动.bat)**（英文入口 [install-and-start.bat](install-and-start.bat)），选择本地创作或中文演唱安装档。无需预装 Node.js；自动下载的便携工具、声库、缓存放在项目旁的 `../CantaLoom-resources/`，npm 依赖仍放项目 `node_modules/`。之后也可用同一入口启动。内存/显存建议、下载内容、许可及可选资源见[首次安装说明](docs/ENGINES.md#first-install)。云端 LLM 需要在后台自行填写服务与 Key。
+
+Windows 日常使用：双击项目根目录 **「打开吱声机.bat」**。管理后台使用「打开吱声机管理面板.bat」（或 start-admin.bat）。首次打开会检查依赖、构建最新应用、启动服务并自动打开工作台；已运行时会核对端口进程和本机管理状态，只关闭确认属于 CantaLoom 的旧服务，再构建并重启；其他服务占用端口时中止，不会强行关闭。准备窗口保留日志，按 Ctrl+C 可停止自己启动的服务。
 
 进入后点击 **「一键开工」**：制作环境就绪时开始制作，尚未准备好时打开现有设置面板并显示缺项。面板里可用「本地搭建积木」进行本地创作，或通过「打开本机设置」配置后「重新检查」。配置检查不调用模型，也不把已配置当成真实生成验收。
 
@@ -29,12 +31,14 @@ LOOP! 首页已完成页面接线、Mock 流程及本地创作验证；历史真
 | LOOP! 单页创作 | 已接工程音轨、格子、排序、TAP、歌词卡片、局部编辑、播放与导出 | [本轮接线验证](docs/iteration-log.md#loop-prototype-wiring)；真实制作与 MP4 编码未重跑 |
 | 真实中文演唱与 LLM | 历史记录已有真实调用、绮萱 CPU / DirectML、缓存与成片实测 | [绮萱历史记录](docs/iteration-log.md#qixuan)；不证明新电脑已装好引擎或当前 Key 可用 |
 | 自由作曲与动态旋律 | compose / melody 接口、共享客户端及工程应用逻辑已提供 | [自由创作接入](docs/ARCHITECTURE.md#composition)；首页最小入口及单句旋律编辑已本地接入 |
-| 自动制作、调教与混音 | 制作任务、调教/混音核心已有实现；LOOP! 已接每句预设、Auto/Manual、四项细调、音符覆盖/表达锁/三版恢复与四种分轨试听 | [当前页面接入](docs/ARCHITECTURE.md#performance)、[Mock/PCM 证据](docs/iteration-log.md#expression-mix-controls)；浏览器伴奏音量禁用并交红茶，真实引擎/听感仍待验收 |
+| 自动制作、调教与混音 | 制作任务、调教/混音核心已有实现；LOOP! 已接每句预设、Auto/Manual、四项细调、音符覆盖/表达锁/三版恢复与四种分轨试听 | [当前页面接入](docs/ARCHITECTURE.md#performance)、[Mock/PCM 证据](docs/iteration-log.md#expression-mix-controls)；浏览器伴奏核心已修复、控件仍待 Toge 解禁，真实共同听感仍待验收 |
 | 新流程 Mock 与页面 | **A1 / A2 已完成**：首页主题/可选歌词 → 制作状态 → 完整结果应用 → 试听已接通；支持取消、失败保留与缺失句重试。旧入口保留，未知 Mock 接口返回 404 | [A1 验证](docs/iteration-log.md#a1-free-creation-mock)、[A2 验证](docs/iteration-log.md#a2-free-creation-page)；双方待办见下方[协作工单](#协作工单) |
 | 钢琴卷帘与局部旋律 | **已接线并通过 Mock**：在歌词卡片下按句编辑音高/位置/长度、锁定及指定句重作曲；改动句重唱，保留其他句与伴奏 | [编辑入口](docs/ARCHITECTURE.md#piano-roll)、[钢琴卷帘验证](docs/iteration-log.md#c-piano-roll) |
 | 新网页完整流程及听感 | **待双方验收**：现场新输入 → 制作 → 试听/导出，以及人工听感 | Mock 页面测试、后端历史实测与非静音指标不能代替这项验收 |
 
-最小页面已可在 Mock 中从新输入制作并试听；钢琴卷帘、局部旋律、调教与现有有效混音控件均已接线。每句调教在「逐句演唱与重唱」中展开，混音在歌词区底部展开；默认不占首屏。高级音高/颤音/音素/表现曲线在「逐音符人工覆盖」内；分轨文件与响度在「导出作品」中，MP4 报告只展示本次响应。见[工单 27](CC-Tasks/27-frontend-interface-sync.md)，Mock 文件和报告不是真实引擎/FFmpeg 验收。浏览器伴奏音量核心问题见[交接 5-C-synth-mix](CROSS-END-HANDOFF.md#5-c-synth-mix)，真实最小闭环仍需工单 4 / 6 验收。详细 checkbox 只维护在对应 CC-Tasks 工单中。
+最小页面已可在 Mock 中从新输入制作并试听；钢琴卷帘、局部旋律、调教与现有有效混音控件均已接线。每句调教在「逐句演唱与重唱」中展开，混音在歌词区底部展开；默认不占首屏。高级音高/颤音/音素/表现曲线在「逐音符人工覆盖」内；分轨文件与响度在「导出作品」中，MP4 报告只展示本次响应。见[工单 27](CC-Tasks/27-frontend-interface-sync.md)，Mock 文件和报告不是真实引擎/FFmpeg 验收。浏览器伴奏核心已由工单 33 修复，控件仍待 Toge 解禁，见[交接 5-C-synth-mix](CROSS-END-HANDOFF.md#5-c-synth-mix)，真实最小闭环仍需工单 4 / 6 验收。详细 checkbox 只维护在对应 CC-Tasks 工单中。
+
+旧名称已废弃，当前产品名统一为 **织声机 CantaLoom**。旧浏览器存档键、`SONGYU_*` 环境变量、HTTP 头、已安装的 `SongyuBridge` 和已安装的旧启动文件保留兼容，避免已有工程、加密配置、引擎或快捷方式失效；新导出工程使用 `.cantaloom.json`，旧 `.songyu.json` 仍可导入。历史工单与迭代证据保留当时名称。
 
 ## 开始开发
 
@@ -62,7 +66,7 @@ npm run dev:mock
 
 ## 本地演示
 
-Windows 双击「打开声屿.bat」（内部复用 `start.bat`）：检查环境、缺依赖时执行 `npm ci`、构建源码、启动同源页面/API，再打开浏览器。`--no-open` 不打开浏览器，`--check` 完成启动检查后自行停止。不会替换 `.env` 或关闭占用端口的其他服务。
+Windows 双击「打开吱声机.bat」（内部复用 `start.bat`）：检查环境、缺依赖时执行 `npm ci`、构建源码、启动同源页面/API，再打开浏览器。`--no-open` 不打开浏览器，`--check` 完成启动检查后自行停止。两个中文入口默认传入 `--restart`，管理入口另传入 `--admin`；`start.bat` 也可显式使用 `--restart`。不会替换 `.env` 或关闭未确认身份的其他服务。
 
 手动方式：
 
@@ -101,18 +105,35 @@ npm start
 | Blacktea（红茶） | [21 · 和声、声部连接与拍号速度](CC-Tasks/后端/21-harmony-voice-leading-form.md)：契约提案待评审授权，依赖 15 P2-A 确认，待排期 |
 | Blacktea（红茶） | [22 · 制作后端治理](CC-Tasks/后端/22-backend-production-ops.md)：缓存配额、任务持久化、渲染并发池；领取工单 12 子任务，待排期 |
 | Toge（toge） | [5 · 自由创作 Mock、页面与局部编辑](CC-Tasks/5-toge-free-creation.md)：LOOP!、调教及现有混音路径已接线并通过 Mock；视觉核对及真实共同验收待完成 |
+| Toge（toge） | [36 · 工单31–35前端接线与剩余交接](CC-Tasks/36-toge-backend-followup.md)：Groove、零偏移提示、Synth伴奏解禁、制作追溯、AI HTML PV；本轮剩余前端唯一执行清单；31–35后端随本轮统一PR交付，开工先同步main |
 | Toge（toge） | [27 · 已交付接口与前端接线](CC-Tasks/27-frontend-interface-sync.md)：高级调教/历史演唱恢复、分轨下载/响度报告已补；可选 groove 与真实验收仍未完成 |
 | Toge（toge） | [23 · 首页三个视觉章节与竖屏版式](CC-Tasks/23-three-chapter-page.md)：入场动效、Music Blocks 过渡、MV 放映页与竖屏调整已实现并通过 Mock；待 toge 实际滚动核对 |
 | Toge（toge） | [29 · 五章节滚动转场](CC-Tasks/29-five-chapter-scroll-transitions.md)：幕布揭开工作台、Let's 逐字翻转并揭开 MV，已实现并通过 Mock 与无头浏览器逐帧检查；待 toge 实际滚动核对手感 |
+| Blacktea（测试审计） | [24 · 测试体系审计与精简](CC-Tasks/已完成/24-test-system-audit.md)：等价覆盖、测试分层与 CI 去重；不修改业务逻辑 |
 | 双方共同验收 | [6 · 原型接线后的真实闭环与听感](CC-Tasks/6-joint-acceptance.md)：依赖 4/5 就绪，分别记录 Mock、真实引擎、页面和人工听感 |
 | 跨端交接规则与入口 | [18 · 跨端交接文档](CC-Tasks/已完成/18-cross-end-handoff.md)：登记、按需读取与完成后清理 |
 | 前一轮工单整理 | [7 · 项目工作流整理](CC-Tasks/已完成/7-documentation-workflow.md)：已完成的范围与验证入口 |
 | 本轮文档合并 | [8 · 文档主题合并与历史归位](CC-Tasks/已完成/8-docs-consolidation.md) |
 | 日常使用入口 | [16 · 单一双击入口与准备状态](CC-Tasks/已完成/16-easy-launch.md)，已完成；实际资源配置仍依赖红茶工单 4 |
+| 新用户安装入口 | [37 · 一键安装启动与硬件预算](CC-Tasks/已完成/37-first-run-installer.md)：便携环境与授权声库下载；全新演唱安装尚未完整实机验收 |
 | 后台主题 | [14 · 日夜切换与文案精简](CC-Tasks/已完成/14-admin-themes.md) |
 | 后台双栏与链路测试 | [13 · 后台制作链路](CC-Tasks/已完成/13-admin-pipeline.md) |
 | 后台后续方向 | [12 · 后台与资源管理](CC-Tasks/12-admin-backlog.md)，待排期 |
 | 历史方案 | [1 · 动态旋律](CC-Tasks/1-dynamic-melody-and-performance.md)、[9 · 初始工作台](CC-Tasks/9-initial-workbench.md)、[10 · P2.1 后续建议](CC-Tasks/10-guided-composition.md)、[11 · 解耦迁移](CC-Tasks/11-frontend-backend-decoupling.md)；恢复的原文：[2 · 自由创作](CC-Tasks/2-free-composition-original.md)、[3 · 自动调教](CC-Tasks/3-auto-performance-original.md)，当前进度以工单 4/5/6 为准 |
+
+本轮品牌与 PR 整合：[工单 30](CC-Tasks/已完成/30-cantaloom-brand-and-pr-integration.md)。
+
+可选 AI HTML 动态 PV：[工单 35](CC-Tasks/后端/35-ai-html-pv.md)后端/共享渲染已交付，有真实模型设计与动态 MP4；LOOP! 页面、存档与共同观感仍待接。[接口](docs/ARCHITECTURE.md#ai-html-pv) / [资源要求](docs/ENGINES.md#html-pv)。
+
+制作表现规划追溯与安全响应：[工单 34](CC-Tasks/已完成/34-production-trace-contract.md)；后端/共享响应完成，Mock/页面展示待 Toge review。
+
+Synth 伴奏增益核心修复：[工单 33](CC-Tasks/已完成/33-browser-synth-band-gain.md)；WAV/PV 已验证，控件待 Toge 解禁。
+
+首音素显式零偏移修复：[工单 32](CC-Tasks/已完成/32-phoneme-explicit-zero.md)；待 Toge 清理旧限制提示。
+
+制作 Groove 工程参数与后端续接：[工单 31](CC-Tasks/已完成/31-production-groove-integration.md)；页面/Mock/Synth 仍待 Toge 接入。
+
+本轮启动重启功能：[工单 31](CC-Tasks/已完成/31-launcher-restart.md)。
 
 ## 文档与验证入口
 

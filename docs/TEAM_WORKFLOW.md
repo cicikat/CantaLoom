@@ -1,4 +1,4 @@
-# SONGYU 两人协作工作流
+# CantaLoom 两人协作工作流
 
 本文件维护稳定流程与目录所有权；当前能力见 [README](../README.md)，任务 checkbox 见 [README 协作工单](../README.md#协作工单)索引的 CC-Tasks 清单。包版本与能力阶段不是同一概念；后端交付、Mock 可用、页面接线和完整验收分别记录。
 
@@ -67,7 +67,7 @@ Mock 为浏览器内部 transport，不回落真实后端。测试音显式 isDe
 - 完成步骤先更新对应工单 checkbox，并在 docs/iteration-log.md 顶部写明日期、实际结果、验证边界、工单和相关文档地址，再本地提交。进入协作交付时推送本人分支并开 PR，另一方 review；明确要求仅本地/不推送的任务停在本地提交。
 - 合并前更新分支并按范围回归；发生冲突先报告文件和原因，不擅自选一方覆盖，不强推或自动合并 main。
 - PR 写清实际结果、契约/调用点、Mock与真实测试边界、未完成交接，以及工单/迭代日志链接。main 可保留向后兼容但尚无页面入口的 API；这不代表新产品阶段已完成。
-- CI 配置在 main、匹配的 feature/codex 分支 push 和 PR 运行。维护者需实际核实远端运行及 main 的 `checks` 必需检查，配置文件存在不表示保护设置已经启用。
+- CI 在 main push、PR 与手动触发时运行；功能分支通过 PR 检查，避免同提交 push/PR 双跑，同 PR 新提交取消旧运行（main 不取消）。维护者需实际核实远端运行及 main 的 `checks` 必需检查，配置文件存在不表示保护设置已经启用。
 
 ## 验证与完成标准
 
@@ -91,9 +91,36 @@ npm run test:e2e
 .\start.bat --check
 ```
 
-E2E 自动启动隔离服务，不必预先启动 dev；默认真实前端 5183、API 3101、Mock 前端 5184，可用 E2E_FRONTEND_PORT / E2E_API_PORT / E2E_MOCK_PORT 调整，不复用运行中实例。完整套件需真实资源；绮萱还依赖既有本机工程，缺资源可 skip，必须报告跳过。CI 排除部分 FluidSynth / Qixuan / FFmpeg 用例，不等于真实生成验收。
+E2E 自动启动隔离服务，不必预先启动 dev；默认真实前端 5183、API 3101、Mock 前端 5184，可用 E2E_FRONTEND_PORT / E2E_API_PORT / E2E_MOCK_PORT 调整，不复用运行中实例。默认套件为下述快速回归；真实资源验收需显式选择，绮萱页面工程通过 SONGYU_ACCEPTANCE_PROJECT 指定。缺资源的 skip 必须报告，不等于真实生成验收。
 
 每个功能分开记录“后端/核心完成、Mock可用、页面接线、真实联调、共同验收”；checkbox 仅存在对应 CC-Tasks 工单。请求成功、Schema通过、非静音、PCM差异均不能替代从正式页面创作和人工听感。制作 ready-for-mix 也不等于已导出作品。
+
+<a id="test-tiers"></a>
+
+## 测试分层与产物
+
+默认快速层不需要模型、声库、FluidSynth 或 FFmpeg：`npm run build`、`npm test`、`npm run test:e2e:mock`、`npm run test:e2e`。最后一条保留真实 HTTP / 管理后台 / 浏览器 Web Audio 和显式 API 夹具，不能称为真实模型验收。Windows DPAPI 与公开契约测试继续运行。CI 使用相同入口并明确设置 SONGYU_TEST_TIER=quick、SONGYU_REAL_TESTS=0，不再靠测试标题中的引擎名排除用例。
+
+外部资源层只在有授权资源的主机手动执行（PowerShell）：
+
+```powershell
+$env:SONGYU_TEST_TIER='acceptance'
+$env:SONGYU_REAL_TESTS='1'
+# 核心真实音频：Qixuan P0/P1、FluidSynth/groove、FFmpeg；其余单元仍会运行
+npm test
+# 仅选 @acceptance 浏览器用例；保留真实演唱、重唱拼接、器乐与 MP4
+# Qixuan 页面还需设置 SONGYU_ACCEPTANCE_PROJECT 为已生成的真实工程路径
+npm run test:e2e
+# 真实 LLM 路由还须主动开启；会调用已配置的上游
+$env:SONGYU_LLM_ROUTING_REAL='1'
+npx tsx --test tests/llm-router-real.test.mjs
+Remove-Item Env:SONGYU_LLM_ROUTING_REAL -ErrorAction SilentlyContinue
+Remove-Item Env:SONGYU_TEST_TIER,Env:SONGYU_REAL_TESTS -ErrorAction SilentlyContinue
+```
+
+快速层排除的 8 项 Node 外部验收与 6 项 @acceptance 浏览器验收均保留；不得以快速层通过推断它们通过。验收工程输入与测试产物分离：测试不覆盖输入工程；浏览器下载统一用 testInfo.outputPath，默认分别进入 temp/test-results/http/、temp/test-results/mock/。截图仅失败时自动生成，布局仍由 DOM/几何断言验证；19 项全页和 2 项面板成功截图不属于自动视觉比对，已去掉其无条件输出。CI 失败只上传 temp/test-results/。
+
+TAP 测试用 Playwright 时钟和真实点击给出五次精确 500ms 间隔，不受 CI 调度抖动影响；播放器仍用真实 Web Audio 时钟，通过进度条件等待。需要等待的服务就绪、异步处理与超时注入保留明确边界，不用固定 sleep 当成功信号。原静态 LOOP 样稿仍有 README/实际浏览器调用，保留入口提示与卡片几何参考；未挂载的 FreeCreation/Notes 没有独立旧组件测试可删，生产源码不在本轮清理范围。逐项审计证据见[工单 24](../CC-Tasks/已完成/24-test-system-audit.md)与[迭代日志](iteration-log.md#test-system-audit)。
 
 ## 文档职责与更新
 

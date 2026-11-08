@@ -1,4 +1,4 @@
-# SONGYU 架构、数据与接口
+# CantaLoom 架构、数据与接口
 
 这里维护当前代码结构、工程保护和前后端调用方法。分工与协作规则见 [TEAM_WORKFLOW](TEAM_WORKFLOW.md)，引擎安装和后台见 [ENGINES](ENGINES.md)。历史测试数字与交付过程只在[迭代日志](iteration-log.md)，待办只在 [CC-Tasks](../README.md#协作工单)。
 
@@ -71,7 +71,7 @@
 
 ## 日常启动与制作准备
 
-「打开声屿.bat」是面向使用者的入口，本机桌面「声屿」指向它。scripts/reuse-studio.mjs 先检查当前端口的 health、页面标识、与本地 dist 相同的资产路径和 JS 内容哈希；匹配则直接打开正在运行的当前版本，--check / --no-open 不开浏览器，也不停止已有进程。未匹配或服务未运行时，原样传递参数给现有 start.bat；没有第二套构建/服务启动逻辑，也不处理、停止或抢占其他程序。既有启动器负责环境/端口检查、按 lockfile 补依赖、构建、启动同源服务、确认页面与资产后打开浏览器。`--check` 不打开浏览器并在检查后退出，`--no-open` 保持服务但不打开浏览器。双击入口的启动逻辑未变，App 已切换为 LOOP! 接线；原 HTML 提示已改为实际首页入口说明，见[原型边界](#prototype-frontend)。
+「打开吱声机.bat」和「打开吱声机管理面板.bat」调用 start.bat --restart，管理入口另加 --admin。scripts/restart-studio.mjs 通过 Windows 监听 PID、进程启动时间、Node 可执行文件/服务入口及仅本机管理状态确认旧服务；新版管理状态提供 projectRoot/pid，旧版需匹配资源根目录和服务命令。停止前再次核对进程代次与端口归属，拒绝其他应用、其他项目路径、watch 进程或无法确认身份的服务，不按进程名批量终止或杀进程树。等待端口释放后由 scripts/start-local.mjs 检查依赖、构建并启动绝对路径的 server/index.mjs，再打开首页或 /admin。--check 不开浏览器，检查后停止本次服务；--no-open 保持新服务。scripts/reuse-studio.mjs 保留既有独立复用能力，两个中文入口不再经过复用分支。重启清空服务端内存任务，磁盘工程、浏览器存档、缓存与加密配置不删除；真实制作中的任务不会跨进程恢复。启动与重启证据见[工单 31](../CC-Tasks/已完成/31-launcher-restart.md)。
 
 useProductionReadiness 通过既有 health / engines / qixuan Client 只读检查本机配置与资源；在进入页面、回到窗口及点击「重新检查」时刷新，使用代次保护丢弃过期检查结果。它接管原 useStudio 的 health 刷新，不新增 API 或改服务端设置。当前 production 服务要求 LLM、伴奏音源、歌声服务和 FFmpeg；缺项/未连接时「一键开工」仍可点击，打开已有创作设置并聚焦其入口，列出缺项、本机设置与本地积木选项；不提交 production 请求。只有正在操作、任务运行中或主题为空时禁用按钮；不为缺项新增常驻说明栏。
 
@@ -366,6 +366,88 @@ MP4 导出使用 loudnorm（I=-14 LUFS、TP=-1.5 dBTP、LRA=11），48kHz AAC 19
 
 `POST /api/instruments/render` 的可选 groove 示例：`{projectId:"project-1",trackId:"track-1",version:1,swingTicks:60,timingTicks:15,velocityAmount:0.08}`。MIDI 分辨率 480 tick/beat；swing 延后 .5 拍的事件，非鼓 timing/velocity 用 tuple+参数的纯伪随机数生成器，保持同输入 MIDI 字节一致。位置只在 MIDI 编码时偏移，工程 beat 不变；末端裁剪、非负 onset 和最小 1 tick 时值保障事件有效。
 
-调用方透传 locked / manuallyEdited / notes[].locked；任一保护禁用整轨 groove，后端在 hash 前去掉该 groove，保护轨道不会因开关改变缓存键。非保护参数和身份/版本进入缓存键，revision=3。缺省不传 groove 不应用任何额外渲染律动。现有页面/浏览器和 production 尚不传这些字段，API 选项可用不等于页面已接；不应只在服务端启用而让浏览器导出使用另一套节奏。接线须保持参数/保护标记在保存、预览和导出间一致。
+调用方透传 locked / manuallyEdited / notes[].locked；任一保护禁用整轨 groove，后端在 hash 前去掉该 groove，保护轨道不会因开关改变缓存键。非保护参数和身份/版本进入缓存键，revision=3。缺省不传 groove 不应用任何额外渲染律动。工单 31 已接 production 与 `src/external-audio.ts` 的 FluidSynth 请求；浏览器 Synth、Client 制作方法类型、Mock 和页面控件仍由 Toge 接入，尚不能宣称浏览器合成试听一致。
 
 运行 `node --test tests/groove.test.mjs` 可验证事件流与真实 FluidSynth PCM/缓存（缺少引擎自动 skip）；`node scripts/verify-render-quality.mjs --free` 用本地规则自由编曲测试 Chromium 解码/统一混音与真实 MP4，非真实 LLM 创作和人工听评。
+
+
+#### 制作任务 Groove 参数（工单 31）
+
+`POST /api/production` 使用独立 `productionInputSchema`，例如 `{"intent":"雨后出发","targetSeconds":25,"grooveSettings":{"swingTicks":48,"timingTicks":8,"velocityAmount":0.06}}`。`grooveSettingsSchema` 为严格三参数对象，各字段缺省 0；不接受 projectId、trackId、version，非法输入 HTTP 400，启动不可用仍为 503。原自由创作输入保持严格不变，规划前剥离设置，不将其传入 LLM。
+
+生成成功的 `GET /api/production/:id` 工程带 `project.grooveSettings`，保存/导入通过 `validateProject` 校验；未提供时旧 v1 工程不补字段、不迁移。设置不进入人声依赖。缺省或全零时省略渲染 groove，保持原非 Groove 缓存输入。
+
+`shared/groove.mjs` 的 `projectInstrumentInput(project,track)` 由工程/轨道 ID、版本与设置构造稳定种子，并透传真实保护状态及音符。production 和 external-audio 共用该入口；MIDI 沿用 `performedNotes`（480 tick/beat 的 start/end、原 note 引用和演奏 velocity）。未来 Synth 应复用同一事件入口，按 tick/480 转回 beat，再按 BPM 转秒，不能另写随机算法；工程音符保持原 beat。
+
+验证与剩余跨端接线见[工单 31](../CC-Tasks/已完成/31-production-groove-integration.md)、[20-groove-render](../CROSS-END-HANDOFF.md#20-groove-render)。本阶段未修改稳定混音/字幕/FFmpeg 路径。
+
+
+#### 首音素显式零偏移（工单 32）
+
+`overrides[].phonemes[{index:0,offsetMs:0}]` 明确覆盖本音符的句级 `consonantMs`。需要阻止非零默认偏移时生成 `phoneme_overrides:[{index:0,offset:0}]`；其他无替换零偏移维持旧省略规则，不给历史工程批量补字段。没有首位覆盖时继续使用原 consonantMs；发音替换仍优先，BPM→tick 换算不变。
+
+只有首位显式 offsetMs:0 且无发音替换的请求使用 `resolvePerformance.renderRevision=4` / Qixuan 缓存 revision=6，避免复用修复前错误音频；原手动、自动以及无 Performance 请求保持各自旧版本。已有工程的该句资产经原依赖策略过期，其他句与器乐不变。真实 USTX/WAV 与缓存对照及验证边界见[工单 32](../CC-Tasks/已完成/32-phoneme-explicit-zero.md)和[日志](iteration-log.md#phoneme-explicit-zero-32)。
+
+
+#### Synth 伴奏增益（工单 33）
+
+`renderAudio` 让本地 Synth 器乐经过独立 GainNode 再进入原 master；`processed` 时增益为 `mixSettings.bandGain ?? 1`，否则为 1。元音演示与外部人声不进入器乐总线。FluidSynth WAV 继续原 addWav 的平衡/声像/增益路径，不再乘一次总线。原处理默认值（自由模式默认开）、stem、静音、单轨、干声、master 压缩及处理后峰值保护保持不变。
+
+试听、`exportWavFile` 与 `exportPVFile` 仍共用 renderAudio；bandGain=0 的纯器乐 PCM/WAV/PV 输入为零，1 与旧 Synth 基线一致，2 改变实际 PCM。MP4 后续响度归一仍是原策略，不能假定编码后响度与浏览器增益成线性关系。页面控件解禁由 Toge 处理，元音演示的人声 gain/reverb 本期未开放；Groove 事件同步不在本补丁内。验证见[工单 33](../CC-Tasks/已完成/33-browser-synth-band-gain.md)及[日志](iteration-log.md#synth-band-gain-33)。
+
+
+#### 制作任务表现规划状态与公开追溯（工单 34）
+
+沿用 `POST /api/production`，例如请求 `{"intent":"雨后出发","targetSeconds":25}`，启动成功仍为 202 与 `id/state/stage`。`GET /api/production/:id` 与单句 retry 的公开响应使用同一显式投影，不再直接返回内部 job。保留 `id/state/stage/project/composition/phraseId/completedPhrases/error` 和可选 Mock 标记；根级 input、failureContext、performanceTrace、instrumentAssets、内部时间记录及任意后台上下文不在公开契约内。`composition.input` 仍是原 FreeResult 的创作输入，不包含后台配置，原结果应用不变。
+
+新增可选 `performancePlanning`：前序阶段可缺省；disabled 表示未配置该任务路由，running 表示正在规划，succeeded 表示规划返回，skipped 表示没有可规划句（锁定/手工等保护，planner 返回 trace:null），failed 表示配置或规划失败。只有 succeeded 可有可选 trace；没有 trace 时不伪造模型/Token，不从全局 router 历史捞取其他任务的记录。
+
+以下是**契约夹具**，不是实际模型调用；为简洁省略 project/composition：
+
+```json
+{"id":"00000000-0000-4000-8000-000000000001","state":"succeeded","stage":"ready-for-mix","performancePlanning":{"status":"succeeded","trace":{"provider":"fixture-provider","model":"fixture-model","promptVersion":"performance_planning/1/0123456789abcdef","attempts":1,"promptTokens":30,"completionTokens":20,"milliseconds":10,"cost":null,"costCurrency":null}}}
+```
+
+trace 与现有 router 成功字段一致：provider（1–80 字）、model（1–100 字）、promptVersion（任务/版本/16 位哈希）、attempts（1–3）、非负整数 promptTokens/completionTokens/milliseconds、非负 cost 或 null、costCurrency 为 USD 或 null。序列化仅取该白名单，非法追溯整项省略；不返回 task、at、reason、baseUrl、keyRef、systemPrompt、Authorization、原始请求/响应或 stack。未知费用为 null，不能当作零费用。
+
+规划失败示例仍用原 HTTP 200 轮询状态，原中文 error 保留；不会进入器乐/演唱，已有谱面保留，单句 retry 返回原 409，不能跳过规划：
+
+```json
+{"id":"00000000-0000-4000-8000-000000000001","state":"failed","stage":"validated","error":"演唱表现规划失败；未进入演唱，请修正配置后重新制作","errorCode":"PERFORMANCE_PLANNING_FAILED","performancePlanning":{"status":"failed"}}
+```
+
+未启用例为 `"performancePlanning":{"status":"disabled"}`，全锁定跳过为 `{"status":"skipped"}`，均无 trace；旧响应和 Mock 夹具可不提供该新字段。无效创建输入仍 400，无法启动 503，任务不存在/重启 404，非可重试句 409。内存任务边界不变，追溯不写进 SongProject。本轮现有 Client 通过共享 Schema 已能保留字段，Mock/页面是否展示仍由 Toge review。证据见[工单 34](../CC-Tasks/已完成/34-production-trace-contract.md)与[日志](iteration-log.md#production-trace-34)。
+
+工单 34 序列化补充：project.vocalAssets 仅返回既有 VocalAsset 工程字段，剔除引擎返回的 sourceProject 绝对缓存路径与额外诊断，保留 dependency/voice/renderParameters 与成功应用/单句重试所需数据。内部资产不修改。
+
+
+<a id="ai-html-pv"></a>
+
+### 可选 AI HTML 动态 PV（工单 35）
+
+默认 Canvas/四张 PNG+ASS 导出不变。独立 `pv_design` 仅由 `POST /api/pv/design` 的明确请求触发，必须有显式任务路由及可用 keyRef；未配置不回退歌词模型，也不从 production 自动触发。`server/services/pv.mjs` 复用现有 TaskRouter；生产音乐、歌声、混音不改。后台增加同一任务项，安全/CSRF/DPAPI 边界不变；公开配置和追溯不返回 systemPrompt，表单省略该字段时服务端保留原设置，显式空串可清除。
+
+`shared/contracts/pv.mjs` 与相邻 `.d.mts` 定义：
+
+- `PvProject` 是最小工程投影：id/title/idea/mood/bpm、四段 sections（id/start/beats/energy）、歌词（id/text/start/end）及 ≤96 个 pulses（beat/strength）。时间始终为 beat，四段连续，15–35 秒，歌词不重叠/越界。不能直接上传整个 SongProject、WAV 或引擎配置。
+- `PvDesign` v1：1280×720，四场景 ID 和顺序精确匹配；每场景 ≤12 层；背景为双十六进制颜色渐变；shape(circle/rect/triangle)、particles(seed/count/fall/orbit)、text(title/current_lyric)。各层位置/尺寸/颜色/透明度/旋转/缩放及 2–12 个归一化关键帧均有范围；全局图层 ID 唯一、粒子总数 ≤384，每段恰有一个歌词源。无任意文本代码、CSS、路径、图片或 URL；不是模板 ID 选择。
+- `pvFingerprint(project)` 对 Schema 规范化快照做 SHA-256。设计响应和 HTML 导出携带该指纹。前端未来在应用设计、seek 和导出前重新投影当前工程并比较：歌词、BPM、时间轴等变化必须提示重新生成。指纹用于依赖一致性，不能证明客户端拥有工程或代替鉴权。
+
+`POST /api/pv/design` 请求为 `{project: PvProject}`；`200` 返回 `{source:'llm', inputFingerprint, pvDesign, trace?}`。trace 仅有 task/provider/model/promptVersion/attempts/Token/耗时/费用等 router 成功白名单，费用未知为 null。Mock 需 `{source:'mock',mock:true,...}` 且无真实 trace，产品 Mock 尚未接。完整**接口夹具**可用 [pv-fixture](../tests/support/pv-fixture.mjs)，真实验收产物不在 Git。
+
+错误：输入/绑定 400 `PV_INPUT_INVALID`，同一时刻已有规划 429 `PV_BUSY`，未配置独立路由/密钥 503 `PV_NOT_CONFIGURED`，上游或校验失败 502 `PV_PLANNING_FAILED`；不返回上游原始错误、不静默用固定本地方案替代。`GET /api/pv/status` 的 available 只表示可选 Chromium 文件探测，返回宽高/fps/maxSeconds；实际启动仍可能报 503。FFmpeg 沿用既有探测。
+
+`shared/pv-render.mjs` 的 `pvDocument(project,design,singingCredit)` 先校验，输出仓库可信 DOM/SVG runtime；文字仅 textContent，JSON 对脚本结束符转义，CSP 禁止连接、图片、字体下载和外部代码。`renderAt(timeMs)` 只依赖显式时间/快照/种子，不使用墙钟、Math.random 或 CSS 自行动画。标题/歌词/署名由可信快照绑定，HTML 不再叠加 ASS。预览需用 `iframe sandbox="allow-scripts"`，不得加 allow-same-origin；父页面发 `{type:'cantaloom-pv-seek',timeMs}` 消息给该 iframe；runtime 只接受 parent 来源及有限数值，父页需限定消息目标为自己持有的 iframe。布局固定 1280×720，由父容器整体缩放；字体沿用本机 Arial/Microsoft YaHei/sans-serif，帧一致性要求相同 Chromium/系统字体环境，未嵌入外部字体。
+
+旧 `POST /api/export` 请求仍是原四张 PNG + WAV/歌词/标题/style/duration/署名，逐字段兼容。新分支为：
+
+```js
+{ visualMode:'html', pvProject, pvDesign, inputFingerprint,
+  wav: mixedWavBase64, title:pvProject.title, duration:seconds,
+  lyrics:pvProject.lyrics.map(l=>({text:l.text,start:l.start*60/pvProject.bpm,end:l.end*60/pvProject.bpm})),
+  style:'cinema', singingCredit:'demo' }
+```
+
+HTML 不带 scenes；快照、设计、标题、歌词秒时间及 duration 必须一致；指纹不符 400 `PV_STALE_DESIGN`。Chromium 缺失/无法启动 503 `PV_CHROMIUM_UNAVAILABLE`；编码/预算失败 500，仍不回退画面。复用同一 export 编码互斥锁（异步探测前占位），并发 429。Chromium 使用原生 sandbox、离线 context、无服务工作线程/权限/下载、网络请求全部拒绝；只跑可信 runtime。固定 24fps CDP 捕获 PNG 帧（≤840）、临时帧 ≤512 MiB、帧阶段 145s/浏览器 watchdog 150s，HTML 编码与响度使用剩余的总 170s 预算；原 Canvas 的 120s FFmpeg 参数不变。结果仍为 MP4 Blob 和 X-Songyu-Loudness；同一已混音 WAV 进入原 loudnorm/AAC，不另渲染音频。失败与下载完成清理自己创建的临时目录。
+
+后端交付证据见[工单 35](../CC-Tasks/后端/35-ai-html-pv.md)、[日志](iteration-log.md#ai-html-pv-35)、[引擎要求](ENGINES.md#html-pv)。SongProject 持久化、Client/Mock、LOOP! 可选按钮/隔离预览和进度接线由 Toge 后续实施，不等于正式页面端到端完成。

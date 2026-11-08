@@ -112,3 +112,43 @@ test('qixuan status reports capabilities parsed from the installed singer when a
  for(const name of ['ene','tenc','breath','voiceColor','phonemeEnvelope'])assert.ok(voice.capabilities?.unsupported.includes(name),`${name} 明确列为不支持`);
  assert.deepEqual(voice.capabilities?.phonemeOverride,{offset:true,replace:true});
 });
+
+
+test('explicit first phoneme zero defeats phrase offset without changing legacy or unrelated events',()=>{
+ for(const bpm of [60,120,160])for(const consonantMs of [-20,12]){
+  const base={preset:'natural' as const,mode:'manual' as const,consonantMs};
+  const edit=(phonemes:{index:number;offsetMs?:number;phoneme?:string}[])=>performanceSchema.parse({...base,overrides:[{index:0,origin:'manual',phonemes}]});
+  const performance=edit([{index:0,offsetMs:0}]),before=structuredClone(performance);
+  const result=notePerformance(notes,0,bpm,performance);
+  assert.deepEqual(result.phoneme_overrides,[{index:0,offset:0}]);
+  assert.deepEqual(performance,before);
+  const legacy=notePerformance(notes,0,bpm,base);
+  assert.deepEqual(legacy.phoneme_overrides,[{index:0,offset:Math.round(consonantMs*bpm*480/60000)}]);
+  assert.deepEqual(result.pitch,legacy.pitch);assert.deepEqual(result.vibrato,legacy.vibrato);
+  assert.deepEqual(notePerformance(notes,1,bpm,performance),notePerformance(notes,1,bpm,base));
+  assert.deepEqual(performanceCurves(notes,0,3,performance,bpm),performanceCurves(notes,0,3,base,bpm));
+  for(const offsetMs of [-30,30])assert.deepEqual(notePerformance(notes,0,bpm,edit([{index:0,offsetMs}])).phoneme_overrides,[{index:0,offset:Math.round(offsetMs*bpm*480/60000)}]);
+  assert.deepEqual(notePerformance(notes,0,bpm,edit([{index:0,phoneme:'h'}])).phoneme_overrides,[{index:0,phoneme:'h'}]);
+  assert.deepEqual(notePerformance(notes,0,bpm,edit([{index:3,offsetMs:0}])).phoneme_overrides,legacy.phoneme_overrides);
+  assert.deepEqual(notePerformance(notes,0,bpm,edit([])).phoneme_overrides,legacy.phoneme_overrides);
+ }
+ assert.deepEqual(notePerformance(notes,0,60,{preset:'natural',overrides:[{index:0,phonemes:[{index:3,offsetMs:.1}]}]}).phoneme_overrides,[],'rounded zero at other positions retains legacy omission');
+ assert.throws(()=>performanceSchema.parse({preset:'natural',overrides:[{index:0,phonemes:[{index:0,offsetMs:0},{index:0,offsetMs:12}]}]}));
+});
+
+test('USTX preserves explicit first zero; dependency revision invalidates only zero-edited phrases',()=>{
+ const p=createProject(),line=p.lyrics[0];line.performance={preset:'natural',mode:'manual',consonantMs:12};
+ const before=singingDependency(p,line,voice),sibling=singingDependency(p,p.lyrics[1],voice),tracks=structuredClone(p.tracks);
+ const tuned=setPhrasePerformance(p,line.id,{...line.performance,overrides:[{index:0,origin:'manual',phonemes:[{index:0,offsetMs:0}]}]});
+ const performance=tuned.lyrics[0].performance!;
+ assert.equal(resolvePerformance(performance).renderRevision,4);
+ assert.equal(resolvePerformance(line.performance).renderRevision,2);
+ assert.equal(resolvePerformance({preset:'soft',mode:'auto'}).renderRevision,3);
+ assert.deepEqual(notePerformance(notes,1,120,{preset:'soft',mode:'auto',overrides:[{index:1,locked:true,phonemes:[{index:0,offsetMs:0}]}]}).phoneme_overrides,[{index:0,offset:0}]);
+ const input={lyricId:line.id,lyrics:line.text,start:line.start,end:line.end,bpm:p.bpm,notes:alignedNotes(line),performance};
+ const u=qixuanProject(input);
+ assert.deepEqual(u.voice_parts[0].notes[0].phoneme_overrides,[{index:0,offset:0}]);
+ assert.deepEqual(u.voice_parts[0].notes.slice(1),qixuanProject({...input,performance:line.performance}).voice_parts[0].notes.slice(1));
+ assert.notEqual(singingDependency(tuned,tuned.lyrics[0],voice),before);
+ assert.equal(singingDependency(tuned,tuned.lyrics[1],voice),sibling);assert.deepEqual(tuned.tracks,tracks);
+});

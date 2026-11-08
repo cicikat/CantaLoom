@@ -69,7 +69,7 @@ Owner：toge；音乐算法/服务问题交红茶，字段变化双方确认。A
 完成一项后立即勾选本工单；在 [迭代日志](../docs/iteration-log.md) 顶部记录日期、实际结果、验证边界、工单及相关文档地址，再按范围本地提交。推送和 PR 按 [团队工作流](../docs/TEAM_WORKFLOW.md)及当前任务授权执行，不自动合并 main。
 
 
-跨端测试交接：[5-browser-timing](../CROSS-END-HANDOFF.md#5-browser-timing)，核对高负载下 TAP/播放器回归的时序稳定性；本轮后端交付只登记证据，不代改前端用例。
+跨端测试交接 5-browser-timing 已于 2026-11-07 按用户测试审计授权处理：TAP 改可控时钟、播放等待改条件断言，保留功能验证；证据见[工单 24 回执](../docs/iteration-log.md#test-system-audit)。后续前端测试语义 review 见 [24-test-review](../CROSS-END-HANDOFF.md#24-test-review)。
 
 ## 已交付接口补接（工单 27）
 
@@ -82,3 +82,7 @@ Owner：toge；音乐算法/服务问题交红茶，字段变化双方确认。A
 ## 2026-11-08 积木播放动效
 
 - [x] 将整列同步抬起改为按当前音符起音与力度弹跳、自然衰减；空格、其他小节音符与静音轨道不触发，减少动态偏好下使用描边。仅前端展示，未改作曲或音频。
+
+2026-11-08 回执：[工单 33](已完成/33-browser-synth-band-gain.md)已修复 Synth 伴奏增益核心，并完成 PCM/WAV/PV 输入、真实 FluidSynth 与 MP4 编码回归。上文该核心缺口为历史状态；Toge 待解禁现有控件并回归页面，沿用 5-C-synth-mix，元音人声增益/混响和人工听评不在本次范围。
+
+2026-11-08 交接汇总：本轮31–35涉及的提示清理、Synth控件解禁、Groove、表现规划状态与HTML PV前端接线统一进入[工单36](36-toge-backend-followup.md)。旧交接ID保留，执行checkbox只维护在36；本单其他历史/视觉/共同验收事项未被接管。
