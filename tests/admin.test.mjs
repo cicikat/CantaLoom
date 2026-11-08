@@ -44,3 +44,10 @@ test('admin preview requires CSRF, validates MP4 and returns a video response',a
  const response=await fetch(base+'/api/admin/preview',{method:'POST',headers,body:JSON.stringify({mp4:Buffer.from('0000ftypmp42').toString('base64')})});assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/video\/webm/);assert.equal(await response.text(),'webm-fixture');assert.equal(calls,1);
  }finally{await new Promise(r=>server.close(r))}
 });
+
+test('model discovery uses draft credentials, requires CSRF and sanitizes provider failures',async()=>{
+ const app=express();app.use(express.json());let fail=false;
+ mountAdmin(app,{store:{snapshot:()=>({})},jobs:createJobs(),root:process.cwd(),publicDirectory:path.resolve('server/public'),request:async(url,options)=>{assert.equal(url,'https://provider.example/v1/models');assert.equal(options.headers.Authorization,'Bearer draft-secret');if(fail)throw Error('private upstream draft-secret');return {ok:true,json:async()=>({data:[{id:'b'},{id:'a'},{id:'a'}]})}}});
+ const server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base=`http://127.0.0.1:${server.address().port}`;
+ try{const {csrf}=await (await fetch(base+'/api/admin/state')).json();const body=JSON.stringify({task:'default',baseUrl:'https://provider.example/v1',apiKey:'draft-secret'});assert.equal((await fetch(base+'/api/admin/models',{method:'POST',headers:{'Content-Type':'application/json'},body})).status,403);const headers={'Content-Type':'application/json','X-SONGYU-CSRF':csrf};assert.deepEqual(await (await fetch(base+'/api/admin/models',{method:'POST',headers,body})).json(),{models:['a','b']});fail=true;const response=await fetch(base+'/api/admin/models',{method:'POST',headers,body});assert.equal(response.status,502);assert.ok(!(await response.text()).includes('draft-secret'))}finally{await new Promise(r=>server.close(r))}
+});
