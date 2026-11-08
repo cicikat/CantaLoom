@@ -157,3 +157,5 @@ Synth 伴奏增益核心修复：[工单 33](CC-Tasks/已完成/33-browser-synth
 管理调试：双击 `start-admin.bat`，路由设置见 [管理调试启动与路由](docs/ENGINES.md#管理调试启动与路由)。本轮工单：[25](CC-Tasks/已完成/25-admin-routing.md)。
 
 资源台模型发现：[工单 26](CC-Tasks/已完成/26-admin-model-discovery.md)。
+
+后台模型连接复用与 Ping：[工单 39](CC-Tasks/已完成/39-admin-presets-and-ping.md)，使用方法见[管理路由](docs/ENGINES.md#管理调试启动与路由)。

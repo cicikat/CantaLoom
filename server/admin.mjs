@@ -14,16 +14,36 @@ export function mountAdmin(app,{store,jobs,root,publicDirectory,projectRoot,onCo
  app.get('/api/admin/state',(_req,res)=>res.json({csrf:token,config:store.snapshot(),checks,jobs:jobs.list(),audit,uptimeSeconds:Math.floor(process.uptime()),runtime:{node:process.version,platform:process.platform,root,...(projectRoot?{projectRoot,pid:process.pid}:{})},capabilities:{llm:'歌词、旋律与演唱表现任务路由；真实调用记录见 /api/admin/llm',instruments:'Web Audio / FluidSynth',singing:'元音演示 / 外部 WAV / 绮萱 OpenUtau-DiffSinger 真实演唱',visual:'程序化 Canvas / 可选 AI HTML PV（Chromium）',jobs:'记录本进程最近 100 个请求；浏览器作曲、排队和百分比进度尚无遥测'}}));
  app.get('/api/admin/llm',(_req,res)=>{try{res.json({routes:Object.fromEntries(taskNames.map(task=>{const route=resolveRoute(process.env,task);const {systemPrompt,...publicRoute}=route;return [task,{...publicRoute,enabled:task!=='pv_design'||!!JSON.parse(process.env.LLM_ROUTES||'{}').pv_design,keyConfigured:(task!=='pv_design'||!!JSON.parse(process.env.LLM_ROUTES||'{}').pv_design)&&!!process.env[route.keyRef]}]})),history:routingHistory()})}catch{res.status(400).json({error:'任务路由配置无效'})}});
  app.post('/api/admin/models',async(req,res)=>{
-  const parsed=z.object({task:z.enum(['default',...taskNames]),baseUrl:z.string().max(2048),apiKey:z.string().max(2048).refine(v=>!/[\r\n\0]/.test(v)).optional()}).strict().safeParse(req.body);
+  const parsed=z.object({task:z.enum(['default',...taskNames]),connectionId:z.string().regex(/^[a-z][a-z0-9_]{0,39}$/).optional(),baseUrl:z.string().max(2048),apiKey:z.string().max(2048).refine(v=>!/[\r\n\0]/.test(v)).optional()}).strict().safeParse(req.body);
   if(!parsed.success)return res.status(400).json({error:'模型查询参数无效'});
-  try{const {task,baseUrl,apiKey}=parsed.data;taskRouteSchema.shape.baseUrl.parse(baseUrl);
-   const key=apiKey||(task==='default'?process.env.LLM_API_KEY:process.env[resolveRoute(process.env,task).keyRef]);
+  try{const {task,connectionId,baseUrl,apiKey}=parsed.data;taskRouteSchema.shape.baseUrl.parse(baseUrl);
+   const key=apiKey||(connectionId?process.env[JSON.parse(process.env.LLM_CONNECTIONS||'{}')[connectionId]?.keyRef]:task==='default'?process.env.LLM_API_KEY:process.env[resolveRoute(process.env,task).keyRef]);
    if(!key)return res.status(400).json({error:'请填写 API Key 或先保存连接密钥'});
    const response=await request(baseUrl.replace(/\/$/,'')+'/models',{headers:{Authorization:`Bearer ${key}`},redirect:'error',signal:AbortSignal.timeout(12000)});
    if(!response.ok)return res.status(502).json({error:'厂商模型列表获取失败，请检查 URL、密钥与接口支持'});
    const body=await response.json();const models=z.array(z.object({id:z.string().min(1).max(200)})).max(10000).parse(body.data);
    res.json({models:[...new Set(models.map(m=>m.id))].sort()});
   }catch{res.status(502).json({error:'无法获取兼容模型列表，可手动填写模型 ID'})}
+ });
+ // Probe one saved connection or an unsaved editor value; never return upstream text.
+ app.post('/api/admin/ping',async(req,res)=>{
+  const parsed=z.object({task:z.enum(['default',...taskNames]).optional(),connectionId:z.string().regex(/^[a-z][a-z0-9_]{0,39}$/).optional(),baseUrl:taskRouteSchema.shape.baseUrl.optional(),model:taskRouteSchema.shape.model.optional(),apiKey:z.string().max(2048).refine(v=>!/[\r\n\0]/.test(v)).optional()}).strict().safeParse(req.body);
+  if(!parsed.success)return res.status(400).json({error:'连接测试参数无效'});
+  if(probing||jobs.isPaused())return res.status(429).json({error:'已有连通检查运行中'});
+  probing=true;const started=Date.now();
+  try{
+   const input=parsed.data;
+   const route=input.connectionId?JSON.parse(process.env.LLM_CONNECTIONS||'{}')[input.connectionId]:input.task==='default'?{baseUrl:process.env.LLM_BASE_URL||'https://api.openai.com/v1',model:process.env.LLM_MODEL||'gpt-4.1-mini',keyRef:'LLM_API_KEY'}:resolveRoute(process.env,input.task||'lyrics_planning');
+   if(!route)return res.status(400).json({error:'模型连接不存在，请先保存'});
+   const baseUrl=input.baseUrl||route.baseUrl,model=input.model||route.model,key=input.apiKey||process.env[route.keyRef];
+   taskRouteSchema.shape.baseUrl.parse(baseUrl);
+   if(!key)return res.status(400).json({error:'请填写或保存该连接的密钥'});
+   const response=await request(baseUrl.replace(/\/$/,'')+'/chat/completions',{method:'POST',redirect:'error',signal:AbortSignal.timeout(30000),headers:{'Content-Type':'application/json',Authorization:`Bearer ${key}`},body:JSON.stringify({model,max_tokens:16,messages:[{role:'user',content:'Reply OK.'}]})});
+   if(!response.ok)return res.status(502).json({error:'上游拒绝请求；检查 URL、模型、额度和密钥',httpStatus:response.status});
+   const body=await response.json();
+   if(typeof body.choices?.[0]?.message?.content!=='string'||!body.choices[0].message.content.trim())return res.status(502).json({error:'接口未返回有效文本'});
+   record('执行模型连接最小调用测试');res.json({state:'reachable',model,milliseconds:Date.now()-started,at:new Date().toISOString(),message:'聊天接口可达；不代表 SongPlan 或音乐校验通过'});
+  }catch{res.status(502).json({error:'连接失败或超时；未返回上游原始错误'})}finally{probing=false}
  });
  app.put('/api/admin/config',async(req,res)=>{try{if(probing||jobs.isPaused()||jobs.list().some(j=>j.state==='running'))return res.status(409).json({error:'有生成或检查任务运行，请结束后再修改配置'});jobs.pause();try{const result=await store.update(req.body);for(const k of Object.keys(checks))delete checks[k];await onConfig();record('更新配置（不记录值或密钥）');res.json(result)}finally{jobs.resume()}}catch(e){res.status(400).json({error:e instanceof z.ZodError?'配置格式或 URL 无效，请检查输入':'保存配置失败，请检查当前账户和配置目录权限'})}});
  app.post('/api/admin/check',async(req,res)=>{const parsed=z.object({kind:z.enum(['llm','engines'])}).strict().safeParse(req.body);if(!parsed.success)return res.status(400).json({error:'检查类型无效'});if(probing||jobs.isPaused())return res.status(429).json({error:'已有连通检查运行中'});probing=true;const started=Date.now();const kind=parsed.data.kind;try{if(kind==='engines'){const details=await diagnostics();checks.engines={state:'checked',at:new Date().toISOString(),milliseconds:Date.now()-started,details}}else{const route=resolveRoute(process.env,'lyrics_planning');if(!process.env[route.keyRef])throw Error('missing');const base=route.baseUrl.replace(/\/$/,'');const response=await request(base+'/chat/completions',{method:'POST',redirect:'error',signal:AbortSignal.timeout(30000),headers:{'Content-Type':'application/json',Authorization:`Bearer ${process.env[route.keyRef]}`},body:JSON.stringify({model:route.model,max_tokens:8,messages:[{role:'user',content:'Reply OK.'}]})});if(!response.ok){checks.llm={state:'failed',at:new Date().toISOString(),httpStatus:response.status,message:'上游拒绝请求；检查 URL、模型、额度和密钥'};}else{const body=await response.json();checks.llm={state:typeof body.choices?.[0]?.message?.content==='string'?'reachable':'invalid-response',at:new Date().toISOString(),milliseconds:Date.now()-started,message:'仅验证聊天接口；完整 SongPlan 校验以创作请求成功为准'}}}record(kind==='llm'?'执行 LLM 最小调用检查':'执行本地引擎诊断');res.json(checks[kind])}catch{checks[kind]={state:'failed',at:new Date().toISOString(),message:kind==='llm'?'连接失败、超时或未配置密钥；未返回上游原始错误':'引擎诊断失败，请检查路径'};res.status(502).json(checks[kind])}finally{probing=false}});
