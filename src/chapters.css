@@ -135,6 +135,17 @@
 .chapter-blocks .lyricrows{gap:16px;margin-top:22px}
 .chapter-blocks .singing-details{background:var(--off);box-shadow:4px 4px 0 var(--stroke)}
 .chapter-blocks .mix-panel{box-shadow:4px 4px 0 var(--stroke)}
+/* Two pages side by side: the lyric page stays out of the scroll flow until "打开逐句演唱" slides the row left.
+   Only the slide itself uses a transform, so the settled pages keep normal layout for fixed/sticky children. */
+.bench-slider{overflow-x:clip}
+.bench-track{display:flex;align-items:flex-start}
+.bench-pane{flex:0 0 100%;min-width:0}
+.bench-track[data-view=board] .lyrics-pane,.bench-track[data-view=lyrics] .board-pane{display:none}
+.bench-track[data-view=to-lyrics],.bench-track[data-view=from-lyrics]{transform:translateX(-100%)}
+.bench-track[data-view^=to-]{transition:transform .56s cubic-bezier(.65,0,.35,1)}
+.chapter-blocks .lyrics-pane .lyrics-section{margin-top:0}
+.lyrics-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}
+.lyrics-toolbar .minibtn{box-shadow:3px 3px 0 var(--stroke)}
 
 /* ---------- Chapter 3 · MV theatre ---------- */
 .chapter-mv{overflow:hidden;display:flex;flex-direction:column;justify-content:center;min-height:100vh;min-height:100svh;background:var(--mv-bg);color:var(--off);padding:0 0 88px}

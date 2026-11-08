@@ -76,6 +76,12 @@ test('free lyric synchronization keeps its melody editable and rejects mismatche
 async function enterWorkbench(page:import('@playwright/test').Page){
  await page.getByRole('navigation').getByRole('button',{name:'音乐积木',exact:true}).click();await expect(page.locator('.bench-pin')).toHaveClass(/is-open/);
 }
+async function enterLetsAfterWorkbenchPause(page:import('@playwright/test').Page){
+ const top=await page.locator('.act-mv').evaluate(el=>el.getBoundingClientRect().top+scrollY);
+ await page.evaluate(y=>scrollTo(0,Math.floor(y)),top);
+ // The workbench must actually settle before a separate gesture can leave it.
+ await page.waitForTimeout(650);await page.mouse.move(8,(page.viewportSize()?.height??800)-12);await page.mouse.wheel(0,100);
+}
 async function openPiano(page:import('@playwright/test').Page,withOverrides=false){
  await page.goto('/');
  await page.evaluate(async withOverrides=>{
@@ -88,8 +94,11 @@ async function openPiano(page:import('@playwright/test').Page,withOverrides=fals
   if(withOverrides){p.lyrics[0].performance.overrides=[{index:0,dynamics:8,origin:'manual'}];p.performanceHistory={[p.lyrics[0].id]:[{preset:'soft',overrides:[{index:0,dynamics:2}]}]}}
   localStorage.setItem('songyu-mock-project-v1',JSON.stringify(p));
  },withOverrides);
- await page.reload();await page.getByRole('button',{name:'编辑第1句旋律',exact:true}).click();await expect(page.getByRole('region',{name:'单句钢琴卷帘'})).toBeVisible();
+ await page.reload();await openLyricsPage(page);await page.getByRole('button',{name:'编辑第1句旋律',exact:true}).click();await expect(page.getByRole('region',{name:'单句钢琴卷帘'})).toBeVisible();
  return mockStored(page);
+}
+async function openLyricsPage(page:import('@playwright/test').Page){
+ await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();await expect(page.locator('.bench-track')).toHaveAttribute('data-view','lyrics');
 }
 
 test('frontend alone supports planning, locks, singing, sibling cache, playback, reload and exports with zero API requests',async({page})=>{
@@ -325,9 +334,10 @@ test('LOOP keeps the prototype pieces in three chapters on desktop and phone and
  await page.goto('/03_patchlab_playful.html');await page.getByLabel('原始样稿说明').evaluate(el=>el.remove());
  const original=await page.evaluate(()=>({lyric:document.querySelector('.lyric')!.getBoundingClientRect().height}));
 
- await page.goto('/');const actual=await page.evaluate(()=>{const top=(s:string)=>document.querySelector(s)!.getBoundingClientRect().top+scrollY;return {heroBottom:document.querySelector('.hero')!.getBoundingClientRect().bottom+scrollY,viewport:innerHeight,board:top('#board'),lyrics:top('#lyrics'),pv:top('#pv'),lyric:document.querySelector('.lyric')!.getBoundingClientRect().height}});
+ await page.goto('/');const actual=await page.evaluate(()=>{const top=(s:string)=>document.querySelector(s)!.getBoundingClientRect().top+scrollY;return {heroBottom:document.querySelector('.hero')!.getBoundingClientRect().bottom+scrollY,viewport:innerHeight,board:top('#board'),lyricsInFlow:document.querySelector('#lyrics')!.getClientRects().length>0,pv:top('#pv')}});
  // Chapter 1 fills the first screen, the Music Blocks bridge sits before the workbench, and the MV chapter comes last.
- expect(Math.abs(actual.heroBottom-actual.viewport)).toBeLessThanOrEqual(2);expect(actual.board).toBeGreaterThan(actual.viewport*1.5);expect(actual.board<actual.lyrics&&actual.lyrics<actual.pv).toBe(true);expect(actual.lyric).toBeLessThanOrEqual(original.lyric+8);
+ // The lyric page is a side page of the workbench, so plain scrolling never passes through it.
+ expect(Math.abs(actual.heroBottom-actual.viewport)).toBeLessThanOrEqual(2);expect(actual.board).toBeGreaterThan(actual.viewport*1.5);expect(actual.board<actual.pv).toBe(true);expect(actual.lyricsInFlow).toBe(false);
  // The two scroll acts are decorative, driven by scroll position, and play back in reverse (ticket 29).
  const bench=page.locator('.act-bench'),benchStage=bench.locator('.act-stage'),say=page.locator('.act-mv');
  await expect(bench).toHaveAttribute('aria-hidden','true');await expect(say).toHaveAttribute('aria-hidden','true');await expect(benchStage).not.toHaveClass(/is-titled/);
@@ -338,12 +348,14 @@ test('LOOP keeps the prototype pieces in three chapters on desktop and phone and
  await expect(page.locator('.workspace-meta')).not.toBeVisible();await expect(page.locator('.engine-panel')).not.toBeVisible();await expect(page.locator('.transport')).toHaveCount(0);await expect(page.locator('.lyric').first().locator(':scope > button')).toHaveCount(1);
  await expect(page.getByRole('heading',{name:/敲一下.*变成一首歌/})).toBeVisible();await expect(page.locator('.hero .bigcard')).toBeVisible();await expect(page.locator('.creation-options')).not.toHaveAttribute('open');
 
+ await enterWorkbench(page);await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();await expect(page.locator('.bench-track')).toHaveAttribute('data-view','lyrics');
+ expect(await page.locator('.lyric').first().evaluate(el=>el.getBoundingClientRect().height)).toBeLessThanOrEqual(original.lyric+8);
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  const p=await openPiano(page);await page.getByRole('button',{name:'编辑第2句旋律',exact:true}).click();await expect(page.getByRole('region',{name:'单句钢琴卷帘'}).locator('.phrase-toolbar>b')).toHaveText(p.lyrics[1].text);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 
-test('both chapter openers restore the original overlapping circles, timed title pop and full-screen hold',async({page})=>{
+test('both chapter openers keep the original circles and finish at the next title after one gesture',async({page})=>{
  await page.goto('/');
  for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
   await page.setViewportSize(viewport);
@@ -357,29 +369,27 @@ test('both chapter openers restore the original overlapping circles, timed title
    await page.evaluate(y=>scrollTo(0,y),metrics.top);
    await expect(stage).not.toHaveClass(/is-titled/);
    expect(await page.evaluate(()=>!!document.elementFromPoint(innerWidth/2,innerHeight*.47)?.closest('.act'))).toBe(false);
-   await page.evaluate(y=>scrollTo(0,y),metrics.top+metrics.h*1.8*.2);
-   await expect.poll(()=>stage.evaluate(el=>parseFloat((el as HTMLElement).style.getPropertyValue('--p')))).toBeCloseTo(.2,2);
+   if(selector==='.act-mv')await enterLetsAfterWorkbenchPause(page);else await page.mouse.wheel(0,100);
+   await expect(track).toHaveClass(/is-entering/);
    const ring=await stage.locator('.act-ring').first().evaluate(el=>{
     const css=getComputedStyle(el),matrix=new DOMMatrixReadOnly(css.transform);
     return {diameter:parseFloat(css.width),scale:matrix.d,y:matrix.f,p:parseFloat((el.parentElement as HTMLElement).style.getPropertyValue('--p'))};
    });
-   const diameter=Math.max(viewport.width,viewport.height*.85)*1.5,e=ring.p/.24;
+   const diameter=Math.max(viewport.width,viewport.height*.85)*1.5,e=Math.min(1,ring.p/.24);
    expect(ring.diameter).toBeCloseTo(diameter,0);
    expect(ring.scale).toBeCloseTo(.55+.45*e,2);
    expect(Math.abs(ring.y-e*(-viewport.height-.15*diameter))).toBeLessThan(1);
-   // Stop scrolling just after the threshold: the final letter must finish popping in on its own clock.
-   await page.evaluate(y=>scrollTo(0,y),metrics.top+metrics.h*1.8*.43);
+   // No more input: the circles and title must finish and land at the stable title page themselves.
+   await expect.poll(()=>stage.evaluate(el=>parseFloat((el as HTMLElement).style.getPropertyValue('--p')))).toBe(1);
+   await expect(track).not.toHaveClass(/is-entering/);
    await expect(stage).toHaveClass(/is-titled/);
    const last=stage.locator(selector==='.act-bench'?'.bridge-blocks>span:last-child':'.say-lets');
    await expect(last).toHaveCSS('opacity','1');
    await expect(last).toHaveCSS('translate','0px');
-   await page.evaluate(y=>scrollTo(0,y),metrics.top+metrics.h*1.8*.5);
    await expect(stage).toHaveClass(/is-covered/);
    const pin=track.locator('xpath=following-sibling::*[1]');
    await expect(pin).not.toHaveClass(/is-open/);
-   await page.evaluate(y=>scrollTo(0,y),metrics.top+metrics.h*1.8);
-   await expect(pin).not.toHaveClass(/is-open/);
-   expect(metrics.h*1.8*(1-.43)).toBeGreaterThan(metrics.h);
+   expect(Math.abs(await page.evaluate(()=>scrollY)-(metrics.top+metrics.h*1.8))).toBeLessThanOrEqual(2);
    await page.evaluate(y=>scrollTo(0,y),metrics.top);
    await expect(stage).not.toHaveClass(/is-titled/);
   }
@@ -404,28 +414,30 @@ test('Lets plays and completes its phrase animation after entry without further 
  for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
   await page.setViewportSize(viewport);
   const top=await act.evaluate(el=>el.getBoundingClientRect().top+scrollY);
-  const enter=top+viewport.height*1.8*.5;
   await page.evaluate(y=>scrollTo(0,y),top);
   await expect(act).not.toHaveClass(/is-swapped/);
   // One scroll enters the yellow page. No wheel/mouse/scroll calls until the whole phrase has finished.
-  await page.evaluate(y=>scrollTo(0,y),enter);
+  await enterLetsAfterWorkbenchPause(page);
   await expect(stage).toHaveClass(/is-titled/);
   await expect(outgoing).toHaveCSS('opacity','1');
-  const initialWidth=await block.evaluate(el=>el.getBoundingClientRect().width),stoppedAt=await page.evaluate(()=>scrollY);
+  const initialWidth=await block.evaluate(el=>el.getBoundingClientRect().width);
+  await expect.poll(()=>stage.evaluate(el=>parseFloat((el as HTMLElement).style.getPropertyValue('--p')))).toBe(1);
+  await expect(act).not.toHaveClass(/is-entering/);
+  const stoppedAt=await page.evaluate(()=>scrollY);
   await expect(act).toHaveClass(/is-swapped/,{timeout:6000});
   await expect(outgoing).toHaveCSS('opacity','0');await expect(incoming).toHaveCSS('opacity','1');
   await expect(block).toHaveCSS('background-color','rgb(187, 164, 248)');
   expect(await block.evaluate(el=>el.getBoundingClientRect().width)).toBeGreaterThan(initialWidth);
   expect(await page.evaluate(()=>scrollY)).toBe(stoppedAt);
   await expect(stage.locator('.say-hint')).toHaveCSS('opacity','1');
-  // Small movements within the page preserve the completed phrase; leaving and returning starts it again.
-  await page.evaluate(y=>scrollTo(0,y),enter+20);await expect(act).toHaveClass(/is-swapped/);
-  await page.evaluate(y=>scrollTo(0,y),top+viewport.height*1.8*.2);
+  // Leaving and returning starts the complete entry again; the following gesture is reserved for MV.
+  await page.evaluate(y=>scrollTo(0,y),top);
   await expect(act).not.toHaveClass(/is-swapped/);await expect(incoming).toHaveCSS('opacity','0');
-  await page.evaluate(y=>scrollTo(0,y),enter);
+  await enterLetsAfterWorkbenchPause(page);
   await expect(outgoing).toHaveCSS('opacity','1');
+  await expect.poll(()=>stage.evaluate(el=>parseFloat((el as HTMLElement).style.getPropertyValue('--p')))).toBe(1);
   await expect(act).toHaveClass(/is-swapped/,{timeout:6000});
-  expect(Math.abs(await page.evaluate(()=>scrollY)-enter)).toBeLessThanOrEqual(1);
+  expect(Math.abs(await page.evaluate(()=>scrollY)-(top+viewport.height*1.8))).toBeLessThanOrEqual(2);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  }
  await page.getByRole('navigation').getByRole('button',{name:'PV ✦',exact:true}).click();
@@ -443,9 +455,10 @@ test('one downward gesture plays the complete Lets to MV reveal and one upward g
  const pv=page.getByRole('region',{name:'歌词 PV',exact:true});
  for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
   await page.setViewportSize(viewport);
-  const top=await act.evaluate(el=>el.getBoundingClientRect().top+scrollY),enter=top+viewport.height*1.8*.5;
+  const top=await act.evaluate(el=>el.getBoundingClientRect().top+scrollY);
   await page.evaluate(y=>scrollTo(0,y),top);await expect(act).not.toHaveClass(/is-swapped/);
-  await page.evaluate(y=>scrollTo(0,y),enter);await expect(act).toHaveClass(/is-swapped/,{timeout:6000});
+  await enterLetsAfterWorkbenchPause(page);await expect(act).toHaveClass(/is-swapped/,{timeout:6000});
+  const titleTop=await page.evaluate(()=>scrollY);
   // One real wheel input, then no more scrolling until the actual MV is uncovered and usable.
   await page.mouse.wheel(0,100);
   await expect(act).toHaveClass(/is-exiting/);
@@ -467,7 +480,7 @@ test('one downward gesture plays the complete Lets to MV reveal and one upward g
   await expect.poll(()=>curtain.evaluate(el=>new DOMMatrixReadOnly(getComputedStyle(el).transform).m42),{timeout:6000}).toBe(0);
   await expect(act).not.toHaveClass(/is-exiting/);await expect(pin).not.toHaveClass(/is-open/);
   await expect(stage.locator('.say-hint')).toHaveCSS('opacity','1');
-  expect(Math.abs(await page.evaluate(()=>scrollY)-(enter+100))).toBeLessThanOrEqual(2);
+  expect(Math.abs(await page.evaluate(()=>scrollY)-(titleTop+100))).toBeLessThanOrEqual(2);
   // Reversing before the colour block fills the screen also returns to a complete, stable title.
   await page.mouse.wheel(0,100);await expect(act).toHaveClass(/is-exiting/);
   await expect.poll(()=>stage.locator('.say-block').evaluate(el=>el.getBoundingClientRect().height)).toBeGreaterThan(viewport.height*.4);
@@ -477,6 +490,93 @@ test('one downward gesture plays the complete Lets to MV reveal and one upward g
   // A fresh downward gesture replays the exit without needing continuous wheel input.
   await page.mouse.wheel(0,100);await expect(pin).toHaveClass(/is-open/,{timeout:6000});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ }
+ expect(errors).toEqual([]);
+});
+
+test('one gesture finishes Music Blocks to workbench and returns through the circles without trapping content',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.goto('/');
+ const act=page.locator('.act-bench'),stage=act.locator('.act-stage'),pin=page.locator('.bench-pin');
+ for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
+  await page.setViewportSize(viewport);
+  const top=await act.evaluate(el=>el.getBoundingClientRect().top+scrollY);
+  await page.evaluate(y=>scrollTo(0,Math.max(0,y)),top);
+  await page.mouse.wheel(0,100);
+  await expect.poll(()=>stage.evaluate(el=>parseFloat((el as HTMLElement).style.getPropertyValue('--p')))).toBe(1);
+  await expect(stage.locator('.bridge-blocks>span').last()).toHaveCSS('opacity','1');
+  await expect(act).not.toHaveClass(/is-entering/);
+  await page.mouse.wheel(0,100);
+  await expect(act).toHaveClass(/is-exiting/);
+  await expect(pin).toHaveClass(/is-open/,{timeout:6000});await expect(act).not.toHaveClass(/is-exiting/);
+  expect(await page.evaluate(()=>!!document.elementFromPoint(innerWidth/2,innerHeight/2)?.closest('.act'))).toBe(false);
+  const beat=page.locator('#board .beat').first(),pressed=await beat.getAttribute('aria-pressed');
+  await beat.click();await expect(beat).toHaveAttribute('aria-pressed',pressed==='true'?'false':'true');
+  await page.mouse.move(8,viewport.height-12);
+  const landed=await page.evaluate(()=>scrollY);
+  const bottom=await page.locator('.act-mv').evaluate(el=>el.getBoundingClientRect().top+scrollY);
+  await page.mouse.wheel(0,120);await expect.poll(()=>page.evaluate(()=>scrollY)).toBeGreaterThanOrEqual(Math.min(landed+60,Math.floor(bottom))-1);
+  await page.evaluate(y=>scrollTo(0,y),landed);await page.waitForTimeout(650);await page.mouse.wheel(0,-100);
+  await expect(act).toHaveClass(/is-exiting/);
+  await expect.poll(()=>stage.locator('.bench-curtain').evaluate(el=>new DOMMatrixReadOnly(getComputedStyle(el).transform).m42),{timeout:6000}).toBe(0);
+  await expect(act).not.toHaveClass(/is-exiting/);await expect(pin).not.toHaveClass(/is-open/);
+  // The next upward gesture returns all the way through the circles to the previous chapter, then stops.
+  await page.mouse.wheel(0,-100);await expect(act).toHaveClass(/is-entering/);
+  await expect.poll(()=>stage.evaluate(el=>parseFloat((el as HTMLElement).style.getPropertyValue('--p')))).toBe(0);
+  await expect(act).not.toHaveClass(/is-entering/);
+  expect(Math.abs(await page.evaluate(()=>scrollY)-top)).toBeLessThanOrEqual(2);
+  await expect(page.locator('.hero')).toBeInViewport();
+  // Navigation must bypass an in-flight opener instead of being mistaken for another scroll gesture.
+  await page.mouse.wheel(0,100);await expect(act).toHaveClass(/is-entering/);
+  await page.getByRole('navigation').getByRole('button',{name:'PV ✦',exact:true}).click();
+  await expect(page.locator('.mv-pin')).toHaveClass(/is-open/);
+  await expect(page.getByRole('region',{name:'歌词 PV',exact:true})).toBeInViewport({ratio:.5});
+  await page.getByRole('navigation').getByRole('button',{name:'音乐积木',exact:true}).click();
+  await expect(pin).toHaveClass(/is-open/);await expect(act).not.toHaveClass(/is-entering/);
+  await page.getByRole('navigation').getByRole('button',{name:'创作',exact:true}).click();
+  await expect.poll(()=>page.evaluate(()=>scrollY)).toBe(0);await expect(act).not.toHaveClass(/is-entering/);
+ }
+ expect(errors).toEqual([]);
+});
+
+test('workbench stays usable through edits and wheel inertia; only a separate gesture after stopping at the bottom leaves',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+ for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
+  await page.setViewportSize(viewport);await page.goto('/');await enterWorkbench(page);
+  const next=page.locator('.act-mv'),stage=next.locator('.act-stage'),bench=page.locator('.bench-pin');
+  await page.mouse.move(8,viewport.height-12);
+  // Continue the arriving scroll immediately. Even a one-screen workbench must absorb its wheel tail.
+  for(let i=0;i<12;i++){await page.mouse.wheel(0,120);await page.waitForTimeout(35)}
+  await page.waitForTimeout(650);
+  await expect(next).not.toHaveClass(/is-entering/);await expect(stage).not.toHaveClass(/is-titled/);
+  const arrivedBottom=await next.evaluate(el=>el.getBoundingClientRect().top+scrollY);
+  expect(Math.abs(await page.evaluate(()=>scrollY)-arrivedBottom)).toBeLessThanOrEqual(2);
+  await expect(bench).toHaveClass(/is-open/);
+  const beat=page.locator('#board .beat').first(),pressed=await beat.getAttribute('aria-pressed');
+  await beat.click();await expect(beat).toHaveAttribute('aria-pressed',pressed==='true'?'false':'true');
+  await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();
+  await expect(page.locator('.bench-track')).toHaveAttribute('data-view','lyrics');
+  const lyric=page.getByLabel('第1句歌词',{exact:true}),text='把今天写进一封信里';
+  await lyric.fill(text);await expect.poll(async()=>(await mockStored(page)).lyrics[0].text).toBe(text);
+  await page.getByRole('button',{name:'播放全曲',exact:true}).click();
+  await expect(page.getByRole('button',{name:'暂停全曲',exact:true})).toBeVisible({timeout:20000});
+  await page.getByRole('button',{name:'暂停全曲',exact:true}).click();
+  await expect(next).not.toHaveClass(/is-entering/);await expect(bench).toHaveClass(/is-open/);
+  await page.getByRole('button',{name:'← 回到音乐积木',exact:true}).click();
+  await expect(page.locator('.bench-track')).toHaveAttribute('data-view','board');
+  const bounds=await page.evaluate(()=>{
+   const pin=document.querySelector('.bench-pin')!,top=pin.getBoundingClientRect().top+scrollY+parseFloat(getComputedStyle(pin,'::after').height);
+   return {top,bottom:document.querySelector('.act-mv')!.getBoundingClientRect().top+scrollY};
+  });
+  await page.evaluate(y=>scrollTo(0,Math.floor(y)),bounds.bottom);
+  // Even after resting, a wheel over a control is still editing/scrolling content, not permission to leave.
+  await page.getByRole('button',{name:'打开逐句演唱',exact:true}).hover();await page.waitForTimeout(650);
+  await page.mouse.wheel(0,100);await page.waitForTimeout(650);
+  await expect(next).not.toHaveClass(/is-entering/);await expect(stage).not.toHaveClass(/is-titled/);
+  await page.evaluate(y=>scrollTo(0,Math.floor(y)),bounds.bottom);
+  await page.mouse.move(8,viewport.height-12);await page.waitForTimeout(650);
+  await page.mouse.wheel(0,100);
+  await expect(next).toHaveClass(/is-entering/);await expect(next).toHaveClass(/is-swapped/,{timeout:6000});
  }
  expect(errors).toEqual([]);
 });
@@ -553,7 +653,8 @@ test('P1 missing singer capabilities keep unsupported phoneme and expression con
   // @ts-expect-error Vite browser module
   const {api}=await import('/src/api/client.ts');const original=api.qixuan;api.qixuan=async()=>{const v=await original();delete v.capabilities;return v};
  });
- await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();const panel=page.locator('.expression-panel').first();await panel.locator(':scope > summary').click();await panel.getByText('逐音符人工覆盖',{exact:true}).click();await panel.getByText('音高曲线、颤音与音素',{exact:true}).click();await panel.getByText('逐音素时序与发音',{exact:true}).click();await expect(panel.getByRole('button',{name:'添加音素覆盖',exact:true})).toBeDisabled();await expect(panel).toContainText('服务未报告音素能力');await panel.getByText('整句表现与力度曲线',{exact:true}).click();await expect(panel.getByLabel('表现曲线',{exact:true}).locator('option[value=brec]')).toHaveJSProperty('disabled',true);
+ // The lyric page keeps the collapsed singing panel, so it reopens in place and refetches the singer capabilities.
+ await page.locator('.singing-details>summary').click();const panel=page.locator('.expression-panel').first();await panel.locator(':scope > summary').click();await panel.getByText('逐音符人工覆盖',{exact:true}).click();await panel.getByText('音高曲线、颤音与音素',{exact:true}).click();await panel.getByText('逐音素时序与发音',{exact:true}).click();await expect(panel.getByRole('button',{name:'添加音素覆盖',exact:true})).toBeDisabled();await expect(panel).toContainText('服务未报告音素能力');await panel.getByText('整句表现与力度曲线',{exact:true}).click();await expect(panel.getByLabel('表现曲线',{exact:true}).locator('option[value=brec]')).toHaveJSProperty('disabled',true);
 });
 
 test('P1 artifact downloads use current sources, label mock reports and preserve the project after failures',async({page})=>{
@@ -574,6 +675,26 @@ test('P1 artifact downloads use current sources, label mock reports and preserve
  const midi=page.waitForEvent('download');await files.getByRole('button',{name:'下载 MID',exact:true}).first().click();expect((await midi).suggestedFilename()).toContain('.mock.mid');
  const pv=page.waitForEvent('download');await dialog.getByRole('button',{name:/歌词视频 PV/}).click();expect((await pv).suggestedFilename()).toContain('.mock-export.json');await expect(dialog.getByRole('region',{name:'MP4 响度报告'})).toContainText('没有成片响度实测');
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await dialog.screenshot({path:'temp/task27-artifacts-mobile.png'});
+});
+
+test('lyric stickers slide in from the right only after 打开逐句演唱 and slide back to the workbench',async({page})=>{
+ await page.goto('/');const track=page.locator('.bench-track'),board=page.locator('#board'),lyrics=page.locator('#lyrics'),back=page.getByRole('button',{name:'← 回到音乐积木',exact:true});
+ await enterWorkbench(page);await expect(lyrics).toBeHidden();
+ await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();
+ // Mid-slide both pages are on screen and the lyric page is still travelling in from the right.
+ await expect(track).toHaveAttribute('data-view','to-lyrics');await page.waitForTimeout(200);
+ const mid=await page.evaluate(()=>({board:document.querySelector('#board')!.getBoundingClientRect().left,lyrics:document.querySelector('#lyrics')!.getBoundingClientRect().left,width:innerWidth}));
+ expect(mid.board).toBeLessThan(0);expect(mid.lyrics).toBeGreaterThan(0);expect(mid.lyrics).toBeLessThan(mid.width);
+ await page.screenshot({path:'temp/songyu-lyrics-page-sliding.png'});
+ await expect(track).toHaveAttribute('data-view','lyrics');await expect(board).toBeHidden();await expect(lyrics).toBeInViewport();await expect(back).toBeFocused();
+ expect(await lyrics.evaluate(el=>Math.round(el.getBoundingClientRect().left))).toBe(0);await expect(page.locator('.singing-details')).toHaveAttribute('open','');
+ await page.screenshot({path:'temp/songyu-lyrics-page.png'});
+ await back.click();await expect(track).toHaveAttribute('data-view','board');await expect(lyrics).toBeHidden();await expect(board).toBeInViewport();await expect(page.getByRole('button',{name:'打开逐句演唱',exact:true})).toBeFocused();
+ // Top navigation always lands on the workbench page itself, never on a lyric page left open.
+ await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();await expect(track).toHaveAttribute('data-view','lyrics');
+ await enterWorkbench(page);await expect(track).toHaveAttribute('data-view','board');await expect(board).toBeInViewport();
+ await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();await expect(track).toHaveAttribute('data-view','lyrics');await expect(lyrics).toBeInViewport();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'temp/songyu-lyrics-page-mobile.png'});
 });
 
 test('C mix controls forward all preview stems and persist real PCM changes through WAV/PV export',async({page})=>{
@@ -612,6 +733,6 @@ test('C mix controls forward all preview stems and persist real PCM changes thro
   const {api}=await import('/src/api/client.ts');const original=api.exportVideo;api.exportVideo=async(input:any)=>{const bytes=Uint8Array.from(atob(input.wav),(c:string)=>c.charCodeAt(0));(window as any).pvSilent=bytes.slice(44).every(v=>v===0);return original(input)};
  });
  const pv=page.waitForEvent('download');await dialog.getByRole('button',{name:/歌词视频 PV/}).click();expect((await pv).suggestedFilename()).toContain('.mock-export.json');expect(await page.evaluate(()=>(window as any).pvSilent)).toBe(true);
- await page.keyboard.press('Escape');const saved=await mockStored(page);await page.reload();expect(await mockStored(page)).toEqual(saved);await page.locator('.mix-panel>summary').click();expect((await mockStored(page)).mixSettings).toMatchObject({vocalGain:0,bandGain:0,reverb:.12});
+ await page.keyboard.press('Escape');const saved=await mockStored(page);await page.reload();expect(await mockStored(page)).toEqual(saved);await openLyricsPage(page);await page.locator('.mix-panel>summary').click();expect((await mockStored(page)).mixSettings).toMatchObject({vocalGain:0,bandGain:0,reverb:.12});
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(errors).toEqual([]);
 });

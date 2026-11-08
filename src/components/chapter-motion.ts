@@ -10,6 +10,20 @@ export const easeOut=(t:number)=>1-(1-t)**3;
 /** Overshoots a little before settling: the "lands with a bounce" curve. */
 export const easeBack=(t:number,s=1.6)=>t<=0?0:t>=1?1:1+(s+1)*(t-1)**3+s*(t-1)**2;
 
+export const CIRCLE_ENTRY_MS=1200,BENCH_REVEAL_MS=1000;
+export const WORKBENCH_REST_MS=450;
+/** Reaching a content edge is not permission to leave it. Require a separate gesture after the page settles. */
+export function workbenchGestureAction(distance:number,delta:number,now:number,lastInput:number,lastMotion:number,interactive=false,repeat=false){
+ if(distance>Math.max(1,delta))return 'content';
+ if(distance>1)return 'stop';
+ return !interactive&&!repeat&&now-lastInput>=WORKBENCH_REST_MS&&now-lastMotion>=WORKBENCH_REST_MS?'leave':'stop';
+}
+/** Scroll chooses a direction once; elapsed time carries the transition to the next stable page. */
+export function timedProgress(previous:number,target:0|1,elapsed:number,duration:number){
+ const progress=clamp(previous+(target?1:-1)*Math.max(0,elapsed)/duration);
+ return {progress,running:progress!==target};
+}
+
 /**
  * Progress through a scroll "act": a tall track whose 100vh stage is pinned with position:sticky,
  * followed by a pinned page whose curtain is pulled away during the last `reveal` pixels.
@@ -38,7 +52,7 @@ export function phraseFrame(intro:number,now:number,startedAt:number|null,finish
 export const MV_EXIT_MS=1800;
 /** One downward gesture plays the whole close/fill/reveal sequence; an upward gesture reverses it. */
 export function mvExitFrame(previous:number,target:0|1,elapsed:number){
- const progress=clamp(previous+(target?1:-1)*Math.max(0,elapsed)/MV_EXIT_MS);
+ const {progress}=timedProgress(previous,target,elapsed,MV_EXIT_MS);
  return {progress,join:easeInOut(span(progress,0,.18)),expand:easeInOut(span(progress,.18,.56)),reveal:easeInOut(span(progress,.56,1)),running:progress!==target};
 }
 

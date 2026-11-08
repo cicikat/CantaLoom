@@ -1,5 +1,5 @@
 import {memo,useEffect,useRef,type CSSProperties,type RefObject} from 'react';
-import {actProgress,cascade,easeInOut,easeOut,lerp,mvExitFrame,phraseFrame,span} from './chapter-motion';
+import {actProgress,BENCH_REVEAL_MS,cascade,CIRCLE_ENTRY_MS,easeInOut,easeOut,lerp,mvExitFrame,phraseFrame,span,timedProgress,WORKBENCH_REST_MS,workbenchGestureAction} from './chapter-motion';
 
 // Two scroll "acts" sit between the three content chapters:
 //   hero → BenchAct ("Music Blocks") → workbench → MvAct ("Let's …") → MV theatre.
@@ -10,7 +10,11 @@ import {actProgress,cascade,easeInOut,easeOut,lerp,mvExitFrame,phraseFrame,span}
 // one text block's size change per frame; nothing in the content chapters is covered once its curtain is gone.
 
 type Act=ReturnType<typeof actProgress>;
-interface Scene{measure():void;draw(act:Act|null,now:number):boolean}
+type Gesture={down:boolean;up:boolean;entering:boolean;navigating:boolean};
+interface Scene{measure():void;draw(act:Act|null,now:number,gesture:Gesture):boolean}
+
+const NAVIGATION_EVENT='songyu:chapter-navigation';
+let navigation:{top:number;until:number}|null=null;
 
 /** Writes a style value only when it changed, so idle scroll frames touch nothing. */
 function writer(){
@@ -37,31 +41,121 @@ const Discs=({colors}:{colors:readonly string[]})=><>{colors.map((c,i)=><span ke
 /** Length of the spacer that keeps a page pinned under its curtain (0 when reduced motion removes it). */
 function pinReveal(pin:HTMLElement){const after=getComputedStyle(pin,'::after');return after.display==='none'?0:parseFloat(after.height)||0}
 
+function workbenchBounds(){
+ const bench=document.querySelector<HTMLElement>('.bench-pin'),next=document.querySelector<HTMLElement>('.act-mv');
+ if(!bench||!next)return null;
+ const top=bench.getBoundingClientRect().top+scrollY+pinReveal(bench);
+ return {top,bottom:Math.max(top,next.getBoundingClientRect().top+scrollY)};
+}
+const isControl=(target:EventTarget|null)=>target instanceof Element&&!!target.closest('button,input,textarea,select,a,summary,canvas,[contenteditable=true],[role=slider],dialog[open]');
+function innerCanScroll(target:EventTarget|null,direction:number){
+ for(let node=target instanceof Element?target:null;node&&node!==document.body;node=node.parentElement){
+  if(node instanceof HTMLElement&&/(auto|scroll)/.test(getComputedStyle(node).overflowY)&&node.scrollHeight>node.clientHeight+1){
+   if(direction>0?node.scrollTop+node.clientHeight<node.scrollHeight-1:node.scrollTop>1)return true;
+  }
+ }
+ return false;
+}
+
 function useScrollAct(trackRef:RefObject<HTMLDivElement|null>,build:(track:HTMLDivElement,stage:HTMLDivElement,pin:HTMLElement)=>Scene&{dispose?():void}){
  const buildRef=useRef(build);buildRef.current=build;
  useEffect(()=>{
   const track=trackRef.current,stage=track?.firstElementChild as HTMLDivElement|null,pin=track?.nextElementSibling as HTMLElement|null;
   if(!track||!stage||!pin?.classList.contains('act-pin'))return;
   const motion=matchMedia('(prefers-reduced-motion: reduce)'),scene=buildRef.current(track,stage,pin);
-  let frame=0,reveal=0;
+  let frame=0,reveal=0,introLength=0,lastScroll=scrollY,entryProgress=0,entryTarget:0|1=0,entryClock:number|null=null;
+  const guardsBottom=track.classList.contains('act-mv');
+  let leaveAllowed=false,lastInput=performance.now(),lastMotion=lastInput,previousBounds=workbenchBounds();
+  let touchY:number|null=null,touchFresh=false;
   const read=():Act=>{const t=track.getBoundingClientRect();return actProgress(t.top,t.height,stage.offsetHeight,pin.getBoundingClientRect().top,reveal)};
   const tick=(now:number)=>{
-   frame=0;const act=motion.matches?null:read();
+   frame=0;
+   if(navigation&&(Math.abs(scrollY-navigation.top)<.01||now>=navigation.until))navigation=null;
+   const navigating=!!navigation;
+   const bounds=workbenchBounds(),wasInContent=previousBounds&&lastScroll>=previousBounds.top-1&&lastScroll<=previousBounds.bottom+1;
+   if(!motion.matches&&!navigating&&!leaveAllowed&&entryClock===null&&!track.classList.contains('is-exiting')&&wasInContent&&bounds){
+    // Focus, layout changes and touch inertia can move the document without another deliberate gesture.
+    if(guardsBottom&&scrollY>bounds.bottom+1&&scrollY<bounds.bottom+introLength)scrollTo({top:Math.floor(bounds.bottom),behavior:'instant'});
+    else if(!guardsBottom&&scrollY<bounds.top-1&&scrollY>bounds.top-reveal)scrollTo({top:Math.ceil(bounds.top),behavior:'instant'});
+   }
+   let act=motion.matches?null:read();
+   const down=scrollY>lastScroll+.5,up=scrollY<lastScroll-.5;
+   const initialScroll=scrollY;if(down||up)lastMotion=now;
+   let entering=false,entryRunning=false;
+   if(navigating||!act||act.story>.002||act.reveal>.002||(act.intro===0&&up))entryClock=null;
+   else{
+    const wasRunning=entryClock!==null;
+    if(!wasRunning)entryProgress=act.intro;
+    const forward=down&&act.intro>0&&act.intro<1&&(!guardsBottom||leaveAllowed);
+    const backward=up&&(wasRunning||(act.intro>0&&act.story<=.002&&act.reveal<=.002));
+    if(forward)entryTarget=1;else if(backward)entryTarget=0;
+    if(wasRunning||forward||backward){
+     entering=true;
+     const step=timedProgress(entryProgress,entryTarget,entryClock===null?0:now-entryClock,CIRCLE_ENTRY_MS);
+     entryProgress=step.progress;entryRunning=step.running;entryClock=entryRunning?now:null;
+     const top=track.getBoundingClientRect().top+scrollY;
+     scrollTo({top:Math.ceil(top+introLength*entryProgress),behavior:'instant'});
+     act=read();
+    }
+   }
+   track.classList.toggle('is-entering',entryRunning);
    pin.classList.toggle('is-open',!act||act.reveal>=1);
-   if(scene.draw(act,now))schedule();
+   const protectTop=!guardsBottom&&!leaveAllowed&&!track.classList.contains('is-exiting')&&!!act&&act.reveal>.002;
+   const running=scene.draw(act,now,{down:down&&!entering&&!navigating,up:up&&!entering&&!navigating&&!protectTop,entering,navigating});
+   if(Math.abs(scrollY-initialScroll)>.5)lastMotion=now;
+   lastScroll=scrollY;
+   previousBounds=bounds;
+   if(!entryRunning&&!track.classList.contains('is-exiting'))leaveAllowed=false;
+   if(entryRunning||running)schedule();
   };
   const schedule=()=>{if(!frame)frame=requestAnimationFrame(tick)};
-  const measure=()=>{reveal=pinReveal(pin);scene.measure();schedule()};
+  const guardInput=(event:Event,direction:number,delta:number,repeat=false,freshTouch?:boolean)=>{
+   const now=performance.now(),beforeInput=lastInput;lastInput=now;navigation=null;
+   if(motion.matches||event.defaultPrevented||entryClock!==null||track.classList.contains('is-exiting'))return;
+   if(direction!==(guardsBottom?1:-1))return;
+   const bounds=workbenchBounds();if(!bounds||scrollY<bounds.top-1||scrollY>bounds.bottom+1)return;
+   if(innerCanScroll(event.target,direction))return;
+   const edge=guardsBottom?bounds.bottom:bounds.top,distance=(edge-scrollY)*direction;
+   const sliding=!!document.querySelector('.bench-track[data-view^="to-"],.bench-track[data-view="from-lyrics"]');
+   const action=workbenchGestureAction(distance,delta,now,freshTouch===true?now-WORKBENCH_REST_MS:beforeInput,lastMotion,isControl(event.target)||sliding,repeat||freshTouch===false);
+   if(action==='content')return;
+   if(event.cancelable)event.preventDefault();
+   if(action==='leave'){
+    leaveAllowed=true;scrollTo({top:Math.round(edge)+direction*2,behavior:'instant'});
+   }else{
+    leaveAllowed=false;scrollTo({top:guardsBottom?Math.floor(edge):Math.ceil(edge),behavior:'instant'});lastMotion=now;
+   }
+   schedule();
+  };
+  const wheel=(e:WheelEvent)=>{if(Math.abs(e.deltaY)>.5)guardInput(e,Math.sign(e.deltaY),Math.abs(e.deltaY)*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1))};
+  const key=(e:KeyboardEvent)=>{
+   if(isControl(e.target)||e.altKey||e.ctrlKey||e.metaKey)return;
+   const direction=['ArrowDown','PageDown','End'].includes(e.key)||(e.key===' '&&!e.shiftKey)?1:['ArrowUp','PageUp','Home'].includes(e.key)||(e.key===' '&&e.shiftKey)?-1:0;
+   if(direction)guardInput(e,direction,e.key.startsWith('Arrow')?40:innerHeight,e.repeat||e.key==='Home'||e.key==='End');
+  };
+  const touchStart=(e:TouchEvent)=>{
+   const now=performance.now();touchY=e.touches.length===1?e.touches[0].clientY:null;
+   touchFresh=workbenchGestureAction(0,1,now,lastInput,lastMotion)==='leave';lastInput=now;navigation=null;
+  };
+  const touchMove=(e:TouchEvent)=>{
+   if(touchY===null||e.touches.length!==1)return;
+   const y=e.touches[0].clientY,delta=touchY-y;touchY=y;
+   if(Math.abs(delta)>1){guardInput(e,Math.sign(delta),Math.abs(delta),false,touchFresh);touchFresh=false}
+  };
+  const touchEnd=()=>{touchY=null;touchFresh=false;lastInput=performance.now()};
+  const measure=()=>{reveal=pinReveal(pin);introLength=Math.min(Math.max(1,track.offsetHeight-stage.offsetHeight-reveal),stage.offsetHeight*1.8);scene.measure();schedule()};
   // Keyboard focus landing on a page that is still under its curtain jumps to the end of the reveal.
   const focus=(e:FocusEvent)=>{
    const page=pin.firstElementChild;if(motion.matches||!page?.contains(e.target as Node)||read().reveal>=1)return;
    scrollTo({top:Math.ceil(pin.getBoundingClientRect().top+scrollY+reveal),behavior:'instant'});
   };
   const size=new ResizeObserver(measure);size.observe(stage);
+  const workbench=document.querySelector('.chapter-blocks');if(workbench)size.observe(workbench);
   measure();
   addEventListener('scroll',schedule,{passive:true});addEventListener('resize',measure);motion.addEventListener('change',measure);document.addEventListener('focusin',focus);
+  addEventListener(NAVIGATION_EVENT,schedule);addEventListener('wheel',wheel,{passive:false});addEventListener('touchstart',touchStart,{passive:true});addEventListener('touchmove',touchMove,{passive:false});addEventListener('touchend',touchEnd);addEventListener('touchcancel',touchEnd);addEventListener('keydown',key);
   void document.fonts?.ready.then(measure);
-  return()=>{cancelAnimationFrame(frame);size.disconnect();removeEventListener('scroll',schedule);removeEventListener('resize',measure);motion.removeEventListener('change',measure);document.removeEventListener('focusin',focus);scene.dispose?.()};
+  return()=>{cancelAnimationFrame(frame);size.disconnect();removeEventListener('scroll',schedule);removeEventListener('resize',measure);motion.removeEventListener('change',measure);document.removeEventListener('focusin',focus);removeEventListener(NAVIGATION_EVENT,schedule);removeEventListener('wheel',wheel);removeEventListener('touchstart',touchStart);removeEventListener('touchmove',touchMove);removeEventListener('touchend',touchEnd);removeEventListener('touchcancel',touchEnd);removeEventListener('keydown',key);scene.dispose?.()};
  },[trackRef]);
 }
 
@@ -69,10 +163,11 @@ function useScrollAct(trackRef:RefObject<HTMLDivElement|null>,build:(track:HTMLD
 export function chapterScrollTop(id:string){
  const el=document.getElementById(id);if(!el)return 0;
  const pin=el.closest<HTMLElement>('.act-pin'),top=(n:Element)=>n.getBoundingClientRect().top+scrollY;
- if(!pin)return top(el);
- const page=pin.firstElementChild!,reveal=pinReveal(pin);
+ const page=pin?.firstElementChild,reveal=pin?pinReveal(pin):0;
  // Rounded up so the browser's whole-pixel scroll never stops a hair before the curtain is fully open.
- return Math.ceil(top(pin)+reveal+(el.getBoundingClientRect().top-page.getBoundingClientRect().top));
+ const target=id==='compose'?0:pin&&page?Math.ceil(top(pin)+reveal+(el.getBoundingClientRect().top-page.getBoundingClientRect().top)):top(el);
+ navigation={top:target,until:performance.now()+3000};dispatchEvent(new Event(NAVIGATION_EVENT));
+ return target;
 }
 
 // ---------- Act 1 · original Music Blocks opener, then the violet page pulls down off the workbench ----------
@@ -81,17 +176,35 @@ const DISCS_1=['var(--yellow)','var(--orange)','var(--mint)','var(--blue)','var(
 
 export const BenchAct=memo(function BenchAct(){
  const track=useRef<HTMLDivElement>(null);
- useScrollAct(track,(_el,stage)=>{
+ useScrollAct(track,(el,stage,pin)=>{
   const curtain=stage.querySelector<HTMLElement>('.bench-curtain')!;
-  const put=writer(),ring=discs(stage,put);let H=0;
+  const put=writer(),ring=discs(stage,put);let H=0,revealLength=0,titleAt:number|null=null,progress=0,target:0|1=0,clock:number|null=null,requested=false;
   return {
-   measure(){H=stage.offsetHeight},
-   draw(act){
-    const {intro:p,reveal:r}=act??{intro:1,reveal:0};
-    ring.draw(p,r);
-    // Only the final pull-down is new; the original opener and one-screen hold stay intact.
-    put(curtain,'transform',move(0,easeInOut(r)*(H+120)));
-    return false;
+   measure(){H=stage.offsetHeight;revealLength=pinReveal(pin)},
+   draw(act,now,{down,up,navigating}){
+    const {intro:p,reveal:r}=act??{intro:1,reveal:0},revealTop=pin.getBoundingClientRect().top+scrollY;
+    if(!act||p<=.34){progress=0;target=0;clock=null;titleAt=null;requested=false}
+    else if(navigating){progress=r;target=r>=1?1:0;clock=null;requested=false}
+    else{
+     if(p>.42)titleAt??=now;
+     if(r>=1&&(target===1||progress===0||down)){progress=1;target=1;clock=null;requested=false}
+     else{
+      if(up){target=0;requested=false}
+      else if(down&&p>=1)requested=true;
+      // Let the original staggered title finish before another gesture opens the workbench.
+      if(requested&&titleAt!==null&&now-titleAt>=1100){target=1;requested=false}
+     }
+    }
+    const previous=progress,step=navigating?{progress,running:false}:timedProgress(progress,target,clock===null?0:now-clock,BENCH_REVEAL_MS);
+    progress=step.progress;clock=step.running?now:null;
+    const drop=easeInOut(progress);
+    ring.draw(p,drop);el.classList.toggle('is-exiting',step.running);
+    put(curtain,'transform',move(0,drop*(H+120)));
+    if(act){
+     if(step.running||progress!==previous)scrollTo({top:Math.ceil(revealTop+revealLength*drop),behavior:'instant'});
+     pin.classList.toggle('is-open',progress>=1);
+    }
+    return !!act&&!navigating&&(step.running||requested);
    },
   };
  });
@@ -145,7 +258,7 @@ export const MvAct=memo(function MvAct(){
   const outChars=Array.from(from.querySelectorAll<HTMLElement>('.say-ch')),inChars=Array.from(to.querySelectorAll<HTMLElement>('.say-ch'));
   let W=0,H=0,revealLength=0,f=100,stacked=false,letsW=0,wB=0,lineH=0,edgeA:number[]=[],edgeB:number[]=[];
   let startedAt:number|null=null,shown=-1;
-  let lastScroll=scrollY,exitRequested=false,exitStart:number|null=null,exitProgress=0,exitTarget:0|1=0,exitClock:number|null=null;
+  let exitRequested=false,exitStart:number|null=null,exitProgress=0,exitTarget:0|1=0,exitClock:number|null=null;
   return {
    measure(){
     W=stage.clientWidth;H=stage.offsetHeight;revealLength=pinReveal(pin);
@@ -161,16 +274,17 @@ export const MvAct=memo(function MvAct(){
     text.style.fontSize=`${f.toFixed(2)}px`;
     const k=f/100;letsW=l*k;wB=b*k;lineH=h*k;edgeA=rawA.map(x=>x*k);edgeB=rawB.map(x=>x*k);shown=-1;
    },
-   draw(act,now){
+   draw(act,now,{down,up,navigating}){
     const live=!!act,{story:P,reveal:r,intro:q}=act??{story:.5,reveal:0,intro:1};
-    const currentScroll=scrollY,down=currentScroll>lastScroll+.5,up=currentScroll<lastScroll-.5;
+    const currentScroll=scrollY;
     const pageTop=el.getBoundingClientRect().top+currentScroll,revealTop=pin.getBoundingClientRect().top+currentScroll;
-    lastScroll=currentScroll;
-    const playback=phraseFrame(q,now,startedAt,!live||P>=.66||r>0);
+    const playback=phraseFrame(q,now,startedAt,!live||navigating||P>=.66||r>0);
     startedAt=playback.startedAt;
     const m=playback.progress;
     if(!live||q<=.34){
      exitRequested=false;exitStart=null;exitProgress=0;exitTarget=0;exitClock=null;
+    }else if(navigating){
+     exitRequested=false;exitStart??=1.8;exitProgress=.56+.44*r;exitTarget=1;exitClock=null;
     }else if(r>=1&&(exitTarget===1||exitProgress===0||down)){
      // Navigation/focus can skip directly to MV. It must not leave a timer or an invisible curtain behind.
      exitRequested=false;exitStart??=1.8;exitProgress=1;exitTarget=1;exitClock=null;
@@ -184,6 +298,7 @@ export const MvAct=memo(function MvAct(){
      }
     }
     const previousExit=exitProgress,exit=mvExitFrame(exitProgress,exitTarget,exitClock===null?0:now-exitClock);
+    if(navigating)exit.running=false;
     exitProgress=exit.progress;exitClock=exit.running?now:null;
     ring.draw(q,exit.reveal);
     el.classList.toggle('is-exiting',exit.running);
@@ -233,10 +348,9 @@ export const MvAct=memo(function MvAct(){
      // reveal spacer while it opens. This lands on usable MV content instead of leaving an empty scroll track.
      const destination=exit.expand>=1?revealTop+revealLength*exit.reveal:pageTop+exitStart*H;
      if(exit.running||exit.progress!==previousExit)scrollTo({top:Math.ceil(destination),behavior:'instant'});
-     lastScroll=scrollY;
      pin.classList.toggle('is-open',exit.reveal>=1);
     }
-    return live&&(playback.running||exit.running);
+    return live&&!navigating&&(playback.running||exit.running);
    },
    dispose(){[...outs,...ins].forEach(a=>a.cancel())},
   };
