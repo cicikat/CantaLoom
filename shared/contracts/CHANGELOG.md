@@ -1,5 +1,14 @@
 # 公共契约变更
 
+## 工单 35 · AI HTML PV（2026-11-08，限定范围已确认）
+
+- Owner Blacktea；本会话明确确认 shared PV 快照/设计/响应、纯 HTML 时间轴、独立 pv_design 与后台任务配置、既有 export HTML 分支。未授权修改 SongProject/Client/Mock/React/Hook/CSS，后续接入 Owner Toge。
+- v1 快照含 id/title/idea/mood/bpm、四段 beat 时间轴/energy、歌词原文/beat 起止及可选节奏 pulses；严格边界，SHA-256 指纹由规范化快照产生并随响应/导出校验，不等同鉴权。
+- 设计为 1280×720 四段场景树：渐变、shape(circle/rect/triangle)、particles(fall/orbit)、text(title/current_lyric)，限定坐标/色值/种子/数量与归一化关键帧。段落 ID 精确匹配，每段一处歌词源；不收模型 HTML/JS/CSS/URL/外部素材。可信 renderAt 仅依赖快照、设计、显式毫秒和种子。
+- POST /api/pv/design 显式调用独立已配置 pv_design，不回退其他模型或本地模板；成功 source=llm、inputFingerprint、pvDesign 和白名单 trace，错误码/HTTP 400/429/503/502。无 trace 不伪造调用；真实/夹具边界记日志。
+- 原 export PNG 请求不变；HTML 判别分支 visualMode=html、pvProject、pvDesign、inputFingerprint，沿用已混音 WAV/title/lyrics/duration/singingCredit，数据须与快照匹配。旧 Client 不在此阶段接新分支；Chromium 可选，缺失 HTML 503，旧 Canvas 仍工作。
+- 同一共享可信 runtime 供隔离预览与服务端逐帧采样，网络禁止、CSP 限制、无任意代码；HTML 不再叠加 ASS 字幕，署名由可信 runtime 单一绘制，音频沿用原 loudnorm/AAC/报告。资源/超时/实测及交接见[工单 35](../../CC-Tasks/后端/35-ai-html-pv.md)、[迭代日志](../../docs/iteration-log.md)。
+
 ## 工单 34 · 制作表现规划公开追溯（2026-11-08）
 
 - Owner Blacktea；本会话针对共享响应 Schema/声明与服务端序列化提出具体范围，用户回复「确认上述限定范围」。不修改 Client、Mock、UI、路由配置、数据库或永久工程追溯。

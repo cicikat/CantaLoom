@@ -16,6 +16,7 @@
 
 | ID | 来源 | 发起方 → 接收方 | 状态 |
 |---|---|---|---|
+| [35-ai-html-pv](#35-ai-html-pv) | 工单 35 | Blacktea → Toge | 后端分阶段实施；页面待接 |
 | [27-phoneme-zero](#27-phoneme-zero) | 工单 27 / 15 P1 | Toge → Blacktea | 核心已修复；待 Toge 清理旧限制提示 |
 | [24-test-review](#24-test-review) | 工单 24 | Blacktea → Toge | 测试审计交付；待浏览器测试语义 review |
 | [5-C-synth-mix](#5-c-synth-mix) | 工单 5 C | Toge → Blacktea | 核心已修复；待 Toge 解禁 Synth 伴奏控件 |
@@ -105,3 +106,11 @@
 - Toge 下一步：Client 制作输入改用 ProductionInput；Mock 保留设置并显式标记夹具；页面只保存三参数；Synth 复用 shared/groove 的 performedNotes，并透传锁定/手工保护，核对预览与导出一致。不要将本轮真实 FluidSynth PCM 当作 Synth、真实 LLM/绮萱或人工听感验收。
 - 对方下一步：需要开放 swing/人性化时，先确认保存/Client/Mock/production/浏览器预览与导出的统一参数来源和保护状态；不能只给服务端一次性参数，使浏览器重新渲染时丢失。按项目 ID、轨道 ID、版本构造稳定种子，不使用时间戳。
 - 验收/回执：本机对照音在 temp/task20/，工单与迭代日志有客观验证；人工抽听 backbeat 与段落推进尚未执行。前端接线核对与当前缺口继续由[工单 27](CC-Tasks/27-frontend-interface-sync.md)维护，未因其他接口补接将本条标为完成。本条不构成代改前端的授权。
+
+
+<a id="35-ai-html-pv"></a>
+
+### 35-ai-html-pv · 独立视觉设计与可信 HTML PV
+
+- 2026-11-08，Blacktea → Toge；本会话用户已确认限定共享/后端范围。P0 已提供严格 shared/contracts/pv.mjs / .d.mts、POST /api/pv/design、GET /api/pv/status；P1 动态渲染与原 export HTML 分支实施中，暂不接页面。
+- [工单 35](CC-Tasks/后端/35-ai-html-pv.md)、[契约记录](shared/contracts/CHANGELOG.md)、[实际证据](docs/iteration-log.md#ai-html-pv-35)。后端完成后再提供新旧导出示例、资源边界与真实 MP4；页面/Mock/Client/工程存储由 Toge 后续实施。

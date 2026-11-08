@@ -1,0 +1,2 @@
+import {access} from 'node:fs/promises';
+export async function pvRenderStatus(){try{if(process.env.SONGYU_HTML_PV_DISABLED==='1')throw Error();const {chromium}=await import('@playwright/test');await access(chromium.executablePath());return {available:true,width:1280,height:720,fps:24,maxSeconds:35}}catch{return {available:false,width:1280,height:720,fps:24,maxSeconds:35,code:'PV_CHROMIUM_UNAVAILABLE'}}}

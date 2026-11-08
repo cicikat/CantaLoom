@@ -1,5 +1,14 @@
 <a id="lets-mv-entry-autoplay"></a>
 
+<a id="ai-html-pv-35"></a>
+
+## 2026-11-08 · 工单 35 AI HTML PV（分阶段实施）
+
+- 工单：[35](../CC-Tasks/后端/35-ai-html-pv.md)；字段与本次限定授权见[CHANGELOG](../shared/contracts/CHANGELOG.md)。用户已确认共享 PV 设计/快照/HTML runtime、独立模型任务和原 export 兼容扩展，不改 SongProject/Client/Mock/前端。
+- P0：严格四段设计、复杂度/安全边界、快照指纹，pv_design 路由与管理配置/密钥枚举、POST /api/pv/design 与资源探测已实现。Admin 路由追溯不返回 systemPrompt。9 项定向测试与 build 通过；仅测试夹具，真实两首规划验证另行显式执行。P1 渲染/实际动态 MP4 未完成，不能据此称动态 PV 已交付。
+- 分阶段本地提交，未推送；原启动脚本删除和其他工作保留。后续结果在此条补充。
+
+
 <a id="production-trace-34"></a>
 
 ## 2026-11-08 · 工单 34 制作表现规划追溯与安全响应

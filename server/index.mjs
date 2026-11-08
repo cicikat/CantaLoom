@@ -1,3 +1,4 @@
+import {mountPv} from './routes/pv.mjs';
 import {mountProduction} from './routes/production.mjs';
 import {mountFreeComposition} from './routes/free-composition.mjs';
 import {mountMelody} from './routes/melody.mjs';
@@ -22,6 +23,7 @@ const settings=await createConfigStore({directory:path.join(externalRoot,'runtim
 const app=express();app.disable('x-powered-by');app.use(express.json({limit:'24mb'}));
 const jobs=createJobs();app.use(jobs.middleware);
 mountFreeComposition(app);
+mountPv(app);
 mountMelody(app);
 mountInstruments(app);
 mountSinging(app);
