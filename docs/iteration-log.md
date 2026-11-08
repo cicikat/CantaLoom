@@ -1,5 +1,20 @@
 <a id="lets-mv-entry-autoplay"></a>
 
+<a id="synth-band-gain-33"></a>
+
+## 2026-11-08 · 工单 33 浏览器 Synth 伴奏总增益
+
+- 工单：[33](../CC-Tasks/已完成/33-browser-synth-band-gain.md)；关联[5 C](../CC-Tasks/5-toge-free-creation.md)、[27](../CC-Tasks/27-frontend-interface-sync.md)；范围确认见[CHANGELOG](../shared/contracts/CHANGELOG.md)，用法见[架构](ARCHITECTURE.md#performance)与[接口清单](INTERFACES.md)。Owner Blacktea；用户在本会话就具体共享音频范围回复「确认上述限定范围」。
+- 实现：src/audio.ts 新增本地器乐 band GainNode，processed 时应用既有 bandGain??1，否则为 1；本地人声不进入该总线，FluidSynth WAV 保留原增益路径，不双乘。原 master/压缩、默认值、stem/mute/单轨、dry、人声处理、最终峰值保护保持原实现；audio-mix、服务器、Schema、UI/Hook/Mock 定义均未修改。
+- 先加失败测试：零增益仍有 Synth 器乐 PCM，WAV/PV 静音断言失败。修复后两项 Chromium Web Audio 夹具用例通过，覆盖 0/1/2、enabled/缺省、free/旧模式、独立元音/外部测试人声不被静音、dry/processed、单句、mute/单轨、强信号叠加峰值保护、工程不变，以及实际 exportWavFile/exportPVFile 的输入与渲染 PCM 一致。gain=1 与旧 Synth PCM 一致。示例 RMS：0 / 0.00790446 / 0.01580891，人声 RMS=0.00810594；gain=2 peak=0.136863。Fixture FluidSynth WAV 增益比 2.0，未重复应用。
+- 测试层归属：新增 `tests/browser/synth-band-gain.spec.js`，复用已有 Playwright 服务/Chromium；真实资源两项标 @acceptance。未给 npm test 增加 Chromium 前置，也未改 CI；现外部层计数为 8 Node、6 browser，团队说明同步。
+- 验证：`npm run build` 通过（已有体积/依赖注释警告）；`npm test` 123 项：115 通过、8 外部验收跳过；`npm run test:e2e` 16/16 通过（含新两项音频核心用例）；`npm run test:e2e:mock -- -g 'C mix controls|frontend alone supports'` 2/2 通过（仅选受影响混音/WAV/PV/无 API 场景，未重跑 Mock 全套）。`git diff --check` 与修改文档本地链接检查通过。
+- 真实资源单独执行：开启 acceptance、SONGYU_REAL_TESTS=1，并显式指定本机 FFMPEG_PATH，运行该文件的 @acceptance 项 2/2 通过：实际 FluidSynth 0/1/2 RMS=0 / 0.000459606 / 0.000919213（比值 2），Synth 经现有 PV 入口生成的 WAV 与前置 PCM 一致，真实 FFmpeg 编码产出 MP4。默认 PATH 无 FFmpeg 时曾明确跳过，配置已有可执行文件后实际通过，未安装/下载引擎。FFmpeg 临时产物清理先验证位于系统临时目录且名称为 songyu-*，再删除。
+- 导出边界：该稀疏 16 秒测试素材的实测 input=-24.8 LUFS/-17.3 dBTP、output=-9.2 LUFS/-1.5 dBTP；归一目标仍是原 -14/-1.5，不把目标值当作实测，也不宣称本素材达到目标 LUFS。PCM/WAV 输入一致与真实编码通过不代表 UI 全流程、绮萱/LLM、手机/Safari或人工听评。
+- 产物：`temp/task33/fluidsynth.wav`、`fluidsynth.json`、`synth-pv-input.wav`、`synth.mp4`、`export.json`；日志 `temp/task33-before.log`、`task33-targeted.log`、`task33-unit.log`、`task33-build.log`、`task33-e2e-http.log`、`task33-e2e-mock.log`、`task33-real.log`、`task33-export-final.log`。测试音与真实资源分别标注，不包装成真实演唱。
+- 交接：[5-C-synth-mix](../CROSS-END-HANDOFF.md#5-c-synth-mix)已回执核心修复，等待 Toge 解禁已有伴奏控件并回归页面后清理；元音人声音量/混响仍禁用，Groove Synth 同步继续工单 31 后续。后端核心工单归档，真实共同听感继续工单 6。本地 feature/backend-synth-band-gain，未推送；原脚本删除与其他工单保留。
+
+
 <a id="phoneme-explicit-zero-32"></a>
 
 ## 2026-11-08 · 工单 32 首音素显式零偏移与旧缓存失效

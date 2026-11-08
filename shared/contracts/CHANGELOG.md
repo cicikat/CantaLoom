@@ -1,5 +1,12 @@
 # 公共契约变更
 
+## 工单 33 · Synth 伴奏增益路由（2026-11-08）
+
+- Owner Blacktea；本会话针对 src/audio.ts 器乐总线、必要 audio-mix 适配和 PCM/WAV/PV 测试提出具体范围，用户回复「确认上述限定范围」。不修改 UI、Hook、Mock 定义、增益字段、API 或服务端 FluidSynth。
+- renderAudio 内仅为 Synth 器乐建立 band bus，processed 时使用 mixSettings.bandGain??1，否则为 1；人声仍走原 master/外部 vocalBus。FluidSynth 继续现有 addWav 路由，不进入新总线。原处理默认值、master、压缩与峰值保护不变。
+- 调用点：统一 renderAudio 的试听、WAV/PV；测试 Owner Blacktea，控件解禁 Owner Toge。Groove 试听仍依赖工单 31 后续接线，本单不改 swing/随机算法。
+- 验证区分 Chromium OfflineAudioContext/音频夹具与真实 FluidSynth/FFmpeg；实际证据见[工单 33](../../CC-Tasks/已完成/33-browser-synth-band-gain.md)和[迭代日志](../../docs/iteration-log.md)。
+
 ## 工单 32 · 显式首音素零偏移修复（2026-11-08）
 
 - Owner Blacktea；用户明确要求完成工单 32，限定 shared/performance 既有字段优先级修复，不新增 Schema、HTTP、工程字段或 UI。先补失败回归后修复。

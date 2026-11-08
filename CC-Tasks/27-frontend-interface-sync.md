@@ -38,3 +38,5 @@ Owner：Toge / Frontend & UX。状态：高级调教、历史演唱恢复、产�
 2026-11-08 后续更新：[工单 31](已完成/31-production-groove-integration.md)已完成制作与工程参数、统一 FluidSynth 输入；页面/Mock/Client 制作类型及 Synth 仍由 Toge 按 20-groove-render 接入。上文为当时核对边界。
 
 2026-11-08 回执：[工单 32](已完成/32-phoneme-explicit-zero.md)已修复首音素显式零偏移，并通过 USTX/依赖回归和真实绮萱 WAV/缓存对照。上文该项问题为历史状态；Toge 待移除原限制提示，沿用 27-phoneme-zero 交接，人工听评仍未执行。
+
+2026-11-08 回执：[工单 33](已完成/33-browser-synth-band-gain.md)已修复 Synth 伴奏增益核心，并完成 PCM/WAV/PV 输入、真实 FluidSynth 与 MP4 编码回归。上文该核心缺口为历史状态；Toge 待解禁现有控件并回归页面，沿用 5-C-synth-mix，元音人声增益/混响和人工听评不在本次范围。

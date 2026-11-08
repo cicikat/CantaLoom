@@ -118,7 +118,7 @@ Remove-Item Env:SONGYU_LLM_ROUTING_REAL -ErrorAction SilentlyContinue
 Remove-Item Env:SONGYU_TEST_TIER,Env:SONGYU_REAL_TESTS -ErrorAction SilentlyContinue
 ```
 
-快速层排除的 6 项 Node 外部验收与 4 项 @acceptance 浏览器验收均保留；不得以快速层通过推断它们通过。验收工程输入与测试产物分离：测试不覆盖输入工程；浏览器下载统一用 testInfo.outputPath，默认分别进入 temp/test-results/http/、temp/test-results/mock/。截图仅失败时自动生成，布局仍由 DOM/几何断言验证；19 项全页和 2 项面板成功截图不属于自动视觉比对，已去掉其无条件输出。CI 失败只上传 temp/test-results/。
+快速层排除的 8 项 Node 外部验收与 6 项 @acceptance 浏览器验收均保留；不得以快速层通过推断它们通过。验收工程输入与测试产物分离：测试不覆盖输入工程；浏览器下载统一用 testInfo.outputPath，默认分别进入 temp/test-results/http/、temp/test-results/mock/。截图仅失败时自动生成，布局仍由 DOM/几何断言验证；19 项全页和 2 项面板成功截图不属于自动视觉比对，已去掉其无条件输出。CI 失败只上传 temp/test-results/。
 
 TAP 测试用 Playwright 时钟和真实点击给出五次精确 500ms 间隔，不受 CI 调度抖动影响；播放器仍用真实 Web Audio 时钟，通过进度条件等待。需要等待的服务就绪、异步处理与超时注入保留明确边界，不用固定 sleep 当成功信号。原静态 LOOP 样稿仍有 README/实际浏览器调用，保留入口提示与卡片几何参考；未挂载的 FreeCreation/Notes 没有独立旧组件测试可删，生产源码不在本轮清理范围。逐项审计证据见[工单 24](../CC-Tasks/已完成/24-test-system-audit.md)与[迭代日志](iteration-log.md#test-system-audit)。
 

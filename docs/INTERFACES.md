@@ -17,7 +17,7 @@
 
 这是可用能力的清单，不要求把所有限制做成输入框。energy 由既有单句自动分析带入；overrides 索引由音符选择器带入；take 由重唱操作带入；缓存、引擎版本和文件上限由程序处理。steps/depth、EQ、声像等固定或未实现参数不做滑杆。
 
-本轮只接前端：浏览器 synth 伴奏尚未应用 bandGain，伴奏音量在此模式禁用；切到已有 FluidSynth 路径才启用。元音演示不支持此处的调教、人声音量与混响，相关控件禁用。详情与红茶交接见 [5-C-synth-mix](../CROSS-END-HANDOFF.md#5-c-synth-mix)。
+本轮只接前端：工单 33 已修复浏览器 Synth 的 bandGain 核心路由，当前页面仍按原前端边界禁用该模式伴奏控件，等待 Toge 解禁；FluidSynth 控件沿用原路径。元音演示不支持此处的调教、人声音量与混响，相关控件禁用。详情与红茶交接见 [5-C-synth-mix](../CROSS-END-HANDOFF.md#5-c-synth-mix)。
 
 ## 创作输入（`api.compose` / `api.startProduction`）
 

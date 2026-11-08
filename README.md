@@ -27,12 +27,12 @@ LOOP! 首页已完成页面接线、Mock 流程及本地创作验证；历史真
 | LOOP! 单页创作 | 已接工程音轨、格子、排序、TAP、歌词卡片、局部编辑、播放与导出 | [本轮接线验证](docs/iteration-log.md#loop-prototype-wiring)；真实制作与 MP4 编码未重跑 |
 | 真实中文演唱与 LLM | 历史记录已有真实调用、绮萱 CPU / DirectML、缓存与成片实测 | [绮萱历史记录](docs/iteration-log.md#qixuan)；不证明新电脑已装好引擎或当前 Key 可用 |
 | 自由作曲与动态旋律 | compose / melody 接口、共享客户端及工程应用逻辑已提供 | [自由创作接入](docs/ARCHITECTURE.md#composition)；首页最小入口及单句旋律编辑已本地接入 |
-| 自动制作、调教与混音 | 制作任务、调教/混音核心已有实现；LOOP! 已接每句预设、Auto/Manual、四项细调、音符覆盖/表达锁/三版恢复与四种分轨试听 | [当前页面接入](docs/ARCHITECTURE.md#performance)、[Mock/PCM 证据](docs/iteration-log.md#expression-mix-controls)；浏览器伴奏音量禁用并交红茶，真实引擎/听感仍待验收 |
+| 自动制作、调教与混音 | 制作任务、调教/混音核心已有实现；LOOP! 已接每句预设、Auto/Manual、四项细调、音符覆盖/表达锁/三版恢复与四种分轨试听 | [当前页面接入](docs/ARCHITECTURE.md#performance)、[Mock/PCM 证据](docs/iteration-log.md#expression-mix-controls)；浏览器伴奏核心已修复、控件仍待 Toge 解禁，真实共同听感仍待验收 |
 | 新流程 Mock 与页面 | **A1 / A2 已完成**：首页主题/可选歌词 → 制作状态 → 完整结果应用 → 试听已接通；支持取消、失败保留与缺失句重试。旧入口保留，未知 Mock 接口返回 404 | [A1 验证](docs/iteration-log.md#a1-free-creation-mock)、[A2 验证](docs/iteration-log.md#a2-free-creation-page)；双方待办见下方[协作工单](#协作工单) |
 | 钢琴卷帘与局部旋律 | **已接线并通过 Mock**：在歌词卡片下按句编辑音高/位置/长度、锁定及指定句重作曲；改动句重唱，保留其他句与伴奏 | [编辑入口](docs/ARCHITECTURE.md#piano-roll)、[钢琴卷帘验证](docs/iteration-log.md#c-piano-roll) |
 | 新网页完整流程及听感 | **待双方验收**：现场新输入 → 制作 → 试听/导出，以及人工听感 | Mock 页面测试、后端历史实测与非静音指标不能代替这项验收 |
 
-最小页面已可在 Mock 中从新输入制作并试听；钢琴卷帘、局部旋律、调教与现有有效混音控件均已接线。每句调教在「逐句演唱与重唱」中展开，混音在歌词区底部展开；默认不占首屏。高级音高/颤音/音素/表现曲线在「逐音符人工覆盖」内；分轨文件与响度在「导出作品」中，MP4 报告只展示本次响应。见[工单 27](CC-Tasks/27-frontend-interface-sync.md)，Mock 文件和报告不是真实引擎/FFmpeg 验收。浏览器伴奏音量核心问题见[交接 5-C-synth-mix](CROSS-END-HANDOFF.md#5-c-synth-mix)，真实最小闭环仍需工单 4 / 6 验收。详细 checkbox 只维护在对应 CC-Tasks 工单中。
+最小页面已可在 Mock 中从新输入制作并试听；钢琴卷帘、局部旋律、调教与现有有效混音控件均已接线。每句调教在「逐句演唱与重唱」中展开，混音在歌词区底部展开；默认不占首屏。高级音高/颤音/音素/表现曲线在「逐音符人工覆盖」内；分轨文件与响度在「导出作品」中，MP4 报告只展示本次响应。见[工单 27](CC-Tasks/27-frontend-interface-sync.md)，Mock 文件和报告不是真实引擎/FFmpeg 验收。浏览器伴奏核心已由工单 33 修复，控件仍待 Toge 解禁，见[交接 5-C-synth-mix](CROSS-END-HANDOFF.md#5-c-synth-mix)，真实最小闭环仍需工单 4 / 6 验收。详细 checkbox 只维护在对应 CC-Tasks 工单中。
 
 旧名称已废弃，当前产品名统一为 **织声机 CantaLoom**。旧浏览器存档键、`SONGYU_*` 环境变量、HTTP 头、已安装的 `SongyuBridge` 和已安装的旧启动文件保留兼容，避免已有工程、加密配置、引擎或快捷方式失效；新导出工程使用 `.cantaloom.json`，旧 `.songyu.json` 仍可导入。历史工单与迭代证据保留当时名称。
 
@@ -116,6 +116,8 @@ npm start
 | 历史方案 | [1 · 动态旋律](CC-Tasks/1-dynamic-melody-and-performance.md)、[9 · 初始工作台](CC-Tasks/9-initial-workbench.md)、[10 · P2.1 后续建议](CC-Tasks/10-guided-composition.md)、[11 · 解耦迁移](CC-Tasks/11-frontend-backend-decoupling.md)；恢复的原文：[2 · 自由创作](CC-Tasks/2-free-composition-original.md)、[3 · 自动调教](CC-Tasks/3-auto-performance-original.md)，当前进度以工单 4/5/6 为准 |
 
 本轮品牌与 PR 整合：[工单 30](CC-Tasks/已完成/30-cantaloom-brand-and-pr-integration.md)。
+
+Synth 伴奏增益核心修复：[工单 33](CC-Tasks/已完成/33-browser-synth-band-gain.md)；WAV/PV 已验证，控件待 Toge 解禁。
 
 首音素显式零偏移修复：[工单 32](CC-Tasks/已完成/32-phoneme-explicit-zero.md)；待 Toge 清理旧限制提示。
 

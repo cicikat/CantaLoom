@@ -385,3 +385,10 @@ MP4 导出使用 loudnorm（I=-14 LUFS、TP=-1.5 dBTP、LRA=11），48kHz AAC 19
 `overrides[].phonemes[{index:0,offsetMs:0}]` 明确覆盖本音符的句级 `consonantMs`。需要阻止非零默认偏移时生成 `phoneme_overrides:[{index:0,offset:0}]`；其他无替换零偏移维持旧省略规则，不给历史工程批量补字段。没有首位覆盖时继续使用原 consonantMs；发音替换仍优先，BPM→tick 换算不变。
 
 只有首位显式 offsetMs:0 且无发音替换的请求使用 `resolvePerformance.renderRevision=4` / Qixuan 缓存 revision=6，避免复用修复前错误音频；原手动、自动以及无 Performance 请求保持各自旧版本。已有工程的该句资产经原依赖策略过期，其他句与器乐不变。真实 USTX/WAV 与缓存对照及验证边界见[工单 32](../CC-Tasks/已完成/32-phoneme-explicit-zero.md)和[日志](iteration-log.md#phoneme-explicit-zero-32)。
+
+
+#### Synth 伴奏增益（工单 33）
+
+`renderAudio` 让本地 Synth 器乐经过独立 GainNode 再进入原 master；`processed` 时增益为 `mixSettings.bandGain ?? 1`，否则为 1。元音演示与外部人声不进入器乐总线。FluidSynth WAV 继续原 addWav 的平衡/声像/增益路径，不再乘一次总线。原处理默认值（自由模式默认开）、stem、静音、单轨、干声、master 压缩及处理后峰值保护保持不变。
+
+试听、`exportWavFile` 与 `exportPVFile` 仍共用 renderAudio；bandGain=0 的纯器乐 PCM/WAV/PV 输入为零，1 与旧 Synth 基线一致，2 改变实际 PCM。MP4 后续响度归一仍是原策略，不能假定编码后响度与浏览器增益成线性关系。页面控件解禁由 Toge 处理，元音演示的人声 gain/reverb 本期未开放；Groove 事件同步不在本补丁内。验证见[工单 33](../CC-Tasks/已完成/33-browser-synth-band-gain.md)及[日志](iteration-log.md#synth-band-gain-33)。

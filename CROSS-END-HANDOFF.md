@@ -18,7 +18,7 @@
 |---|---|---|---|
 | [27-phoneme-zero](#27-phoneme-zero) | 工单 27 / 15 P1 | Toge → Blacktea | 核心已修复；待 Toge 清理旧限制提示 |
 | [24-test-review](#24-test-review) | 工单 24 | Blacktea → Toge | 测试审计交付；待浏览器测试语义 review |
-| [5-C-synth-mix](#5-c-synth-mix) | 工单 5 C | Toge → Blacktea | 前端已接；浏览器伴奏增益核心待接手 |
+| [5-C-synth-mix](#5-c-synth-mix) | 工单 5 C | Toge → Blacktea | 核心已修复；待 Toge 解禁 Synth 伴奏控件 |
 | [20-groove-render](#20-groove-render) | 工单 20 | Blacktea → Toge | 核心/API 已实现；页面与人工听评待安排 |
 | [15-P2A-contracts](#15-p2a-contracts) | 工单 15 P2-A | Blacktea → Toge | 等待本任务共享范围确认 |
 | [15-P2B-routing](#15-p2b-routing) | 工单 15 P2-B | Blacktea → Toge | 后端已推送；等待接入 review 与安排 |
@@ -47,13 +47,13 @@
 
 <a id="5-c-synth-mix"></a>
 
-### 5-C-synth-mix · 浏览器伴奏增益与前端接线边界
+### 5-C-synth-mix · 核心已修复，待前端解禁与回归
 
-- 更新：2026-11-07；来源：[工单 5 C](CC-Tasks/5-toge-free-creation.md#c局部编辑与调教)；Toge → Blacktea；状态：等待音乐核心接手。toge 明确选择「只接前端，核心问题交接红茶」，本条不授权前端修改混音核心。
-- 已交付：`feature/frontend-free-creation-mock` 本轮调教/混音前端提交（主题 `feat: connect phrase expression and supported mix controls`）。默认折叠的句级/音符级调教、锁定/历史、现有单句重唱、四种 stem 试听与 mixSettings 持久化；证据见[迭代日志](docs/iteration-log.md#expression-mix-controls)。没有修改公开 Schema / Client / `src/audio.ts` / `src/audio-mix.ts`。
-- 已定位：`src/audio.ts` 的 addWav/processed 分支给 FluidSynth 应用 bandGain，但浏览器 synth 直接 schedule 到 master，未应用 bandGain；元音演示亦未接 vocalBus。默认 Mock 自由制作的伴奏是 synth，直接开放伴奏滑杆会无效。前端当前仅在 fluidsynth 启用伴奏音量；人声音量/混响仅在 external 启用；有明确禁用说明，不自动切引擎。
-- 对方下一步：在共同混音边界内确认并修复 synth 的伴奏增益路径，保持静音/独奏、现有 stem、WAV/PV、旧工程 enabled 默认和未处理干人声语义；提供实际 PCM/导出回归后回执，前端再解除相应禁用。顺带核对表达锁元数据进入 singingDependency 导致锁切换保守失效的预期；本轮按既有依赖处理，不伪造音频有效性。
-- 验收与回执：前端已验证 external 人声增益归零、混响 PCM 变化、FluidSynth Mock 两路归零后 WAV 与 PV 输入静音；这些是测试音，不是实际 FluidSynth/绮萱引擎验收。真实资源、制作闭环和人工听感继续[工单 6](CC-Tasks/6-joint-acceptance.md)。完成后证据写回工单/迭代日志，再移除本条。
+- 更新：2026-11-08；[工单 33](CC-Tasks/已完成/33-browser-synth-band-gain.md)由 Blacktea 完成；本会话用户已确认限定共享音频范围。原 Toge → Blacktea 请求已回执，现 Blacktea → Toge 交接解禁。分支 feature/backend-synth-band-gain，本地提交，未推送。
+- 已交付：renderAudio 内 Synth 器乐经独立 band bus，处理时应用既有 bandGain；人声仍走原路径，FluidSynth 沿用原增益且不重复。保留 enabled/default、stem/mute/单轨、dry 与峰值保护；WAV/PV 共用同一 PCM。
+- 验证：Chromium PCM 夹具、实际 WAV/PV 入口透传、真实 FluidSynth 增益 0/1/2、真实 FFmpeg MP4 通过；证据见[日志](docs/iteration-log.md#synth-band-gain-33)。夹具不是实际声库听评，真实 MP4 编码不是正式页面全流程验收。
+- Toge 下一步：在 MixControls 解除 Synth 伴奏音量禁用与旧说明，核对当前页面保存/重载、试听与导出；不要连带解禁元音演示的人声音量/混响。完成后先写工单 5/27 与日志证据，再删除本条和索引。
+- 原表达锁元数据进入 singingDependency 的保守失效行为维持原策略，本单不改人声依赖。Groove 浏览器事件同步仍归工单 31 后续接线，真实制作/人工听感仍归工单 6。
 
 <a id="15-p2a-contracts"></a>
 
