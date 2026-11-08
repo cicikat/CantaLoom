@@ -117,6 +117,8 @@ npm start
 
 本轮品牌与 PR 整合：[工单 30](CC-Tasks/已完成/30-cantaloom-brand-and-pr-integration.md)。
 
+制作 Groove 工程参数与后端续接：[工单 31](CC-Tasks/已完成/31-production-groove-integration.md)；页面/Mock/Synth 仍待 Toge 接入。
+
 本轮启动重启功能：[工单 31](CC-Tasks/已完成/31-launcher-restart.md)。
 
 ## 文档与验证入口

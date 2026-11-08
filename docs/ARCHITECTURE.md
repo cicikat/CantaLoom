@@ -364,6 +364,17 @@ MP4 导出使用 loudnorm（I=-14 LUFS、TP=-1.5 dBTP、LRA=11），48kHz AAC 19
 
 `POST /api/instruments/render` 的可选 groove 示例：`{projectId:"project-1",trackId:"track-1",version:1,swingTicks:60,timingTicks:15,velocityAmount:0.08}`。MIDI 分辨率 480 tick/beat；swing 延后 .5 拍的事件，非鼓 timing/velocity 用 tuple+参数的纯伪随机数生成器，保持同输入 MIDI 字节一致。位置只在 MIDI 编码时偏移，工程 beat 不变；末端裁剪、非负 onset 和最小 1 tick 时值保障事件有效。
 
-调用方透传 locked / manuallyEdited / notes[].locked；任一保护禁用整轨 groove，后端在 hash 前去掉该 groove，保护轨道不会因开关改变缓存键。非保护参数和身份/版本进入缓存键，revision=3。缺省不传 groove 不应用任何额外渲染律动。现有页面/浏览器和 production 尚不传这些字段，API 选项可用不等于页面已接；不应只在服务端启用而让浏览器导出使用另一套节奏。接线须保持参数/保护标记在保存、预览和导出间一致。
+调用方透传 locked / manuallyEdited / notes[].locked；任一保护禁用整轨 groove，后端在 hash 前去掉该 groove，保护轨道不会因开关改变缓存键。非保护参数和身份/版本进入缓存键，revision=3。缺省不传 groove 不应用任何额外渲染律动。工单 31 已接 production 与 `src/external-audio.ts` 的 FluidSynth 请求；浏览器 Synth、Client 制作方法类型、Mock 和页面控件仍由 Toge 接入，尚不能宣称浏览器合成试听一致。
 
 运行 `node --test tests/groove.test.mjs` 可验证事件流与真实 FluidSynth PCM/缓存（缺少引擎自动 skip）；`node scripts/verify-render-quality.mjs --free` 用本地规则自由编曲测试 Chromium 解码/统一混音与真实 MP4，非真实 LLM 创作和人工听评。
+
+
+#### 制作任务 Groove 参数（工单 31）
+
+`POST /api/production` 使用独立 `productionInputSchema`，例如 `{"intent":"雨后出发","targetSeconds":25,"grooveSettings":{"swingTicks":48,"timingTicks":8,"velocityAmount":0.06}}`。`grooveSettingsSchema` 为严格三参数对象，各字段缺省 0；不接受 projectId、trackId、version，非法输入 HTTP 400，启动不可用仍为 503。原自由创作输入保持严格不变，规划前剥离设置，不将其传入 LLM。
+
+生成成功的 `GET /api/production/:id` 工程带 `project.grooveSettings`，保存/导入通过 `validateProject` 校验；未提供时旧 v1 工程不补字段、不迁移。设置不进入人声依赖。缺省或全零时省略渲染 groove，保持原非 Groove 缓存输入。
+
+`shared/groove.mjs` 的 `projectInstrumentInput(project,track)` 由工程/轨道 ID、版本与设置构造稳定种子，并透传真实保护状态及音符。production 和 external-audio 共用该入口；MIDI 沿用 `performedNotes`（480 tick/beat 的 start/end、原 note 引用和演奏 velocity）。未来 Synth 应复用同一事件入口，按 tick/480 转回 beat，再按 BPM 转秒，不能另写随机算法；工程音符保持原 beat。
+
+验证与剩余跨端接线见[工单 31](../CC-Tasks/已完成/31-production-groove-integration.md)、[20-groove-render](../CROSS-END-HANDOFF.md#20-groove-render)。本阶段未修改稳定混音/字幕/FFmpeg 路径。

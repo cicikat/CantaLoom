@@ -1,5 +1,18 @@
 <a id="lets-mv-entry-autoplay"></a>
 
+<a id="production-groove-31"></a>
+
+## 2026-11-08 · 工单 31 制作 Groove 工程参数与稳定渲染输入
+
+- 工单：[31](../CC-Tasks/已完成/31-production-groove-integration.md)；限定契约确认与字段见[CHANGELOG](../shared/contracts/CHANGELOG.md)，调用方式见[架构](ARCHITECTURE.md#groove-render)，跨端继续 [20-groove-render](../CROSS-END-HANDOFF.md#20-groove-render)。Owner Blacktea；本会话用户已明确确认限定跨层范围，不扩大到 Client/Mock/UI/Hook/浏览器混音。
+- 实现：独立 productionInputSchema 扩可选三参数 grooveSettings，HTTP 非法参数 400、服务层重复校验；严格自由创作输入维持原契约，规划前剥离设置，新工程附加并随 GET 返回。SongProject 与 validateProject 支持旧 v1 / JSON 往返，加载不迁移旧工程。
+- production 与 external-audio 复用纯 projectInstrumentInput；种子仅从工程 ID、轨道 ID/version 派生，真实保护标记透传。缺省/全零不加 groove，false 保护字段不额外加入旧输入；MIDI 继续原 performedNotes 算法，并补可复用类型声明。保留原 grooveSchema 字段序列，避免旧已启用 Groove 的缓存因 Schema 重排失效。
+- 验证：`npm run build` 通过（已有体积/依赖注释警告）；`npm test` 120 项：113 通过、7 外部验收跳过；`npm run test:e2e` 14 通过，包含真实 HTTP/Web Audio 与显式夹具，无真实模型验收。`npm run test:e2e:mock` 37/37 通过；该套件沿用已有 Mock，不代表已新增 Groove 页面或 Mock 参数接线。`git diff --check` 与修改文档本地链接检查通过。
+- 真实资源另跑：设置 SONGYU_TEST_TIER=acceptance、SONGYU_REAL_TESTS=1，`npx tsx --test tests/production-groove.test.ts tests/groove.test.mjs`，9/9 通过、0 跳过。真实 FluidSynth/SoundFont WAV 非静音，开关 PCM 与 key 不同、重复命中缓存，缺省/全零缓存相同，locked / manuallyEdited / 音符 locked 三类保护 key 不变。新对照音 `temp/task31/plain.wav`、`groove.wav`；主日志 `temp/task31-unit.log`、`task31-build.log`、`task31-e2e-http.log`、`task31-e2e-mock.log`。
+- 边界与交接：production HTTP 测试的规划/歌声是显式夹具，真实资源项仅 FluidSynth；未运行真实 LLM/绮萱、MP4 或人工听评。未修改稳定混音/字幕/FFmpeg 链路。Toge 继续接 ProductionInput Client 类型、Mock、页面设置和 Synth 事件入口，后端完成不等于浏览器合成试听一致或正式页面全流程验收。
+- Git：本地 feature/backend-production-groove，未推送。保留原两个启动脚本删除及其他未跟踪工单；本轮仅暂存自有变更。工单归档到已完成目录并修正引用，原有同号启动器工单保留原名。
+
+
 
 <a id="launcher-restart"></a>
 

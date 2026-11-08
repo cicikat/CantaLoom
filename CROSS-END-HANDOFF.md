@@ -100,5 +100,7 @@
 
 - 更新：2026-11-07；来源：[工单 20](CC-Tasks/后端/20-groove-and-humanization.md)；Blacktea → Toge；状态：音乐核心/API 已实现，页面/Mock 与人工听评待安排。
 - 已交付：自由模式新鼓组、TAP 保护、可选 groove 和保护标记契约；分支 feature/backend-music-quality-tickets，交付 [PR #10](https://github.com/cicikat/CantaLoom/pull/10)。本轮未修改 UI/Client/Mock/SongPlan/工程 Schema；字段与兼容边界见[契约记录](shared/contracts/CHANGELOG.md)及[接入说明](docs/ARCHITECTURE.md#groove-render)。
+- 2026-11-08 工单 31 后端续接：限定跨层范围已由本会话用户明确确认；[工单 31](CC-Tasks/已完成/31-production-groove-integration.md)已接 productionInputSchema、SongProject.grooveSettings、生产与 external-audio 的统一输入。新提交在 feature/backend-production-groove（本地提交，未推送），验证见[日志](docs/iteration-log.md#production-groove-31)。
+- Toge 下一步：Client 制作输入改用 ProductionInput；Mock 保留设置并显式标记夹具；页面只保存三参数；Synth 复用 shared/groove 的 performedNotes，并透传锁定/手工保护，核对预览与导出一致。不要将本轮真实 FluidSynth PCM 当作 Synth、真实 LLM/绮萱或人工听感验收。
 - 对方下一步：需要开放 swing/人性化时，先确认保存/Client/Mock/production/浏览器预览与导出的统一参数来源和保护状态；不能只给服务端一次性参数，使浏览器重新渲染时丢失。按项目 ID、轨道 ID、版本构造稳定种子，不使用时间戳。
 - 验收/回执：本机对照音在 temp/task20/，工单与迭代日志有客观验证；人工抽听 backbeat 与段落推进尚未执行。前端接线核对与当前缺口继续由[工单 27](CC-Tasks/27-frontend-interface-sync.md)维护，未因其他接口补接将本条标为完成。本条不构成代改前端的授权。

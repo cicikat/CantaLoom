@@ -1,5 +1,14 @@
 # 公共契约变更
 
+## 工单 31 · 制作 Groove 参数（2026-11-08）
+
+- Owner：Blacktea；本会话已就下列具体范围提问，用户明确回复「确认上述限定范围」。本次限定确认覆盖共享契约、工程模型校验、纯音乐转换入口与 external-audio 非 UI 透传；不修改 Client、Mock、组件、Hook 或浏览器混音。
+- 新增 grooveSettingsSchema：swingTicks 0–120 整数、timingTicks 0–20 整数、velocityAmount 0–0.2，缺省值各为 0。SongProject.grooveSettings 可选，仅存这三项，旧 v1 不迁移、不补字段。非法参数或伪造身份字段拒绝。
+- productionInputSchema 独立扩展 freeInputSchema；POST /api/production 新增可选 grooveSettings，非法为 400；服务端 start 同样校验。规划调用前剥离设置，生成工程后附加，GET 返回。既有 compose / SongPlan 不改。
+- projectInstrumentInput 统一从工程、轨道生成器乐输入；种子由工程 ID、轨道 ID/version 派生，保护状态来自真实轨道/音符。缺省或全零省略 groove；仅为 true 的保护标记传入，保留旧无保护缓存输入。performedNotes 继续作为 MIDI 与未来 Synth 共用的纯事件转换，不新增算法。
+- 调用点：production 器乐循环、src/external-audio.ts；mjs/d.mts、工程校验及后端测试同步。Mock/Client/UI/Synth 接入 Owner Toge，沿用 20-groove-render；后端完成不代表浏览器试听已一致。
+- 验证：契约/HTTP、保存导入、保护、重复 MIDI、缓存及有资源时真实 FluidSynth WAV；实际结果见[工单 31](../../CC-Tasks/已完成/31-production-groove-integration.md)与[迭代日志](../../docs/iteration-log.md)。
+
 <a id="frontend-interface-27"></a>
 
 ## 工单 27 · 已有产物与响度接口接线（2026-11-07）

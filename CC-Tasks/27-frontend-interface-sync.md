@@ -34,3 +34,5 @@ Owner：Toge / Frontend & UX。状态：高级调教、历史演唱恢复、产�
 验证：build、20 项定向单元/契约测试、6 项 Mock 页面用例通过（分轮执行；末次历史演唱恢复后高级调教用例再次通过）；真实模式 HTTP 导出夹具 1 项通过、真实 FFmpeg 1 项因本机不可用跳过。未验证真实 LLM / 绮萱 / FluidSynth / DAW / 人工听感。
 
 新增交接：[27-phoneme-zero](../CROSS-END-HANDOFF.md#27-phoneme-zero)。首个音素仅设置 offsetMs=0、同时有非零句级 consonantMs 时，现有核心仍继承偏移；界面已说明，不把这项算作真实生效验收。最小复现与期望在交接中，未越界修算法。
+
+2026-11-08 后续更新：[工单 31](已完成/31-production-groove-integration.md)已完成制作与工程参数、统一 FluidSynth 输入；页面/Mock/Client 制作类型及 Synth 仍由 Toge 按 20-groove-render 接入。上文为当时核对边界。
