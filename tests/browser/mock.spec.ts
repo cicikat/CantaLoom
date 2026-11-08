@@ -89,8 +89,11 @@ async function openPiano(page:import('@playwright/test').Page,withOverrides=fals
   if(withOverrides){p.lyrics[0].performance.overrides=[{index:0,dynamics:8,origin:'manual'}];p.performanceHistory={[p.lyrics[0].id]:[{preset:'soft',overrides:[{index:0,dynamics:2}]}]}}
   localStorage.setItem('songyu-mock-project-v1',JSON.stringify(p));
  },withOverrides);
- await page.reload();await page.getByRole('button',{name:'编辑第1句旋律',exact:true}).click();await expect(page.getByRole('region',{name:'单句钢琴卷帘'})).toBeVisible();
+ await page.reload();await openLyricsPage(page);await page.getByRole('button',{name:'编辑第1句旋律',exact:true}).click();await expect(page.getByRole('region',{name:'单句钢琴卷帘'})).toBeVisible();
  return mockStored(page);
+}
+async function openLyricsPage(page:import('@playwright/test').Page){
+ await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();await expect(page.locator('.bench-track')).toHaveAttribute('data-view','lyrics');
 }
 
 test('frontend alone supports planning, locks, singing, sibling cache, playback, reload and exports with zero API requests',async({page})=>{
@@ -336,9 +339,10 @@ test('LOOP keeps the prototype pieces in three chapters on desktop and phone and
  await page.goto('/03_patchlab_playful.html');await page.getByLabel('原始样稿说明').evaluate(el=>el.remove());
  const original=await page.evaluate(()=>({lyric:document.querySelector('.lyric')!.getBoundingClientRect().height}));
  await page.screenshot({path:'temp/songyu-loop-original-layout.png',fullPage:true});
- await page.goto('/');const actual=await page.evaluate(()=>{const top=(s:string)=>document.querySelector(s)!.getBoundingClientRect().top+scrollY;return {heroBottom:document.querySelector('.hero')!.getBoundingClientRect().bottom+scrollY,viewport:innerHeight,board:top('#board'),lyrics:top('#lyrics'),pv:top('#pv'),lyric:document.querySelector('.lyric')!.getBoundingClientRect().height}});
+ await page.goto('/');const actual=await page.evaluate(()=>{const top=(s:string)=>document.querySelector(s)!.getBoundingClientRect().top+scrollY;return {heroBottom:document.querySelector('.hero')!.getBoundingClientRect().bottom+scrollY,viewport:innerHeight,board:top('#board'),lyricsInFlow:document.querySelector('#lyrics')!.getClientRects().length>0,pv:top('#pv')}});
  // Chapter 1 fills the first screen, the Music Blocks bridge sits before the workbench, and the MV chapter comes last.
- expect(Math.abs(actual.heroBottom-actual.viewport)).toBeLessThanOrEqual(2);expect(actual.board).toBeGreaterThan(actual.viewport*1.5);expect(actual.board<actual.lyrics&&actual.lyrics<actual.pv).toBe(true);expect(actual.lyric).toBeLessThanOrEqual(original.lyric+8);
+ // The lyric page is a side page of the workbench, so plain scrolling never passes through it.
+ expect(Math.abs(actual.heroBottom-actual.viewport)).toBeLessThanOrEqual(2);expect(actual.board).toBeGreaterThan(actual.viewport*1.5);expect(actual.board<actual.pv).toBe(true);expect(actual.lyricsInFlow).toBe(false);
  // The two scroll acts are decorative, driven by scroll position, and play back in reverse (ticket 29).
  const bench=page.locator('.act-bench'),benchStage=bench.locator('.act-stage'),say=page.locator('.act-mv');
  await expect(bench).toHaveAttribute('aria-hidden','true');await expect(say).toHaveAttribute('aria-hidden','true');await expect(benchStage).not.toHaveClass(/is-titled/);
@@ -349,6 +353,8 @@ test('LOOP keeps the prototype pieces in three chapters on desktop and phone and
  await expect(page.locator('.workspace-meta')).not.toBeVisible();await expect(page.locator('.engine-panel')).not.toBeVisible();await expect(page.locator('.transport')).toHaveCount(0);await expect(page.locator('.lyric').first().locator(':scope > button')).toHaveCount(1);
  await expect(page.getByRole('heading',{name:/敲一下.*变成一首歌/})).toBeVisible();await expect(page.locator('.hero .bigcard')).toBeVisible();await expect(page.locator('.creation-options')).not.toHaveAttribute('open');
  await page.screenshot({path:'temp/songyu-loop-restored-desktop.png',fullPage:true});
+ await enterWorkbench(page);await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();await expect(page.locator('.bench-track')).toHaveAttribute('data-view','lyrics');
+ expect(await page.locator('.lyric').first().evaluate(el=>el.getBoundingClientRect().height)).toBeLessThanOrEqual(original.lyric+8);
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'temp/songyu-loop-restored-mobile.png',fullPage:true});
  const p=await openPiano(page);await page.getByRole('button',{name:'编辑第2句旋律',exact:true}).click();await expect(page.getByRole('region',{name:'单句钢琴卷帘'}).locator('.phrase-toolbar>b')).toHaveText(p.lyrics[1].text);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -608,7 +614,8 @@ test('P1 missing singer capabilities keep unsupported phoneme and expression con
   // @ts-expect-error Vite browser module
   const {api}=await import('/src/api/client.ts');const original=api.qixuan;api.qixuan=async()=>{const v=await original();delete v.capabilities;return v};
  });
- await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();const panel=page.locator('.expression-panel').first();await panel.locator(':scope > summary').click();await panel.getByText('逐音符人工覆盖',{exact:true}).click();await panel.getByText('音高曲线、颤音与音素',{exact:true}).click();await panel.getByText('逐音素时序与发音',{exact:true}).click();await expect(panel.getByRole('button',{name:'添加音素覆盖',exact:true})).toBeDisabled();await expect(panel).toContainText('服务未报告音素能力');await panel.getByText('整句表现与力度曲线',{exact:true}).click();await expect(panel.getByLabel('表现曲线',{exact:true}).locator('option[value=brec]')).toHaveJSProperty('disabled',true);
+ // The lyric page keeps the collapsed singing panel, so it reopens in place and refetches the singer capabilities.
+ await page.locator('.singing-details>summary').click();const panel=page.locator('.expression-panel').first();await panel.locator(':scope > summary').click();await panel.getByText('逐音符人工覆盖',{exact:true}).click();await panel.getByText('音高曲线、颤音与音素',{exact:true}).click();await panel.getByText('逐音素时序与发音',{exact:true}).click();await expect(panel.getByRole('button',{name:'添加音素覆盖',exact:true})).toBeDisabled();await expect(panel).toContainText('服务未报告音素能力');await panel.getByText('整句表现与力度曲线',{exact:true}).click();await expect(panel.getByLabel('表现曲线',{exact:true}).locator('option[value=brec]')).toHaveJSProperty('disabled',true);
 });
 
 test('P1 artifact downloads use current sources, label mock reports and preserve the project after failures',async({page})=>{
@@ -629,6 +636,26 @@ test('P1 artifact downloads use current sources, label mock reports and preserve
  const midi=page.waitForEvent('download');await files.getByRole('button',{name:'下载 MID',exact:true}).first().click();expect((await midi).suggestedFilename()).toContain('.mock.mid');
  const pv=page.waitForEvent('download');await dialog.getByRole('button',{name:/歌词视频 PV/}).click();expect((await pv).suggestedFilename()).toContain('.mock-export.json');await expect(dialog.getByRole('region',{name:'MP4 响度报告'})).toContainText('没有成片响度实测');
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await dialog.screenshot({path:'temp/task27-artifacts-mobile.png'});
+});
+
+test('lyric stickers slide in from the right only after 打开逐句演唱 and slide back to the workbench',async({page})=>{
+ await page.goto('/');const track=page.locator('.bench-track'),board=page.locator('#board'),lyrics=page.locator('#lyrics'),back=page.getByRole('button',{name:'← 回到音乐积木',exact:true});
+ await enterWorkbench(page);await expect(lyrics).toBeHidden();
+ await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();
+ // Mid-slide both pages are on screen and the lyric page is still travelling in from the right.
+ await expect(track).toHaveAttribute('data-view','to-lyrics');await page.waitForTimeout(200);
+ const mid=await page.evaluate(()=>({board:document.querySelector('#board')!.getBoundingClientRect().left,lyrics:document.querySelector('#lyrics')!.getBoundingClientRect().left,width:innerWidth}));
+ expect(mid.board).toBeLessThan(0);expect(mid.lyrics).toBeGreaterThan(0);expect(mid.lyrics).toBeLessThan(mid.width);
+ await page.screenshot({path:'temp/songyu-lyrics-page-sliding.png'});
+ await expect(track).toHaveAttribute('data-view','lyrics');await expect(board).toBeHidden();await expect(lyrics).toBeInViewport();await expect(back).toBeFocused();
+ expect(await lyrics.evaluate(el=>Math.round(el.getBoundingClientRect().left))).toBe(0);await expect(page.locator('.singing-details')).toHaveAttribute('open','');
+ await page.screenshot({path:'temp/songyu-lyrics-page.png'});
+ await back.click();await expect(track).toHaveAttribute('data-view','board');await expect(lyrics).toBeHidden();await expect(board).toBeInViewport();await expect(page.getByRole('button',{name:'打开逐句演唱',exact:true})).toBeFocused();
+ // Top navigation always lands on the workbench page itself, never on a lyric page left open.
+ await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();await expect(track).toHaveAttribute('data-view','lyrics');
+ await enterWorkbench(page);await expect(track).toHaveAttribute('data-view','board');await expect(board).toBeInViewport();
+ await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();await expect(track).toHaveAttribute('data-view','lyrics');await expect(lyrics).toBeInViewport();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'temp/songyu-lyrics-page-mobile.png'});
 });
 
 test('C mix controls forward all preview stems and persist real PCM changes through WAV/PV export',async({page})=>{
@@ -667,6 +694,6 @@ test('C mix controls forward all preview stems and persist real PCM changes thro
   const {api}=await import('/src/api/client.ts');const original=api.exportVideo;api.exportVideo=async(input:any)=>{const bytes=Uint8Array.from(atob(input.wav),(c:string)=>c.charCodeAt(0));(window as any).pvSilent=bytes.slice(44).every(v=>v===0);return original(input)};
  });
  const pv=page.waitForEvent('download');await dialog.getByRole('button',{name:/歌词视频 PV/}).click();expect((await pv).suggestedFilename()).toContain('.mock-export.json');expect(await page.evaluate(()=>(window as any).pvSilent)).toBe(true);
- await page.keyboard.press('Escape');const saved=await mockStored(page);await page.reload();expect(await mockStored(page)).toEqual(saved);await page.locator('.mix-panel>summary').click();expect((await mockStored(page)).mixSettings).toMatchObject({vocalGain:0,bandGain:0,reverb:.12});
+ await page.keyboard.press('Escape');const saved=await mockStored(page);await page.reload();expect(await mockStored(page)).toEqual(saved);await openLyricsPage(page);await page.locator('.mix-panel>summary').click();expect((await mockStored(page)).mixSettings).toMatchObject({vocalGain:0,bandGain:0,reverb:.12});
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'temp/songyu-expression-mix-mobile.png',fullPage:true});expect(errors).toEqual([]);
 });

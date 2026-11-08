@@ -11,7 +11,8 @@ test('real creative workflow: taps, lock, regenerate, lyrics, persistence and au
  await page.getByRole('button',{name:'锁定鼓点',exact:true}).click();const before=await page.evaluate(()=>JSON.parse(localStorage.getItem('songyu-project-v1')!).tracks.filter((t:any)=>t.locked));
  await page.getByRole('button',{name:'重新生成吉他',exact:true}).click();const after=await page.evaluate(()=>JSON.parse(localStorage.getItem('songyu-project-v1')!).tracks.filter((t:any)=>t.locked));expect(after).toEqual(before);
  await page.getByRole('button',{name:'播放全曲',exact:true}).click();await expect(page.getByRole('button',{name:'暂停全曲',exact:true})).toBeVisible({timeout:20000});await page.waitForTimeout(1200);expect(Number(await page.getByRole('slider',{name:'播放进度'}).inputValue())).toBeGreaterThan(.8);await page.getByRole('button',{name:'暂停全曲',exact:true}).click();
- await page.getByRole('textbox',{name:'第2句歌词'}).fill('把今天的心跳写成歌');await page.reload();await expect(page.getByRole('textbox',{name:'第2句歌词'})).toHaveValue('把今天的心跳写成歌');
+ // Lyric stickers live on the workbench's side page, opened from the vocal card.
+ await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();await page.getByRole('textbox',{name:'第2句歌词'}).fill('把今天的心跳写成歌');await page.reload();await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();await expect(page.getByRole('textbox',{name:'第2句歌词'})).toHaveValue('把今天的心跳写成歌');
  await page.getByRole('navigation').getByRole('button',{name:'PV ✦',exact:true}).click();await page.getByLabel('字幕样式',{exact:true}).selectOption('poster');await page.screenshot({path:'test-results/desktop-pv.png',fullPage:true});
  await projectSettings(page);await page.getByRole('button',{name:'导出作品',exact:true}).click();const downloadEvent=page.waitForEvent('download');await page.getByRole('button',{name:/混音音频/}).click();const dl=await downloadEvent;await dl.saveAs('test-results/real-mix.wav');expect(await dl.failure()).toBeNull();expect(errors).toEqual([]);
 });

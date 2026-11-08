@@ -29,6 +29,7 @@ Owner：Toge（toge / Frontend / UX）。状态：实现与 Mock 回归完成，
 - [x] Let's 自动播放的本轮验证：build、动效单元 4/4、定向 Mock 页面 3/3；1280×800 / 390×844 下滑入后不再发送滚动操作也能播完整句，验证实际字母透明度、色块变宽/变紫、提示出现、退出重播、MV 导航与减少动态效果。未重跑 TAP / 完整 Mock，历史失败仍见上条与迭代日志。
 - [x] MV 揭幕本轮验证：build、动效单元 6/6、定向 Mock 页面 4/4；1280×800 / 390×844 下单次真实滚轮触发后不继续操作仍能完整进入 MV、切换字幕并自然滚动；单次上滑返回、中途倒回、重新下滑重播，以及已有文字自动播放/圆形/布局回归通过。未重跑 TAP / 全套 Mock 或真实引擎。
 - [x] 四段统一自动播放的最新验证：build、动效单元 7/7、定向 Mock 页面 5/5；1280×800 / 390×844 下两处圆形入场、两处揭幕单次触发后完整落页，验证倒回、正常内容滚动、实际积木点击/字幕选择、播放中导航直达、减少动态效果和无页面错误。未重跑 TAP / 完整 Mock、帧率或实机验收。
-- [ ] toge 在自己的浏览器（电脑与手机）核对自动播放的手感与配色；原版 180vh 轨道及圆形样式保留，入场时长为 `chapter-motion.ts` 的 `CIRCLE_ENTRY_MS`，工作台揭幕为 `BENCH_REVEAL_MS`；Let's 翻字用 `PHRASE_HOLD_MS` / `PHRASE_SWAP_MS`，MV 收拢/揭幕用 `MV_EXIT_MS` 与 `mvExitFrame()` 区间。
+- [x] 工作台变短（2026-11-08 toge 要求）：歌词便利贴、钢琴卷帘、逐句演唱与混音移到工作台右侧的歌词页，平时不在滚动流里；点「打开逐句演唱 ↗」整页向左滑入，「← 回到音乐积木」滑回，导航回到积木页。歌词页补播放/暂停与常驻的逐句演唱折叠条。验证：build、单元 108 通过 / 6 跳过、完整 Mock 页面 40/40（含新增滑页用例：中途两页并排、停稳贴左、焦点、返回、导航复位、390 宽无横向溢出）；真实引擎 `studio.spec.ts` 已同步改点击路径但未运行。
+- [ ] toge 在自己的浏览器（电脑与手机）核对自动播放与歌词页横滑的手感与配色；原版 180vh 轨道及圆形样式保留，入场时长为 `chapter-motion.ts` 的 `CIRCLE_ENTRY_MS`，工作台揭幕为 `BENCH_REVEAL_MS`；Let's 翻字用 `PHRASE_HOLD_MS` / `PHRASE_SWAP_MS`，MV 收拢/揭幕用 `MV_EXIT_MS` 与 `mvExitFrame()` 区间。
 
 实现与验证记录见[迭代日志](../docs/iteration-log.md#five-chapter-scroll-transitions)，结构说明见[原型接线边界](../docs/ARCHITECTURE.md#prototype-frontend)。
