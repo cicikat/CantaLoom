@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {readFile} from 'node:fs/promises';
 import {creationSettings,projectSettings,startMaking,tapRhythm} from './settings';
 
 
@@ -28,7 +29,7 @@ test('lyrics from creation settings sync to stickers, MV canvas and saved projec
  await page.goto('/');const before=await mockStored(page);
  const lyrics=before.lyrics.map((l:any,i:number)=>i===0?'把今天写进一封信里':l.text);
  await creationSettings(page);await page.getByLabel('自由创作歌词',{exact:true}).fill(lyrics.join('\n'));
- await page.getByRole('button',{name:'同步歌词到当前作品',exact:true}).click();
+ await page.getByRole('button',{name:'完成',exact:true}).click();
  await expect(page.getByLabel('第1句歌词',{exact:true})).toHaveValue(lyrics[0]);
  expect((await mockStored(page)).lyrics.map((l:any)=>l.text)).toEqual(lyrics);
  await page.evaluate(()=>{
@@ -71,6 +72,102 @@ test('free lyric synchronization keeps its melody editable and rejects mismatche
  await expect(page.getByRole('status').filter({hasText:'字数一致'})).toBeVisible();expect(await mockStored(page)).toEqual(current);
 });
 // Clicking while the asynchronous environment check is still running opens its settings instead of producing.
+test('closing edited settings re-sings only changed lyrics and updates the audio used by playback and exports',async({page})=>{
+ const before=await openPiano(page),id=before.lyrics[0].id;
+ await page.evaluate(async()=>{
+  // @ts-expect-error Vite browser module
+  const {api}=await import('/src/api/client.ts');
+  // @ts-expect-error Vite browser audio
+  const {renderAudio}=await import('/src/audio.ts');
+  const p=JSON.parse(localStorage.getItem('songyu-mock-project-v1')!);
+  (window as any).oldPcm=Array.from((await renderAudio(p,{lyricId:p.lyrics[0].id})).buffer.getChannelData(0));
+  const sing=api.sing;(window as any).lyricRequests=[];
+  api.sing=async(input:any)=>{(window as any).lyricRequests.push(input);return sing(input)};
+ });
+ await creationSettings(page);
+ const lyrics=before.lyrics.map((l:any,i:number)=>i===0?'风吹过海面':l.text);
+ await page.getByLabel('自由创作歌词',{exact:true}).fill(lyrics.join('\n'));
+ await page.getByRole('button',{name:'完成',exact:true}).click();
+ await expect.poll(async()=>(await mockStored(page)).lyrics[0].text).toBe(lyrics[0]);
+ const next=await mockStored(page);
+ expect(next.lyrics.slice(1)).toEqual(before.lyrics.slice(1));
+ expect(next.tracks.filter((t:any)=>t.kind!=='vocal')).toEqual(before.tracks.filter((t:any)=>t.kind!=='vocal'));
+ for(const line of before.lyrics.slice(1))expect(next.vocalAssets[line.id]).toEqual(before.vocalAssets[line.id]);
+ expect(next.vocalAssets[id].audioUrl).not.toBe(before.vocalAssets[id].audioUrl);
+ expect((await page.evaluate(()=>(window as any).lyricRequests)).map((r:any)=>[r.lyricId,r.lyrics])).toEqual([[id,lyrics[0]]]);
+ const changed=await page.evaluate(async()=>{
+  // @ts-expect-error Vite browser audio
+  const {renderAudio}=await import('/src/audio.ts');
+  // @ts-expect-error Vite browser asset validation
+  const {currentVocalAsset}=await import('/src/external-audio.ts');
+  const p=JSON.parse(localStorage.getItem('songyu-mock-project-v1')!);
+  p.lyrics.forEach((l:any)=>currentVocalAsset(p,l));
+  const pcm=(await renderAudio(p,{lyricId:p.lyrics[0].id})).buffer.getChannelData(0),old=(window as any).oldPcm;
+  return pcm.some((v:number,i:number)=>Math.abs(v-old[i])>.001);
+ });
+ expect(changed).toBe(true);
+ await page.getByRole('button',{name:'试听当前演唱',exact:true}).click();
+ await expect(page.getByRole('button',{name:'暂停全曲',exact:true}).first()).toBeEnabled({timeout:20000});
+ await page.getByRole('button',{name:'暂停全曲',exact:true}).first().click();
+ await page.evaluate(async()=>{
+  // @ts-expect-error Vite browser API
+  const {api}=await import('/src/api/client.ts');const audio=api.audio,video=api.exportVideo;
+  (window as any).exportedAudio=[];
+  api.audio=async(url:string)=>{(window as any).exportedAudio.push(url);return audio(url)};
+  api.exportVideo=async(input:any,...args:any[])=>{(window as any).lyricExport=input;return video(input,...args)};
+ });
+ const video=page.waitForEvent('download');
+ await page.getByRole('button',{name:'模拟导出 MP4',exact:true}).click();await video;
+ const exported=await page.evaluate(()=>({input:(window as any).lyricExport,audio:(window as any).exportedAudio}));
+ expect(exported.input.lyrics.map((l:any)=>l.text)).toEqual(lyrics);expect(exported.input.wav.length).toBeGreaterThan(1000);
+ expect(exported.audio).toContain(next.vocalAssets[id].audioUrl);expect(exported.audio).not.toContain(before.vocalAssets[id].audioUrl);
+ await projectSettings(page);await page.getByRole('button',{name:'导出作品',exact:true}).click();
+ const json=page.waitForEvent('download');await page.getByRole('button',{name:'完整工程 · JSON ↓',exact:true}).click();
+ const saved=JSON.parse(await readFile((await (await json).path())!,'utf8'));
+ expect(saved.lyrics.map((l:any)=>l.text)).toEqual(lyrics);expect(saved.vocalAssets[id]).toEqual(next.vocalAssets[id]);
+ await page.reload();expect((await mockStored(page)).vocalAssets[id]).toEqual(next.vocalAssets[id]);
+});
+
+for(const close of ['escape','outside'])test(`edited lyrics also sync when settings close via ${close}`,async({page})=>{
+ await page.goto('/');const before=await mockStored(page);
+ await creationSettings(page);
+ await page.getByLabel('自由创作歌词',{exact:true}).fill(before.lyrics.map((l:any,i:number)=>i===0?'月光落在信封上':l.text).join('\n'));
+ if(close==='escape')await page.getByLabel('自由创作歌词',{exact:true}).press('Escape');
+ else await page.locator('.hero h1').click();
+ await expect.poll(async()=>(await mockStored(page)).lyrics[0].text).toBe('月光落在信封上');
+});
+
+for(const scenario of ['failure','late-input','late-project'])test(`lyric audio synchronization preserves the current project on ${scenario}`,async({page})=>{
+ const before=await openPiano(page);
+ await page.evaluate(async scenario=>{
+  // @ts-expect-error Vite browser module
+  const {api}=await import('/src/api/client.ts');const sing=api.sing;
+  api.sing=async(input:any)=>{
+   if(scenario==='failure')throw Error('MOCK 改词重唱失败');
+   const result=await sing(input);(window as any).lyricSinging=true;
+   await new Promise<void>(resolve=>{(window as any).releaseLyric=resolve});return result;
+  };
+ },scenario);
+ await creationSettings(page);
+ await page.getByLabel('自由创作歌词',{exact:true}).fill(before.lyrics.map((l:any,i:number)=>i===0?'风吹过海面':l.text).join('\n'));
+ await page.getByRole('button',{name:'完成',exact:true}).click();
+ if(scenario!=='failure'){
+  await expect.poll(()=>page.evaluate(()=>(window as any).lyricSinging)).toBe(true);
+  if(scenario==='late-input'){
+   await creationSettings(page);await page.getByLabel('自由创作歌词',{exact:true}).fill('另一份尚未同步的歌词');
+  }else{
+   await page.getByRole('button',{name:'锁定这一句',exact:true}).click();
+  }
+  const current=await mockStored(page);
+  await page.evaluate(()=>(window as any).releaseLyric());
+  await expect(page.getByRole('alert').filter({hasText:'同步期间'})).toBeVisible();
+  expect(await mockStored(page)).toEqual(current);
+ }else{
+  await expect(page.getByRole('alert').filter({hasText:'MOCK 改词重唱失败'})).toBeVisible();
+  expect(await mockStored(page)).toEqual(before);
+ }
+});
+
 // The workbench's first screen sits under the Music Blocks curtain until it is pulled away (ticket 29);
 // enter it through the nav as a reader would before touching the board, TAP or vocal cards.
 async function enterWorkbench(page:import('@playwright/test').Page){
