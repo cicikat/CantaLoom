@@ -1,9 +1,20 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {actProgress,BENCH_REVEAL_MS,cascade,CIRCLE_ENTRY_MS,easeBack,MV_EXIT_MS,mvExitFrame,PHRASE_HOLD_MS,PHRASE_SWAP_MS,phraseFrame,span,timedProgress} from '../src/components/chapter-motion';
+import {actProgress,BENCH_REVEAL_MS,cascade,CIRCLE_ENTRY_MS,easeBack,MV_EXIT_MS,mvExitFrame,PHRASE_HOLD_MS,PHRASE_SWAP_MS,phraseFrame,span,timedProgress,workbenchGestureAction} from '../src/components/chapter-motion';
 
 // Ticket 29: pin the scroll geometry and the entry-triggered phrase playback.
 const V=800,REVEAL=760,INTRO=V*1.8,TRACK=V+INTRO+REVEAL;
+
+test('workbench reaches its edge first and leaves only after a new gesture following a settled pause',()=>{
+ assert.equal(workbenchGestureAction(200,100,1000,0,0),'content');
+ assert.equal(workbenchGestureAction(40,100,1000,0,0),'stop','the gesture that reaches the edge cannot also leave');
+ assert.equal(workbenchGestureAction(0,100,1100,1000,1000),'stop','continued wheel input stays in the workbench');
+ assert.equal(workbenchGestureAction(0,100,5000,4950,1000),'stop','a long wheel stream never becomes a fresh gesture');
+ assert.equal(workbenchGestureAction(0,100,5000,1000,4900),'stop','layout or inertia is still moving the page');
+ assert.equal(workbenchGestureAction(0,100,5000,1000,1000,true),'stop','editing a control does not leave');
+ assert.equal(workbenchGestureAction(0,100,5000,1000,1000,false,true),'stop','a held key does not leave');
+ assert.equal(workbenchGestureAction(0,100,5000,1000,1000),'leave');
+});
 
 test('circle entries and workbench reveal finish with elapsed time and reverse without more input',()=>{
  for(const duration of [CIRCLE_ENTRY_MS,BENCH_REVEAL_MS]){

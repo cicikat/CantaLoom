@@ -76,6 +76,12 @@ test('free lyric synchronization keeps its melody editable and rejects mismatche
 async function enterWorkbench(page:import('@playwright/test').Page){
  await page.getByRole('navigation').getByRole('button',{name:'音乐积木',exact:true}).click();await expect(page.locator('.bench-pin')).toHaveClass(/is-open/);
 }
+async function enterLetsAfterWorkbenchPause(page:import('@playwright/test').Page){
+ const top=await page.locator('.act-mv').evaluate(el=>el.getBoundingClientRect().top+scrollY);
+ await page.evaluate(y=>scrollTo(0,Math.floor(y)),top);
+ // The workbench must actually settle before a separate gesture can leave it.
+ await page.waitForTimeout(650);await page.mouse.move(8,(page.viewportSize()?.height??800)-12);await page.mouse.wheel(0,100);
+}
 async function startMaking(page:import('@playwright/test').Page){const button=page.getByRole('button',{name:'制作新作品',exact:true});await expect(button).not.toHaveAttribute('title');await button.click()}
 async function openPiano(page:import('@playwright/test').Page,withOverrides=false){
  await page.goto('/');
@@ -374,7 +380,8 @@ test('both chapter openers keep the original circles and finish at the next titl
    await page.evaluate(y=>scrollTo(0,y),metrics.top);
    await expect(stage).not.toHaveClass(/is-titled/);
    expect(await page.evaluate(()=>!!document.elementFromPoint(innerWidth/2,innerHeight*.47)?.closest('.act'))).toBe(false);
-   await page.mouse.wheel(0,100);await expect(track).toHaveClass(/is-entering/);
+   if(selector==='.act-mv')await enterLetsAfterWorkbenchPause(page);else await page.mouse.wheel(0,100);
+   await expect(track).toHaveClass(/is-entering/);
    const ring=await stage.locator('.act-ring').first().evaluate(el=>{
     const css=getComputedStyle(el),matrix=new DOMMatrixReadOnly(css.transform);
     return {diameter:parseFloat(css.width),scale:matrix.d,y:matrix.f,p:parseFloat((el.parentElement as HTMLElement).style.getPropertyValue('--p'))};
@@ -418,11 +425,10 @@ test('Lets plays and completes its phrase animation after entry without further 
  for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
   await page.setViewportSize(viewport);
   const top=await act.evaluate(el=>el.getBoundingClientRect().top+scrollY);
-  const enter=top+viewport.height*1.8*.5;
   await page.evaluate(y=>scrollTo(0,y),top);
   await expect(act).not.toHaveClass(/is-swapped/);
   // One scroll enters the yellow page. No wheel/mouse/scroll calls until the whole phrase has finished.
-  await page.evaluate(y=>scrollTo(0,y),enter);
+  await enterLetsAfterWorkbenchPause(page);
   await expect(stage).toHaveClass(/is-titled/);
   await expect(outgoing).toHaveCSS('opacity','1');
   const initialWidth=await block.evaluate(el=>el.getBoundingClientRect().width);
@@ -438,7 +444,7 @@ test('Lets plays and completes its phrase animation after entry without further 
   // Leaving and returning starts the complete entry again; the following gesture is reserved for MV.
   await page.evaluate(y=>scrollTo(0,y),top);
   await expect(act).not.toHaveClass(/is-swapped/);await expect(incoming).toHaveCSS('opacity','0');
-  await page.evaluate(y=>scrollTo(0,y),enter);
+  await enterLetsAfterWorkbenchPause(page);
   await expect(outgoing).toHaveCSS('opacity','1');
   await expect.poll(()=>stage.evaluate(el=>parseFloat((el as HTMLElement).style.getPropertyValue('--p')))).toBe(1);
   await expect(act).toHaveClass(/is-swapped/,{timeout:6000});
@@ -460,9 +466,9 @@ test('one downward gesture plays the complete Lets to MV reveal and one upward g
  const pv=page.getByRole('region',{name:'歌词 PV',exact:true});
  for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
   await page.setViewportSize(viewport);
-  const top=await act.evaluate(el=>el.getBoundingClientRect().top+scrollY),enter=top+viewport.height*1.8*.5;
+  const top=await act.evaluate(el=>el.getBoundingClientRect().top+scrollY);
   await page.evaluate(y=>scrollTo(0,y),top);await expect(act).not.toHaveClass(/is-swapped/);
-  await page.evaluate(y=>scrollTo(0,y),enter);await expect(act).toHaveClass(/is-swapped/,{timeout:6000});
+  await enterLetsAfterWorkbenchPause(page);await expect(act).toHaveClass(/is-swapped/,{timeout:6000});
   const titleTop=await page.evaluate(()=>scrollY);
   // One real wheel input, then no more scrolling until the actual MV is uncovered and usable.
   await page.mouse.wheel(0,100);
@@ -517,9 +523,11 @@ test('one gesture finishes Music Blocks to workbench and returns through the cir
   expect(await page.evaluate(()=>!!document.elementFromPoint(innerWidth/2,innerHeight/2)?.closest('.act'))).toBe(false);
   const beat=page.locator('#board .beat').first(),pressed=await beat.getAttribute('aria-pressed');
   await beat.click();await expect(beat).toHaveAttribute('aria-pressed',pressed==='true'?'false':'true');
+  await page.mouse.move(8,viewport.height-12);
   const landed=await page.evaluate(()=>scrollY);
-  await page.mouse.wheel(0,120);await expect.poll(()=>page.evaluate(()=>scrollY)).toBeGreaterThan(landed+50);
-  await page.evaluate(y=>scrollTo(0,y),landed);await page.mouse.wheel(0,-100);
+  const bottom=await page.locator('.act-mv').evaluate(el=>el.getBoundingClientRect().top+scrollY);
+  await page.mouse.wheel(0,120);await expect.poll(()=>page.evaluate(()=>scrollY)).toBeGreaterThanOrEqual(Math.min(landed+60,Math.floor(bottom))-1);
+  await page.evaluate(y=>scrollTo(0,y),landed);await page.waitForTimeout(650);await page.mouse.wheel(0,-100);
   await expect(act).toHaveClass(/is-exiting/);
   await expect.poll(()=>stage.locator('.bench-curtain').evaluate(el=>new DOMMatrixReadOnly(getComputedStyle(el).transform).m42),{timeout:6000}).toBe(0);
   await expect(act).not.toHaveClass(/is-exiting/);await expect(pin).not.toHaveClass(/is-open/);
@@ -538,6 +546,48 @@ test('one gesture finishes Music Blocks to workbench and returns through the cir
   await expect(pin).toHaveClass(/is-open/);await expect(act).not.toHaveClass(/is-entering/);
   await page.getByRole('navigation').getByRole('button',{name:'创作',exact:true}).click();
   await expect.poll(()=>page.evaluate(()=>scrollY)).toBe(0);await expect(act).not.toHaveClass(/is-entering/);
+ }
+ expect(errors).toEqual([]);
+});
+
+test('workbench stays usable through edits and wheel inertia; only a separate gesture after stopping at the bottom leaves',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+ for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
+  await page.setViewportSize(viewport);await page.goto('/');await enterWorkbench(page);
+  const next=page.locator('.act-mv'),stage=next.locator('.act-stage'),bench=page.locator('.bench-pin');
+  await page.mouse.move(8,viewport.height-12);
+  // Continue the arriving scroll immediately. Even a one-screen workbench must absorb its wheel tail.
+  for(let i=0;i<12;i++){await page.mouse.wheel(0,120);await page.waitForTimeout(35)}
+  await page.waitForTimeout(650);
+  await expect(next).not.toHaveClass(/is-entering/);await expect(stage).not.toHaveClass(/is-titled/);
+  const arrivedBottom=await next.evaluate(el=>el.getBoundingClientRect().top+scrollY);
+  expect(Math.abs(await page.evaluate(()=>scrollY)-arrivedBottom)).toBeLessThanOrEqual(2);
+  await expect(bench).toHaveClass(/is-open/);
+  const beat=page.locator('#board .beat').first(),pressed=await beat.getAttribute('aria-pressed');
+  await beat.click();await expect(beat).toHaveAttribute('aria-pressed',pressed==='true'?'false':'true');
+  await page.getByRole('button',{name:'打开逐句演唱',exact:true}).click();
+  await expect(page.locator('.bench-track')).toHaveAttribute('data-view','lyrics');
+  const lyric=page.getByLabel('第1句歌词',{exact:true}),text='把今天写进一封信里';
+  await lyric.fill(text);await expect.poll(async()=>(await mockStored(page)).lyrics[0].text).toBe(text);
+  await page.getByRole('button',{name:'播放全曲',exact:true}).click();
+  await expect(page.getByRole('button',{name:'暂停全曲',exact:true})).toBeVisible({timeout:20000});
+  await page.getByRole('button',{name:'暂停全曲',exact:true}).click();
+  await expect(next).not.toHaveClass(/is-entering/);await expect(bench).toHaveClass(/is-open/);
+  await page.getByRole('button',{name:'← 回到音乐积木',exact:true}).click();
+  await expect(page.locator('.bench-track')).toHaveAttribute('data-view','board');
+  const bounds=await page.evaluate(()=>{
+   const pin=document.querySelector('.bench-pin')!,top=pin.getBoundingClientRect().top+scrollY+parseFloat(getComputedStyle(pin,'::after').height);
+   return {top,bottom:document.querySelector('.act-mv')!.getBoundingClientRect().top+scrollY};
+  });
+  await page.evaluate(y=>scrollTo(0,Math.floor(y)),bounds.bottom);
+  // Even after resting, a wheel over a control is still editing/scrolling content, not permission to leave.
+  await page.getByRole('button',{name:'打开逐句演唱',exact:true}).hover();await page.waitForTimeout(650);
+  await page.mouse.wheel(0,100);await page.waitForTimeout(650);
+  await expect(next).not.toHaveClass(/is-entering/);await expect(stage).not.toHaveClass(/is-titled/);
+  await page.evaluate(y=>scrollTo(0,Math.floor(y)),bounds.bottom);
+  await page.mouse.move(8,viewport.height-12);await page.waitForTimeout(650);
+  await page.mouse.wheel(0,100);
+  await expect(next).toHaveClass(/is-entering/);await expect(next).toHaveClass(/is-swapped/,{timeout:6000});
  }
  expect(errors).toEqual([]);
 });
