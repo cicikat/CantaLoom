@@ -1,3 +1,4 @@
+import {grooveSettingsSchema} from './contracts/groove.mjs';
 // Pure, portable deterministic generator. No Date, Math.random or engine state.
 export function grooveRandom(value){
  let seed=2166136261;
@@ -22,4 +23,19 @@ export function performedNotes(track,endBeat=0){
   }
   return {note:n,start,end,velocity};
  }).sort((a,b)=>a.start-b.start||a.note.beat-b.note.beat);
+}
+
+// Build the same effective render input on server and browser; never mutate score events.
+export function projectInstrumentInput(project,track){
+ if(track.kind==='vocal')throw Error('人声不能作为器乐渲染');
+ const section=project.sections.find(s=>s.id===track.sectionId);
+ if(!section)throw Error('器乐段落不存在');
+ const settings=project.grooveSettings===undefined?undefined:grooveSettingsSchema.parse(project.grooveSettings);
+ const active=settings&&Object.values(settings).some(value=>value!==0);
+ return {bpm:project.bpm,kind:track.kind,notes:track.notes,
+  ...(project.instrumentPrograms?.[track.kind]!==undefined?{program:project.instrumentPrograms[track.kind]}:{}),
+  ...(project.soundfont!==undefined?{soundfont:project.soundfont}:{}),
+  endBeat:section.start+section.beats,
+  ...(track.locked?{locked:true}:{}),...(track.manuallyEdited?{manuallyEdited:true}:{}),
+  ...(active?{groove:{projectId:project.id,trackId:track.id,version:track.version,...settings}}:{})};
 }

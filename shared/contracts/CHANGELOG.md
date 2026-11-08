@@ -1,5 +1,48 @@
 # 公共契约变更
 
+## 工单 35 · AI HTML PV（2026-11-08，限定范围已确认）
+
+- Owner Blacktea；本会话明确确认 shared PV 快照/设计/响应、纯 HTML 时间轴、独立 pv_design 与后台任务配置、既有 export HTML 分支。未授权修改 SongProject/Client/Mock/React/Hook/CSS，后续接入 Owner Toge。
+- v1 快照含 id/title/idea/mood/bpm、四段 beat 时间轴/energy、歌词原文/beat 起止及可为空的节奏 pulses；严格边界，SHA-256 指纹由规范化快照产生并随响应/导出校验，不等同鉴权。
+- 设计为 1280×720 四段场景树：渐变、shape(circle/rect/triangle)、particles(fall/orbit)、text(title/current_lyric)，限定坐标/色值/种子/数量与归一化关键帧。段落 ID 精确匹配，每段一处歌词源；不收模型 HTML/JS/CSS/URL/外部素材。可信 renderAt 仅依赖快照、设计、显式毫秒和种子。
+- POST /api/pv/design 显式调用独立已配置 pv_design，不回退其他模型或本地模板；成功 source=llm、inputFingerprint、pvDesign 和白名单 trace，错误码/HTTP 400/429/503/502。无 trace 不伪造调用；真实/夹具边界记日志。
+- 原 export PNG 请求不变；HTML 判别分支 visualMode=html、pvProject、pvDesign、inputFingerprint，沿用已混音 WAV/title/lyrics/duration/singingCredit，数据须与快照匹配。旧 Client 不在此阶段接新分支；Chromium 可选，缺失 HTML 503，旧 Canvas 仍工作。
+- Admin state/llm 不公开 systemPrompt，表单省略该字段时保留存量 prompt，显式空串清除；未改DPAPI/Host/Origin/CSRF。响度测量增加内部可选超时，旧默认120s不变，仅HTML使用170s总预算剩余额度。
+- 同一共享可信 runtime 供隔离预览与服务端逐帧采样，网络禁止、CSP 限制、无任意代码；HTML 不再叠加 ASS 字幕，署名由可信 runtime 单一绘制，音频沿用原 loudnorm/AAC/报告。资源/超时/实测及交接见[工单 35](../../CC-Tasks/后端/35-ai-html-pv.md)、[迭代日志](../../docs/iteration-log.md)。
+
+## 工单 34 · 制作表现规划公开追溯（2026-11-08）
+
+- Owner Blacktea；本会话针对共享响应 Schema/声明与服务端序列化提出具体范围，用户回复「确认上述限定范围」。不修改 Client、Mock、UI、路由配置、数据库或永久工程追溯。
+- productionJobSchema 新增可选 performancePlanning（status=disabled/running/succeeded/failed/skipped；仅 succeeded 可带 trace）与可选 errorCode=PERFORMANCE_PLANNING_FAILED。旧字段和 Mock 标记继续兼容，旧响应可无新增字段。
+- trace 白名单核对现有 router：provider、model、promptVersion、attempts(1–3)、promptTokens、completionTokens、milliseconds、cost(number|null)、costCurrency(USD|null)；不公开 task/at/reason、URL/keyRef、提示词、请求/响应、stack。仅成功 router trace 可选公开；失败无虚构 trace。
+- disabled=未配置 performance_planning，running=正在调用 planner，skipped=planner 无可规划句而返回 trace:null，succeeded=已返回经校验规划，failed=配置/规划失败；失败仍终止整项制作、不进入器乐/演唱，禁止单句 retry 绕过。queued/前序阶段可无该字段。
+- GET 与 retry 改用显式公开 job 投影并经契约校验，保留 project/composition 与原成功应用/重试所需字段，根级内部 input/failureContext/performanceTrace 等不公开。composition.input 保留原 FreeResult 的创作输入契约，并非后台配置。
+- 工单 34 序列化补充：project.vocalAssets 仅返回既有 VocalAsset 工程字段，剔除引擎返回的 sourceProject 绝对缓存路径与额外诊断，保留 dependency/voice/renderParameters 与成功应用/单句重试所需数据。内部资产不修改。
+- TS/响应示例与错误边界见[架构](../../docs/ARCHITECTURE.md#production)，验证 Owner Blacktea；Toge 后续 review Mock/页面轻量状态展示，沿用 15-P2B-routing。证据见[工单 34](../../CC-Tasks/已完成/34-production-trace-contract.md)和[迭代日志](../../docs/iteration-log.md)。
+
+## 工单 33 · Synth 伴奏增益路由（2026-11-08）
+
+- Owner Blacktea；本会话针对 src/audio.ts 器乐总线、必要 audio-mix 适配和 PCM/WAV/PV 测试提出具体范围，用户回复「确认上述限定范围」。不修改 UI、Hook、Mock 定义、增益字段、API 或服务端 FluidSynth。
+- renderAudio 内仅为 Synth 器乐建立 band bus，processed 时使用 mixSettings.bandGain??1，否则为 1；人声仍走原 master/外部 vocalBus。FluidSynth 继续现有 addWav 路由，不进入新总线。原处理默认值、master、压缩与峰值保护不变。
+- 调用点：统一 renderAudio 的试听、WAV/PV；测试 Owner Blacktea，控件解禁 Owner Toge。Groove 试听仍依赖工单 31 后续接线，本单不改 swing/随机算法。
+- 验证区分 Chromium OfflineAudioContext/音频夹具与真实 FluidSynth/FFmpeg；实际证据见[工单 33](../../CC-Tasks/已完成/33-browser-synth-band-gain.md)和[迭代日志](../../docs/iteration-log.md)。
+
+## 工单 32 · 显式首音素零偏移修复（2026-11-08）
+
+- Owner Blacktea；用户明确要求完成工单 32，限定 shared/performance 既有字段优先级修复，不新增 Schema、HTTP、工程字段或 UI。先补失败回归后修复。
+- offsetMs=0 以字段存在性识别：首位显式覆盖阻止 legacy consonantMs 回填；仅在需要压过非零句级偏移时输出 offset:0，其他无替换零值维持旧省略行为。旧工程、非零换算、发音替换不改。
+- 缓存兼容：仅含首音素 offsetMs=0 且无发音替换的 Performance 使用 resolvePerformance.renderRevision=4，对应 Qixuan revision=6，以失效修复前错误缓存；其他 Performance 仍为原 revision。本句已有资产通过既有依赖策略失效，其他句和器乐不改。
+- 测试 Owner Blacktea：Schema/映射、USTX、依赖和真实引擎对照；Toge 只需移除原限制提示，Mock/UI 本轮不改。证据见[工单 32](../../CC-Tasks/已完成/32-phoneme-explicit-zero.md)与[迭代日志](../../docs/iteration-log.md)。
+
+## 工单 31 · 制作 Groove 参数（2026-11-08）
+
+- Owner：Blacktea；本会话已就下列具体范围提问，用户明确回复「确认上述限定范围」。本次限定确认覆盖共享契约、工程模型校验、纯音乐转换入口与 external-audio 非 UI 透传；不修改 Client、Mock、组件、Hook 或浏览器混音。
+- 新增 grooveSettingsSchema：swingTicks 0–120 整数、timingTicks 0–20 整数、velocityAmount 0–0.2，缺省值各为 0。SongProject.grooveSettings 可选，仅存这三项，旧 v1 不迁移、不补字段。非法参数或伪造身份字段拒绝。
+- productionInputSchema 独立扩展 freeInputSchema；POST /api/production 新增可选 grooveSettings，非法为 400；服务端 start 同样校验。规划调用前剥离设置，生成工程后附加，GET 返回。既有 compose / SongPlan 不改。
+- projectInstrumentInput 统一从工程、轨道生成器乐输入；种子由工程 ID、轨道 ID/version 派生，保护状态来自真实轨道/音符。缺省或全零省略 groove；仅为 true 的保护标记传入，保留旧无保护缓存输入。performedNotes 继续作为 MIDI 与未来 Synth 共用的纯事件转换，不新增算法。
+- 调用点：production 器乐循环、src/external-audio.ts；mjs/d.mts、工程校验及后端测试同步。Mock/Client/UI/Synth 接入 Owner Toge，沿用 20-groove-render；后端完成不代表浏览器试听已一致。
+- 验证：契约/HTTP、保存导入、保护、重复 MIDI、缓存及有资源时真实 FluidSynth WAV；实际结果见[工单 31](../../CC-Tasks/已完成/31-production-groove-integration.md)与[迭代日志](../../docs/iteration-log.md)。
+
 <a id="frontend-interface-27"></a>
 
 ## 工单 27 · 已有产物与响度接口接线（2026-11-07）

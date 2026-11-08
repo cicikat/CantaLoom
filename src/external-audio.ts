@@ -1,10 +1,10 @@
+import {projectInstrumentInput} from '../shared/groove.mjs';
 import {api} from './api/client';
 import type {AvailableQixuan} from '../shared/contracts/index.mjs';
 import type {SongProject,Lyric,VocalAsset} from './model';
 import {singingDependency,type SingingVoice} from './singing';
 export async function instrumentAudio(p:SongProject,t:SongProject['tracks'][number]){
- if(t.kind==='vocal')throw Error('人声不能作为器乐渲染');
- return api.instruments({bpm:p.bpm,kind:t.kind,notes:t.notes,program:p.instrumentPrograms?.[t.kind],soundfont:p.soundfont,endBeat:p.sections.find(s=>s.id===t.sectionId)!.start+p.sections.find(s=>s.id===t.sectionId)!.beats});
+ return api.instruments(projectInstrumentInput(p,t));
 }
 // Preserve the established dependency serialization order across Schema parsing.
 export function assetVoice(a:VocalAsset):SingingVoice{return {id:a.voiceId,version:a.voiceVersion,providerId:a.providerId as SingingVoice['providerId'],label:a.voiceId,engineVersion:a.engineVersion,renderParameters:a.renderParameters?{runner:a.renderParameters.runner,steps:a.renderParameters.steps,depth:a.renderParameters.depth}:undefined}}

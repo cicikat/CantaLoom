@@ -163,6 +163,32 @@ dotnet build scripts/openutau-bridge/SongyuBridge.csproj -p:OpenUtauDirectory="$
 
 在连接与密钥页为歌词规划、旋律作曲、演唱表现分别启用路由，填写服务商、OpenAI 兼容 Base URL、模型 ID 与 API Key，然后保存。接口追加 `/chat/completions`。独立密钥以 Windows DPAPI 保存，留空保留；未设置独立密钥的新路由使用默认密钥。关闭覆盖恢复默认连接。连接检查目前只测试歌词规划路由，不代表三个任务都已通过真实调用。
 
-管理启动器遇到同一项目的现有服务时，核对管理状态中的项目根目录后直接打开现有后台，不重复启动。其他进程占用仍报错。复用不会加载新后端代码，更新后须在原服务窗口 Ctrl+C 并重新启动。`--check` 始终验证独立启动，不复用服务。
+管理启动器（「打开吱声机管理面板.bat」或 start-admin.bat）默认先确认并关闭旧 CantaLoom 服务，重新构建、启动后打开 /admin；首页入口「打开吱声机.bat」使用同一重启逻辑。新版管理状态返回 projectRoot/pid 用于精确核对，旧服务需同时匹配 Node 服务命令与资源根目录；停止前再次校验监听 PID/启动时间，其他服务占用时中止。--check 会执行该重启流程并在验证后停止新服务；不改写密钥、资源或工程。详见[启动流程](ARCHITECTURE.md)和[工单 31](../CC-Tasks/已完成/31-launcher-restart.md)。
 
 模型连接和三任务路由统一在资源管理台。填写 URL 和 API Key 后点击“获取模型列表”，选择模型并保存；通过服务端请求兼容的 `/models`，不向浏览器返回密钥。厂商不支持此接口时可手填模型 ID。顶部列出已保存的有效路由；表单修改保存后生效。
+
+
+<a id="html-pv"></a>
+
+## 可选 AI HTML PV 资源
+
+独立 `pv_design` 路由从现有本机后台配置（provider/model/baseUrl/keyRef），仅点击/显式 API 请求调用，不改变制作默认费用。配置探测不调用模型。该任务输出视觉数据，不能执行模型 HTML/JS/CSS；不下载图片/字体。接口及资源错误见[架构](ARCHITECTURE.md#ai-html-pv)。
+
+HTML 导出需 FFmpeg（仍要求 libx264/libass，音频沿用 loudnorm/AAC）与已安装的 Playwright Chromium。当前项目开发依赖已有 @playwright/test，按需执行 `npx playwright install chromium`；生产裁剪依赖后该可选包可能不存在，HTML 明确 503，Canvas 仍不需要该包。`GET /api/pv/status` 探测 Chromium 路径；`SONGYU_HTML_PV_DISABLED=1` 可禁用 HTML 渲染资源，不禁用旧 Canvas。Chromium 使用 sandbox，不通过 --no-sandbox 绕过环境问题；需要本机可用中文字体，预览/导出需使用相同字体环境。
+
+本机 25 秒、600 帧验收约 77.7 秒，临时 PNG 约 454 MB，Node 观测峰值约 324 MB；2 秒采样的验收进程树工作集约 1.22 GB（包括验收 harness，不是严格瞬时峰值）。预算：≤512 MiB 临时帧，145s 帧阶段、150s watchdog、170s HTML 总预算；复杂或更长设计可能触发预算失败，不能将单个基准当作所有机器保证。现有 180s Client 时限在本机测试内足够，本阶段未改 Client；接线后仍应按实际资源回归。
+
+资源验收命令（只在显式授权模型调用时设置第一项）：
+
+```powershell
+$env:SONGYU_PV_REAL='1'
+npx tsx scripts/verify-html-pv.mjs --plan
+# --plan 从已加密本机设置读取模型；仅在验证进程里临时指定 pv_design，不写回配置
+# 没有显式 pv_design 时验收工具复用现有歌词路由；正式 API 不回退
+# 按本机实际位置设置 FFMPEG_PATH 后：
+npx tsx scripts/verify-html-pv.mjs --render
+npx tsx scripts/verify-html-pv.mjs --preview
+node scripts/check-html-pv.mjs
+```
+
+输出在 `temp/task35/`：两首真实设计/最小上下文/本地规则工程、离线 sandbox seek harness、实际混音 WAV、动态 MP4、FFprobe/SSIM/耗时/资源报告。音频是当前 Web Audio 本地作曲与元音演示，不是真实中文演唱。真实模型、真实动态编码、快速夹具分别记[日志](iteration-log.md#ai-html-pv-35)；人工观感与正式页面共同验收仍归工单 6。

@@ -1,3 +1,4 @@
+import {mountPv} from './routes/pv.mjs';
 import {mountProduction} from './routes/production.mjs';
 import {mountFreeComposition} from './routes/free-composition.mjs';
 import {mountMelody} from './routes/melody.mjs';
@@ -22,6 +23,7 @@ const settings=await createConfigStore({directory:path.join(externalRoot,'runtim
 const app=express();app.disable('x-powered-by');app.use(express.json({limit:'24mb'}));
 const jobs=createJobs();app.use(jobs.middleware);
 mountFreeComposition(app);
+mountPv(app);
 mountMelody(app);
 mountInstruments(app);
 mountSinging(app);
@@ -30,7 +32,7 @@ const video=await createVideoService(root);
 const production=mountProduction(app,{isPaused:()=>jobs.isPaused(),ffmpegReady:()=>video.ready});
 jobs.addSource(()=>production.list().map(job=>({...job,type:'自动制作'})));
 let planner=createPlanner();
-mountAdmin(app,{store:settings,jobs,root:externalRoot,publicDirectory:path.join(root,'server/public'),previewVideo:bytes=>video.preview(bytes),onConfig:async()=>{planner=createPlanner();await video.refresh()},diagnostics:async()=>{
+mountAdmin(app,{store:settings,jobs,root:externalRoot,projectRoot:root,publicDirectory:path.join(root,'server/public'),previewVideo:bytes=>video.preview(bytes),onConfig:async()=>{planner=createPlanner();await video.refresh()},diagnostics:async()=>{
  const instruments=await new InstrumentRenderer().status();
  const probe=async(command,args)=>{try{return {available:true,version:(await runProcess(command,args,externalRoot,10000)).split(/\r?\n/)[0]}}catch{return {available:false,message:'未安装、路径错误或运行失败'}}};
  const python=process.env.DIFFSINGER_PYTHON||path.join(externalRoot,'DiffSinger/.venv/Scripts/python.exe');

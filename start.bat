@@ -9,7 +9,7 @@ if errorlevel 1 goto node_error
 
 node.exe "%~dp0scripts\start-local.mjs" %*
 set "CANTALOOM_EXIT=%errorlevel%"
-if /i "%~1"=="--check" exit /b %CANTALOOM_EXIT%
+for %%A in (%*) do if /i "%%~A"=="--check" exit /b %CANTALOOM_EXIT%
 echo.
 if not "%CANTALOOM_EXIT%"=="0" echo [ERROR] Startup failed. Read the message above.
 pause

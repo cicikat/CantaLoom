@@ -17,7 +17,7 @@
 
 这是可用能力的清单，不要求把所有限制做成输入框。energy 由既有单句自动分析带入；overrides 索引由音符选择器带入；take 由重唱操作带入；缓存、引擎版本和文件上限由程序处理。steps/depth、EQ、声像等固定或未实现参数不做滑杆。
 
-本轮只接前端：浏览器 synth 伴奏尚未应用 bandGain，伴奏音量在此模式禁用；切到已有 FluidSynth 路径才启用。元音演示不支持此处的调教、人声音量与混响，相关控件禁用。详情与红茶交接见 [5-C-synth-mix](../CROSS-END-HANDOFF.md#5-c-synth-mix)。
+本轮只接前端：工单 33 已修复浏览器 Synth 的 bandGain 核心路由，当前页面仍按原前端边界禁用该模式伴奏控件，等待 Toge 解禁；FluidSynth 控件沿用原路径。元音演示不支持此处的调教、人声音量与混响，相关控件禁用。详情与红茶交接见 [5-C-synth-mix](../CROSS-END-HANDOFF.md#5-c-synth-mix)。
 
 ## 创作输入（`api.compose` / `api.startProduction`）
 
@@ -109,7 +109,7 @@ MID 对应器乐渲染轨道，USTX 对应真实演唱缓存源工程，WAV 对�
 
 示例：`groove:{projectId:"project-1",trackId:"track-1",version:1,swingTicks:60,timingTicks:15,velocityAmount:0.08}`。统一 Zod 校验失败返回 400；有效参数和种子进入渲染 hash，相同输入 MIDI 字节一致。鼓仅应用 swing，不额外加 timing/velocity 抖动；vocal 不经此器乐端点。锁定不由后端猜测，调用方须带保护标记。
 
-自由编曲核心已默认采用 backbeat、末小节 fill、踩镲力度分层与 energy 动态；旧模式保持原鼓型/TAP 实现。**可选 groove 尚未由 production/浏览器/Client/Mock 自动传入，也没有页面开关或工程持久化字段**；接线时必须统一保存、试听与导出的参数来源，见[交接 20-groove-render](../CROSS-END-HANDOFF.md#20-groove-render)。
+自由编曲核心已默认采用 backbeat、末小节 fill、踩镲力度分层与 energy 动态；旧模式保持原鼓型/TAP 实现。**工单 31 已接工程 grooveSettings 持久化、production 与 external-audio 的 FluidSynth 输入；Client 制作类型/Mock/页面与浏览器 Synth 仍待 Toge 接线**；接线时必须统一保存、试听与导出的参数来源，见[交接 20-groove-render](../CROSS-END-HANDOFF.md#20-groove-render)。
 
 ## 混音与分轨（main；P0 加拼接淡化）
 
@@ -128,7 +128,7 @@ MID 对应器乐渲染轨道，USTX 对应真实演唱缓存源工程，WAV 对�
 
 ## 制作任务状态（main）
 
-`POST /api/production` → 202 + job；`GET /api/production/:id` 轮询：state＝running/succeeded/failed，stage＝queued/checking/composing/planning/melody/validated/instruments/singing/ready-for-mix；失败时附 error、phraseId、completedPhrases。`POST /:id/retry/:phraseId` 仅重试失败句（610 秒）。**没有百分比进度**；任务为内存最多 30 条，重启 404；ready-for-mix ≠ 已导出 MP4。
+`POST /api/production` → 202 + job；`GET /api/production/:id` 轮询：state＝running/succeeded/failed，stage＝queued/checking/composing/planning/melody/validated/instruments/singing/ready-for-mix；失败时附 error、phraseId、completedPhrases。`POST /:id/retry/:phraseId` 仅重试失败句（610 秒）。工单 34 新增可选 performancePlanning（disabled/running/succeeded/failed/skipped）和 PERFORMANCE_PLANNING_FAILED 错误码；成功可带白名单 trace，费用未知为 null，未调用/跳过不填模型或 Token。GET/retry 经显式公开投影，内部 input/failureContext 不返回；旧 Client/Mock 响应可无新字段。字段、夹具和错误示例见[制作追溯](ARCHITECTURE.md#production)。**没有百分比进度**；任务为内存最多 30 条，重启 404；ready-for-mix ≠ 已导出 MP4。
 
 ## 导出与署名（main）
 
@@ -167,3 +167,10 @@ MID 对应器乐渲染轨道，USTX 对应真实演唱缓存源工程，WAV 对�
 Mock 已覆盖 compose / melody / production 的创建、阶段、失败与单句重试；未知路径仍返回 404，不会偷连真实后端。plan/instrument/singing/export Mock 继续可用。Mock 歌声必须 `isDemo:true`，真实必须 `false`；真实模式拒绝 mock 标记响应与 Mock 缓存。调教、单句重唱、分轨与混音控件已通过 Mock 页面测试；测试音的 PCM 差异不代表真实歌声听感。工单 27 已补能力查询/音素列表与高级控件；既有曲线在修改其他字段时保留。曲线采用数值点编辑和控制点预览，不宣称已有拖拽画笔；整句 phonemes 平面列表不等于逐音符映射。见[工单 27](../CC-Tasks/27-frontend-interface-sync.md)。
 
 artifacts / loudness 已有专用 Mock：MIDI 是空轨夹具、USTX 是标注过的空工程、响度是固定数值；页面/文件名明确 MOCK，不作真实音乐产物与测量证据。groove 的真实事件效果仍无专用 Mock，不把参数透传当作 MIDI 人性化。
+
+
+## 可选 AI HTML PV（工单 35，后端已交付/页面待接）
+
+`POST /api/pv/design` 单独请求当前工程最小投影，返回严格 pvDesign、inputFingerprint 和可选脱敏 trace；需要独立 pv_design 配置。`GET /api/pv/status` 探测可选 Chromium；失败仍能用 Canvas。HTML 导出使用原 /api/export 的 visualMode='html' 分支，不带四张 scenes，携带快照/设计/指纹及同一混音 WAV。旧 PNG 请求、MP4 Blob/响度头不变。类型、完整字段/夹具和错误语义见[架构](ARCHITECTURE.md#ai-html-pv)。
+
+本阶段没有 SongProject.pvDesign、Client HTML 方法、Mock、新按钮或 LOOP! HTML 预览；[35-ai-html-pv](../CROSS-END-HANDOFF.md#35-ai-html-pv)交 Toge 接存档/重开、指纹失效、sandbox seek、Canvas 回退与导出分支。Mock 必须 source=mock/mock=true，不虚构调用 trace 或 MP4。

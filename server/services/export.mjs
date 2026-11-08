@@ -1,3 +1,4 @@
+import {renderPvFrames} from './pv-render.mjs';
 import {measureLoudness,normalizationFilter,loudnessTarget} from './loudness.mjs';
 import {spawn} from 'node:child_process';
 import {mkdtemp,writeFile,readFile,rm} from 'node:fs/promises';
@@ -21,7 +22,13 @@ export async function createVideoService(root){
   try{await writeFile(path.join(directory,'input.mp4'),mp4);await run(ffmpeg,['-hide_banner','-loglevel','error','-y','-protocol_whitelist','file,pipe','-i','input.mp4','-t','35','-map','0:v:0','-map','0:a:0?','-vf','scale=960:-2','-c:v','libvpx-vp9','-deadline','realtime','-cpu-used','6','-crf','34','-b:v','0','-pix_fmt','yuv420p','-c:a','libopus','-b:a','96k','preview.webm'],directory);return await readFile(path.join(directory,'preview.webm'))}finally{await rm(directory,{recursive:true,force:true})}
  },async render(data){
   const directory=await mkdtemp(path.join(tmpdir(),'songyu-'));
-  try{await writeFile(path.join(directory,'mix.wav'),Buffer.from(data.wav,'base64'));await writeFile(path.join(directory,'subtitles.ass'),subtitles(data),'utf8');
+  try{await writeFile(path.join(directory,'mix.wav'),Buffer.from(data.wav,'base64'));
+ if(data.visualMode==='html'){const htmlStarted=performance.now(),remaining=()=>Math.max(1,170000-(performance.now()-htmlStarted));
+ const metrics=await renderPvFrames(data,directory),inputLoudness=await measureLoudness(ffmpeg,'mix.wav',directory,remaining());
+ await run(ffmpeg,['-hide_banner','-loglevel','error','-y','-framerate','24','-i','frame%06d.png','-i','mix.wav','-t',String(data.duration),'-map','0:v:0','-map','1:a:0','-c:v','libx264','-preset','veryfast','-crf','22','-pix_fmt','yuv420p','-af',normalizationFilter,'-ar','48000','-c:a','aac','-b:a','192k','-movflags','+faststart','output.mp4'],directory,remaining());
+ const outputLoudness=await measureLoudness(ffmpeg,'output.mp4',directory,remaining());return {directory,file:path.join(directory,'output.mp4'),metrics,loudness:{input:inputLoudness,output:outputLoudness,target:loudnessTarget}};
+ }
+ await writeFile(path.join(directory,'subtitles.ass'),subtitles(data),'utf8');
  const args=['-hide_banner','-loglevel','error','-y'];for(let i=0;i<data.scenes.length;i++){const scene=data.scenes[i],png=Buffer.from(scene.png,'base64');if(png.subarray(0,8).toString('hex')!=='89504e470d0a1a0a')throw Error('画面不是有效 PNG');await writeFile(path.join(directory,`scene${i}.png`),png);args.push('-loop','1','-framerate','24','-t',String(scene.duration),'-i',`scene${i}.png`)}args.push('-i','mix.wav');
  const inputLoudness=await measureLoudness(ffmpeg,'mix.wav',directory);
  const filters=data.scenes.map((_,i)=>`[${i}:v]scale=1280:720,zoompan=z='min(1+on*0.00016,1.07)':x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':d=1:s=1280x720:fps=24,setsar=1,setpts=PTS-STARTPTS[v${i}]`);filters.push('[v0][v1][v2][v3]concat=n=4:v=1:a=0,ass=subtitles.ass,format=yuv420p[out]');args.push('-filter_complex',filters.join(';'),'-map','[out]','-map','4:a','-t',String(data.duration),'-c:v','libx264','-preset','veryfast','-crf','22','-af',normalizationFilter,'-ar','48000','-c:a','aac','-b:a','192k','-movflags','+faststart','output.mp4');await run(ffmpeg,args,directory);

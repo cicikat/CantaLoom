@@ -1,3 +1,4 @@
+import {pvProjectSchema,pvDesignSchema,validatePvBinding} from './pv.mjs';
 import {grooveSchema} from './groove.mjs';
 export {grooveSchema} from './groove.mjs';
 import {performanceSchema} from './melody.mjs';
@@ -29,7 +30,13 @@ export const enginesSchema=z.object({instruments:z.object({installed:z.boolean()
 export const dictionarySchema=z.record(z.string(),z.string());
 export const importInput=z.object({wav:z.string().max(11000000).regex(/^[A-Za-z0-9+/]+={0,2}$/),voice:z.object({id:z.string().min(1).max(120),version:z.string().min(1).max(120),providerId:z.enum(['openutau-exchange','diffsinger']),label:z.string().max(120)})});
 const b64=z.string().regex(/^[A-Za-z0-9+/]+={0,2}$/);
-export const exportInput=z.object({wav:b64.max(16000000),scenes:z.array(z.object({png:b64.max(2500000),duration:z.number().min(.5).max(30)})).length(4),duration:z.number().min(15).max(35),lyrics:z.array(z.object({text:z.string().max(100),start:z.number().min(0).max(35),end:z.number().min(0).max(35)})).max(32),style:z.enum(['cinema','poster','minimal']),title:z.string().max(200),singingCredit:z.enum(['demo','qixuan','external']).default('demo')});
+export const canvasExportInput=z.object({wav:b64.max(16000000),scenes:z.array(z.object({png:b64.max(2500000),duration:z.number().min(.5).max(30)})).length(4),duration:z.number().min(15).max(35),lyrics:z.array(z.object({text:z.string().max(100),start:z.number().min(0).max(35),end:z.number().min(0).max(35)})).max(32),style:z.enum(['cinema','poster','minimal']),title:z.string().max(200),singingCredit:z.enum(['demo','qixuan','external']).default('demo')});
+const oldExportInput=canvasExportInput.extend({visualMode:z.literal('canvas').optional()});
+export const htmlExportInput=canvasExportInput.omit({scenes:true}).extend({visualMode:z.literal('html'),pvProject:pvProjectSchema,pvDesign:pvDesignSchema,inputFingerprint:z.string().regex(/^[a-f0-9]{64}$/)}).strict().superRefine((v,ctx)=>{
+ try{validatePvBinding(v.pvProject,v.pvDesign)}catch{ctx.addIssue({code:'custom',message:'PV 段落不匹配'})}
+ const p=v.pvProject,end=p.sections.at(-1);if(v.title!==p.title||Math.abs(v.duration-(end.start+end.beats)*60/p.bpm)>.001||JSON.stringify(v.lyrics)!==JSON.stringify(p.lyrics.map(l=>({text:l.text,start:l.start*60/p.bpm,end:l.end*60/p.bpm}))))ctx.addIssue({code:'custom',message:'PV 快照与导出文本/时间轴不匹配'});
+});
+export const exportInput=z.union([oldExportInput,htmlExportInput]);
 // Lifecycle of one browser request. No invented server queue IDs or percentage progress.
 export const taskSchema=z.object({kind:z.enum(['plan','instrument','singing','export']),state:z.enum(['running','succeeded','failed']),mock:z.boolean(),error:z.string().optional()});
 
