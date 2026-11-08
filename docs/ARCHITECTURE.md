@@ -245,7 +245,7 @@ production 串联规划、旋律、器乐与歌声。stage 契约枚举为 queue
 
 首页 `PatchlabCreation` 在原型首屏负责主题、可选手写歌词、可选 BPM 和目标时长；底部播放器继续复用 useStudio / usePlayer。原 FreeCreation 组件不再挂载。`useProduction` 通过既有 Client 的 `startProduction` / `production` / `retryProduction` 协调请求，不在组件内新增 fetch，不改公开契约、服务或音乐算法。Owner 为 toge，调用原有 validateProject / validateMelody / currentVocalAsset 进行只读校验。
 
-首屏歌词输入先作为制作草稿；改词后点「完成」、Esc、点外部或收起设置，会自动尝试同步当前作品，也保留「同步歌词到当前作品」重试入口。「一键开工」直接使用草稿制作新作品，不同时修改旧作品。`hooks/lyric-edit.ts` 先校验全部修改；已有外部歌声时，`useStudio.syncLyrics` 复用既有 generateLine / applyVocalResult，只重新演唱改动句，全部成功后才经 change 一次应用。便利贴、Landscape / drawPV、自动保存与导出均读取该工程；同步期间禁止导出中间版本，未改动的句、歌声资产及伴奏保留。输入、工程或请求代次变化时丢弃迟到结果；失败保留原作品和草稿，在首页持续显示未同步原因。导入的非绮萱歌声不自动换声库。同步保持句数，自由作品保持原旋律与唱字数；增减句数或改变唱字数需用「一键开工」制作新作品，锁定内容仍受保护。本地搭建也读取草稿并标为 manual。元音模式仅更新演示音符，不会读中文。未修改共享契约、音乐/音频或导出核心，验证见[自动同步与歌声记录](iteration-log.md#lyrics-auto-sync-audio)，旧实现见[历史记录](iteration-log.md#lyrics-current-project-sync)。
+首屏歌词输入先作为制作草稿；点击「同步歌词到当前作品」才更新现有作品。「用当前歌词填写」可载入当前各句，便于局部改词。`hooks/lyric-edit.ts` 先校验全部修改，再经 `useStudio.change` 一次更新；歌词卡片、Landscape / drawPV、自动保存及既有导出均读取同一份工程。同步维持当前句数，增减句数仍走自由制作（1–8 行），不套用旧模板的四句限制。本地搭建也先应用已填写的词，标为 manual，避免被模板替换；失败不发布中间工程。自由作品调用既有 `setLyricText(...,{keepMelody:true})`，同步 melodyDraft 的文本与音节；唱字数不匹配或会改动锁定内容时拒绝，保留原作品。修改仅使对应句的歌声依赖过期，需重新演唱；其他句与伴奏保留。没有新增契约或修改音乐/导出核心，验证见[歌词同步记录](iteration-log.md#lyrics-current-project-sync)。
 
 - 先按 freeInputSchema 校验输入；空行忽略，非空手写行保留原字词与空格，支持 1–8 行、每行最多 100 字。未填写歌词时由对应真实服务或明确 Mock 夹具提供；不调用旧 composeFromIdea。
 - 以约一秒间隔依次查询任务，展示返回的 state/stage 和已完成句数，不假定能观察到全部阶段，不显示百分比。Mock 显示“测试阶段”。

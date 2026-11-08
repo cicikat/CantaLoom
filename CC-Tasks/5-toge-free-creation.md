@@ -17,7 +17,6 @@ Owner：Toge（toge / Frontend / UX）。状态：A1 / A2、钢琴卷帘、局�
 - [x] 根据 toge 对臃肿排版的反馈，撤回默认首屏说明、作品信息栏、段落栏、卡片多排按钮及悬浮播放器；恢复原稿首屏/积木起点与卡片大小，设置和说明按需打开。构建、26 项 Mock / 10 项真实模式本地页面回归通过，详见[版式收简记录](../docs/iteration-log.md#loop-layout-restoration)。
 - [x] 修复「一键开工」缺项时灰掉且原因藏在设置中的交互：改为点击打开已有缺项面板，保持提交保护与版式。构建、真实模式准备流程 4 项和 Mock 创作流程 1 项通过，并在当前 3001 实际页面验收缺项可见、零制作请求；见[记录](../docs/iteration-log.md#start-button-readiness)。
 - [x] 修复首屏铅笔歌词与当前作品断开：新增明确同步操作，本地搭建也读取填写的歌词；更新便利贴、MV 字幕和存档。保留句/轨/音符锁，支持自由作品等唱字数保留旋律，不增减现有句数；构建、9 项定向单元测试、5 项 Mock 页面回归通过，见[记录](../docs/iteration-log.md#lyrics-current-project-sync)。
-- [x] 2026-11-08 修复首页改词后仍需额外同步、旧歌声未更新的问题：点完成 / Esc / 点外部收起设置自动同步；已有中文歌声的作品只重唱改动句，文字与音频全部成功后一次应用，失败与迟到响应保留旧作品。20 项定向 Mock 页面（含实际 PCM 变化、PV 输入与工程 JSON）及歌词保护测试通过；真实声库 / MP4 与人工听感未验，见[记录](../docs/iteration-log.md#lyrics-auto-sync-audio)。
 - [ ] toge 核对接线后的视觉；真实模型/声库制作、真实 MP4 及人工听感交工单 6。
 
 接线依据：[架构边界与区域映射](../docs/ARCHITECTURE.md#prototype-frontend)。后端、音乐算法与共享契约权限仍按既有分工；本段不授权跨区修改。本次仅修改前端与相应文档/页面测试，未修改后端或共享契约；[验证与交接](../docs/iteration-log.md#loop-prototype-wiring)。
