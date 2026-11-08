@@ -93,7 +93,7 @@ Owner：Blacktea / Backend & Music Engine；共享 Schema、渲染适配与最�
 
 - [x] 在 `CROSS-END-HANDOFF.md` 登记稳定 ID `35-ai-html-pv`，提供设计响应、Schema/TS 类型、导出新旧示例、错误状态、资源探测、Mock 夹具规范、真实 MP4 测试位置和旧模式回退说明。
 - [x] 交 Toge 后续实现：工程 `pvDesign?` 保存/重开、统一 Client、LOOP! `#pv` 内可选生成按钮和 HTML 预览、seek 进度绑定、Canvas 回退、真实/Mock 状态标记、导出按钮分支；**不要在后端工单中改 `App.tsx`、Hooks、CSS 或 Mock。**
-- [ ] 共验：同一工程动态预览与导出帧/歌词一致，手动改歌词或 BPM 后旧视觉设计的依赖失效提示明确，旧工程、旧 PV、Mock 不回退；最终[工单 6](../6-joint-acceptance.md)留人工观感验收。
+P2 剩余页面/存档/Mock、预览导出一致性与失效提示接线已统一转入[工单 36 D/E](../36-toge-backend-followup.md)。共同人工验收 checkbox 仅由[工单 6](../6-joint-acceptance.md)维护，本单等待两者回执，不在此重复维护前端 checkbox。
 
 ## 五、拟定接口示例（提案，不代表已经交付）
 
@@ -150,7 +150,7 @@ Owner：Blacktea / Backend & Music Engine；共享 Schema、渲染适配与最�
 - 资源缺失与旧模式：HTML禁用/缺失明确503，旧请求可继续；禁用HTML Chromium后原四背景/ASS+真实FFmpeg的页面导出1/1通过。预算/失败不输出伪MP4、不改工程。增加响度测量的可选超时，仅HTML用剩余总预算，旧调用默认120s不变。
 - 安全补充：Admin state/llm 不返回 systemPrompt；服务端对表单省略的原 prompt 保留，不因脱敏丢配置，显式空串可清除；密钥仍按原DPAPI，未放松Host/Origin/CSRF。模型不输出任意DOM代码，SVG仅白名单基本形状，不接远程素材。
 - 交付入口：完整 Schema/类型/错误/新旧请求见[架构](../../docs/ARCHITECTURE.md#ai-html-pv)，资源/复现见[引擎](../../docs/ENGINES.md#html-pv)，交接 ID [35-ai-html-pv](../../CROSS-END-HANDOFF.md#35-ai-html-pv)。独立离线可拖动 seek 的 `temp/task35/preview-harness.html` 和实际 `ai-html-pv.mp4`、`mix.wav`、两份设计 JSON、FFprobe/SSIM/资源报告可本机检查。
-- 测试及边界：快速/资源数字统一见[迭代日志](../../docs/iteration-log.md#ai-html-pv-35)。音频为本地规则Web Audio混音/元音演示，真实LLM只生成视觉数据；未生成真实中文歌声，不把此成片当作正式LOOP!页面端到端或人工观感验收。P2最后一项保持未勾选，故本单留在当前目录，不归档。
+- 测试及边界：快速/资源数字统一见[迭代日志](../../docs/iteration-log.md#ai-html-pv-35)。音频为本地规则Web Audio混音/元音演示，真实LLM只生成视觉数据；未生成真实中文歌声，不把此成片当作正式LOOP!页面端到端或人工观感验收。P2剩余执行已转入工单36，本文不再重复维护checkbox；整单仍等工单36/6实际回执，留在当前目录不归档。
 
 
 ## 分阶段文件清单
@@ -158,3 +158,5 @@ Owner：Blacktea / Backend & Music Engine；共享 Schema、渲染适配与最�
 P0（`be95902`）：`CC-Tasks/后端/35-ai-html-pv.md`、`CROSS-END-HANDOFF.md`、`docs/iteration-log.md`、`scripts/verify-html-pv.mjs`、`server/admin-config.mjs`、`server/admin.mjs`、`server/index.mjs`、`server/public/admin.js`、`server/routes/pv.mjs`、`server/services/llm-router.mjs`、`server/services/pv-render.mjs`、`server/services/pv.mjs`、`shared/contracts/CHANGELOG.md`、`shared/contracts/pv.d.mts`、`shared/contracts/pv.mjs`、`tests/pv.test.mjs`、`tests/support/pv-fixture.mjs`。
 
 P1/交接（随本轮后续提交）：`CC-Tasks/后端/35-ai-html-pv.md`、`CROSS-END-HANDOFF.md`、`README.md`、`docs/ARCHITECTURE.md`、`docs/ENGINES.md`、`docs/INTERFACES.md`、`docs/iteration-log.md`、`scripts/verify-html-pv.mjs`、`server/admin-config.mjs`、`server/admin.mjs`、`server/routes/export.mjs`、`server/services/export.mjs`、`server/services/loudness.mjs`、`server/services/pv-render.mjs`、`shared/contracts/CHANGELOG.md`、`shared/contracts/index.d.mts`、`shared/contracts/index.mjs`、`tests/pv.test.mjs`、`scripts/check-html-pv.mjs`、`shared/pv-render.mjs`、`shared/pv-render.d.mts`、`tests/browser/pv.spec.js`。
+
+2026-11-08 前端汇总：Toge 的统一执行入口为[工单 36](../36-toge-backend-followup.md)，沿用 35-ai-html-pv；本单范围/阶段文件清单与真实成片证据保留，不因文档归并宣称页面完成。

@@ -17,7 +17,7 @@
 | ID | 来源 | 发起方 → 接收方 | 状态 |
 |---|---|---|---|
 | [35-ai-html-pv](#35-ai-html-pv) | 工单 35 | Blacktea → Toge | 后端/动态MP4已交付；页面/共验待接 |
-| [27-phoneme-zero](#27-phoneme-zero) | 工单 27 / 15 P1 | Toge → Blacktea | 核心已修复；待 Toge 清理旧限制提示 |
+| [27-phoneme-zero](#27-phoneme-zero) | 工单 27 / 15 P1 | Blacktea → Toge | 核心已修复；待 Toge 清理旧限制提示 |
 | [24-test-review](#24-test-review) | 工单 24 | Blacktea → Toge | 测试审计交付；待浏览器测试语义 review |
 | [5-C-synth-mix](#5-c-synth-mix) | 工单 5 C | Toge → Blacktea | 核心已修复；待 Toge 解禁 Synth 伴奏控件 |
 | [20-groove-render](#20-groove-render) | 工单 20 | Blacktea → Toge | 核心/API 已实现；页面与人工听评待安排 |
@@ -31,6 +31,8 @@
 <a id="27-phoneme-zero"></a>
 
 ### 27-phoneme-zero · 核心已修复，待清理前端旧限制说明
+
+- 2026-11-08 接收方执行入口：[工单36 · A1](CC-Tasks/36-toge-backend-followup.md#quick-fixes)。本轮31–35的前端剩余checkbox统一在36；用户已授权31–36统一推送PR合并，接收方开工需同步main核验d550b9c；下文“未推送”为历史阶段状态。完成后按36回执再关闭本ID。
 
 - 更新：2026-11-08；[工单 32](CC-Tasks/已完成/32-phoneme-explicit-zero.md)由 Blacktea 完成；原 Toge → Blacktea 修复请求已回执，现 Blacktea → Toge 仅交接提示清理。
 - 已交付：显式首音素 offsetMs:0 不再继承句级 consonantMs；USTX 必要时输出 offset:0；仅相关零覆盖更新歌声依赖/缓存 revision，其他句与器乐不变。源码及缓存边界见[契约记录](shared/contracts/CHANGELOG.md)，证据见[日志](docs/iteration-log.md#phoneme-explicit-zero-32)。本地 feature/backend-phoneme-explicit-zero，未推送。
@@ -50,6 +52,8 @@
 
 ### 5-C-synth-mix · 核心已修复，待前端解禁与回归
 
+- 2026-11-08 接收方执行入口：[工单36 · A2/A3](CC-Tasks/36-toge-backend-followup.md#quick-fixes)。本轮31–35的前端剩余checkbox统一在36；用户已授权31–36统一推送PR合并，接收方开工需同步main核验d550b9c；下文“未推送”为历史阶段状态。完成后按36回执再关闭本ID。
+
 - 更新：2026-11-08；[工单 33](CC-Tasks/已完成/33-browser-synth-band-gain.md)由 Blacktea 完成；本会话用户已确认限定共享音频范围。原 Toge → Blacktea 请求已回执，现 Blacktea → Toge 交接解禁。分支 feature/backend-synth-band-gain，本地提交，未推送。
 - 已交付：renderAudio 内 Synth 器乐经独立 band bus，处理时应用既有 bandGain；人声仍走原路径，FluidSynth 沿用原增益且不重复。保留 enabled/default、stem/mute/单轨、dry 与峰值保护；WAV/PV 共用同一 PCM。
 - 验证：Chromium PCM 夹具、实际 WAV/PV 入口透传、真实 FluidSynth 增益 0/1/2、真实 FFmpeg MP4 通过；证据见[日志](docs/iteration-log.md#synth-band-gain-33)。夹具不是实际声库听评，真实 MP4 编码不是正式页面全流程验收。
@@ -68,6 +72,8 @@
 <a id="15-p2b-routing"></a>
 
 ### 15-P2B-routing · 模型路由后端交付
+
+- 2026-11-08 接收方执行入口：[工单36 · C](CC-Tasks/36-toge-backend-followup.md#planning-trace)。本轮31–35的前端剩余checkbox统一在36；用户已授权31–36统一推送PR合并，接收方开工需同步main核验d550b9c；下文“未推送”为历史阶段状态。完成后按36回执再关闭本ID。
 
 - 更新：2026-11-07；来源：[工单 15](CC-Tasks/后端/15-p0.md) P2-B；Blacktea → Toge；状态：后端已推送；等待接入 review 与安排。
 - 已交付：已推送分支 `feature/backend-p1-phoneme` 的 `9718420` 提供 lyrics_planning / melody_composition / performance_planning，Admin 的 `LLM_ROUTES` 配置与 `GET /api/admin/llm` 脱敏追溯。未新增公共创作端点或共享工程字段；该实现通过 [PR #9](https://github.com/cicikat/CantaLoom/pull/9) 交付，页面接入仍需 Toge review。
@@ -100,6 +106,8 @@
 
 ### 20-groove-render · 可选器乐渲染律动
 
+- 2026-11-08 接收方执行入口：[工单36 · B](CC-Tasks/36-toge-backend-followup.md#groove-31)。本轮31–35的前端剩余checkbox统一在36；用户已授权31–36统一推送PR合并，接收方开工需同步main核验d550b9c；下文“未推送”为历史阶段状态。完成后按36回执再关闭本ID。
+
 - 更新：2026-11-07；来源：[工单 20](CC-Tasks/后端/20-groove-and-humanization.md)；Blacktea → Toge；状态：音乐核心/API 已实现，页面/Mock 与人工听评待安排。
 - 已交付：自由模式新鼓组、TAP 保护、可选 groove 和保护标记契约；分支 feature/backend-music-quality-tickets，交付 [PR #10](https://github.com/cicikat/CantaLoom/pull/10)。本轮未修改 UI/Client/Mock/SongPlan/工程 Schema；字段与兼容边界见[契约记录](shared/contracts/CHANGELOG.md)及[接入说明](docs/ARCHITECTURE.md#groove-render)。
 - 2026-11-08 工单 31 后端续接：限定跨层范围已由本会话用户明确确认；[工单 31](CC-Tasks/已完成/31-production-groove-integration.md)已接 productionInputSchema、SongProject.grooveSettings、生产与 external-audio 的统一输入。新提交在 feature/backend-production-groove（本地提交，未推送），验证见[日志](docs/iteration-log.md#production-groove-31)。
@@ -111,6 +119,8 @@
 <a id="35-ai-html-pv"></a>
 
 ### 35-ai-html-pv · AI HTML PV 后端/共享渲染已交付，页面与共验待接
+
+- 2026-11-08 接收方执行入口：[工单36 · D/E](CC-Tasks/36-toge-backend-followup.md#html-pv)。本轮31–35的前端剩余checkbox统一在36；用户已授权31–36统一推送PR合并，接收方开工需同步main核验d550b9c；下文“未推送”为历史阶段状态。完成后按36回执再关闭本ID。
 
 - 更新 2026-11-08，Blacktea → Toge；本会话用户已确认限定范围。P0 `be95902`，P1/验收同 feature/backend-ai-html-pv 本地后续提交；未推送。工单：[35](CC-Tasks/后端/35-ai-html-pv.md)，[实际日志](docs/iteration-log.md#ai-html-pv-35)。
 - 共享入口：shared/contracts/pv.mjs/.d.mts 的快照、PvDesign/PvResult、pvFingerprint；shared/pv-render.mjs 的 pvDocument。POST /api/pv/design 需显式配置 pv_design；GET /api/pv/status 是 Chromium 探测。完整字段、成功/失败/Mock夹具、HTML与旧PNG导出示例见[架构](docs/ARCHITECTURE.md#ai-html-pv)、[资源](docs/ENGINES.md#html-pv)、[测试夹具](tests/support/pv-fixture.mjs)。

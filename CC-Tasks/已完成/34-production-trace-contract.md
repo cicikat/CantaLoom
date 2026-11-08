@@ -68,3 +68,5 @@ Owner：Blacktea / Backend & Music Engine；共享响应 Schema、Client、Mock 
 - 本地分支 feature/backend-production-trace，未推送；原有两个脚本删除与 BACKEND-EXECUTION-NOTE.md 保留。
 
 工单 34 序列化补充：project.vocalAssets 仅返回既有 VocalAsset 工程字段，剔除引擎返回的 sourceProject 绝对缓存路径与额外诊断，保留 dependency/voice/renderParameters 与成功应用/单句重试所需数据。内部资产不修改。
+
+2026-11-08 前端汇总：本单剩余 Toge 接线/提示清理及页面验证统一在[工单 36](../36-toge-backend-followup.md)维护 checkbox；沿用原交接 ID，本文保留后端历史证据，不复制前端清单。

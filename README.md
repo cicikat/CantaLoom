@@ -101,6 +101,7 @@ npm start
 | Blacktea（红茶） | [21 · 和声、声部连接与拍号速度](CC-Tasks/后端/21-harmony-voice-leading-form.md)：契约提案待评审授权，依赖 15 P2-A 确认，待排期 |
 | Blacktea（红茶） | [22 · 制作后端治理](CC-Tasks/后端/22-backend-production-ops.md)：缓存配额、任务持久化、渲染并发池；领取工单 12 子任务，待排期 |
 | Toge（toge） | [5 · 自由创作 Mock、页面与局部编辑](CC-Tasks/5-toge-free-creation.md)：LOOP!、调教及现有混音路径已接线并通过 Mock；视觉核对及真实共同验收待完成 |
+| Toge（toge） | [36 · 工单31–35前端接线与剩余交接](CC-Tasks/36-toge-backend-followup.md)：Groove、零偏移提示、Synth伴奏解禁、制作追溯、AI HTML PV；本轮剩余前端唯一执行清单；31–35后端随本轮统一PR交付，开工先同步main |
 | Toge（toge） | [27 · 已交付接口与前端接线](CC-Tasks/27-frontend-interface-sync.md)：高级调教/历史演唱恢复、分轨下载/响度报告已补；可选 groove 与真实验收仍未完成 |
 | Toge（toge） | [23 · 首页三个视觉章节与竖屏版式](CC-Tasks/23-three-chapter-page.md)：入场动效、Music Blocks 过渡、MV 放映页与竖屏调整已实现并通过 Mock；待 toge 实际滚动核对 |
 | Toge（toge） | [29 · 五章节滚动转场](CC-Tasks/29-five-chapter-scroll-transitions.md)：幕布揭开工作台、Let's 逐字翻转并揭开 MV，已实现并通过 Mock 与无头浏览器逐帧检查；待 toge 实际滚动核对手感 |

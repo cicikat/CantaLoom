@@ -46,3 +46,5 @@ notePerformance(
 - 无窗口 Bridge 源码 `scripts/openutau-bridge/Program.cs` 使用 `Ustx.Load` 直接加载产物、交给 OpenUtau 处理，没有再以 falsy 过滤音素 offset。真实 CPU 绮萱生成 legacy / zero / reference 三组 USTX/WAV；首组零覆盖实际 USTX 为 offset:0，其余音符仍 +12 tick，重复缓存逐字节一致。记录 `temp/task32-real.log`（首次均非缓存）、`task32-real-repeat.log`（缓存命中）、`temp/task32/`。此证据不是音素起点测量或人工听评。
 - 交接 ID：[27-phoneme-zero](../../CROSS-END-HANDOFF.md#27-phoneme-zero)：核心已修复；保留此条仅等 Toge 移除前端旧限制说明后清除。当前未代改 UI，也未向外发送消息。
 - 本地分支 feature/backend-phoneme-explicit-zero，未推送。结果统一见[迭代日志](../../docs/iteration-log.md#phoneme-explicit-zero-32)。
+
+2026-11-08 前端汇总：本单剩余 Toge 接线/提示清理及页面验证统一在[工单 36](../36-toge-backend-followup.md)维护 checkbox；沿用原交接 ID，本文保留后端历史证据，不复制前端清单。

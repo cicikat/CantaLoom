@@ -1,5 +1,15 @@
 <a id="lets-mv-entry-autoplay"></a>
 
+<a id="toge-followup-36"></a>
+
+## 2026-11-08 · 工单 36 汇总 31–35 的 Toge 剩余接线
+
+- 用户要求把刚完成后端工单中的未完成/前端部分整理给 Toge；新增[工单36](../CC-Tasks/36-toge-backend-followup.md)，Owner Toge、Backend reviewer Blacktea，唯一执行checkbox覆盖：32零偏移提示清理、33 Synth伴奏解禁、31 Groove全链路、34表现规划状态、35 HTML PV存档/Client/Mock/#pv/seek/导出。共享新增字段与音频接线仍须就36范围确认，本次仅整理文档。
+- 已核对实际 owning source：startProduction仍为FreeInput；Synth band bus已存在而Groove尚未接事件；零偏移旧提示和Synth禁用条件仍在组件；PV runtime/接口已交付但SongProject没有设计字段、Client ExportInput仍为Canvas。整理时后端本地完整基线d550b9c、origin/main为889f424；用户随后明确授权统一推送PR并合并，范围含31–35、已有eedadd3启动器提交及36文档。Toge开工应在PR合并后同步main并核验基线，不能用旧main联调。temp产物不随Git同步，资源和DPAPI配置不可当作已迁移。
+- 去重：[27](../CC-Tasks/27-frontend-interface-sync.md)的Groove未完checkbox、[35 P2](../CC-Tasks/后端/35-ai-html-pv.md)的剩余前端/共验入口转到36/工单6；31–34已完成工单、5、README和原五个交接ID指向36。旧后端实现和历史测试证据不改写，不接管其他历史提案；35等待页面/共同回执，继续保留当前目录，不假关闭。
+- 本轮仅Markdown文档，检查本地链接/锚点、待办去重、git diff --check及改动范围；未运行build/引擎/模型测试，未实施前端、未向Toge发消息。用户另授权功能分支推送PR并合并；远端检查/合并回执以该PR和本轮最终答复为准。完成/验收记录以后由Toge回写36与本日志，人工共同验收checkbox仍仅维护在[工单6](../CC-Tasks/6-joint-acceptance.md)。
+
+
 <a id="ai-html-pv-35"></a>
 
 ## 2026-11-08 · 工单 35 AI HTML 动态 PV 后端与共享渲染

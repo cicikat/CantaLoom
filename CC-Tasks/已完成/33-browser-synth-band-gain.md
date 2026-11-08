@@ -38,3 +38,5 @@ Synth 模式音量改变实际 PCM，0 能静音器乐但保留混合中的人�
 - 真实 FluidSynth 0/1/2 PCM、实际 Synth PV 输入 WAV 与真实 FFmpeg MP4 已回归；资源与夹具分别记录。结果见[迭代日志](../../docs/iteration-log.md#synth-band-gain-33)，产物 `temp/task33/`。未测试真实歌声/LLM、手机/Safari或人工听评。
 - 交接 ID：[5-C-synth-mix](../../CROSS-END-HANDOFF.md#5-c-synth-mix)：核心已回执，Toge 接下来解除 MixControls 的 Synth 伴奏音量禁用并做页面回归，完成后删除交接。元音演示的人声增益/混响不在本次范围。
 - 本地分支 feature/backend-synth-band-gain，未推送；保留原有两个启动脚本删除与其他工单。
+
+2026-11-08 前端汇总：本单剩余 Toge 接线/提示清理及页面验证统一在[工单 36](../36-toge-backend-followup.md)维护 checkbox；沿用原交接 ID，本文保留后端历史证据，不复制前端清单。

@@ -58,3 +58,5 @@ Owner：Blacktea / Backend & Music Engine；共享契约、工程模型与跨层
 - production 独立输入校验、规划剥离、新工程设置返回、v1 JSON 校验往返、统一器乐输入与保护透传已实现；`performedNotes` 原算法不变并补类型声明。关闭/缺省不补旧工程，不改变原输入。
 - 测试与真实资源结果见[迭代日志](../../docs/iteration-log.md#production-groove-31)；产物 `temp/task31/plain.wav`、`groove.wav`。真实制作全流程使用显式规划/歌声夹具；FluidSynth WAV 与缓存另为真实引擎实测，未调用真实 LLM/绮萱，不代表人工听感验收。
 - 交接 ID：20-groove-render；Toge 仍须接 ProductionInput Client 类型/Mock/页面与浏览器 Synth，不改组件和 Hook。工程 JSON 可存参数不代表已有页面编辑入口。
+
+2026-11-08 前端汇总：本单剩余 Toge 接线/提示清理及页面验证统一在[工单 36](../36-toge-backend-followup.md)维护 checkbox；沿用原交接 ID，本文保留后端历史证据，不复制前端清单。
