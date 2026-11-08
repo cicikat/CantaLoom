@@ -618,6 +618,42 @@ test('one downward gesture plays the complete Lets to MV reveal and one upward g
  expect(errors).toEqual([]);
 });
 
+test('Music Blocks waits for a fresh gesture after the title, then shrinks before revealing the workbench',async({page})=>{
+ await page.goto('/');
+ const act=page.locator('.act-bench'),stage=act.locator('.act-stage'),title=stage.locator('.act-title'),pin=page.locator('.bench-pin');
+ for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
+  await page.setViewportSize(viewport);await page.mouse.move(8,viewport.height-12);
+  const top=await act.evaluate(el=>el.getBoundingClientRect().top+scrollY);
+  await page.evaluate(y=>scrollTo(0,y),Math.max(0,top));
+  await page.mouse.wheel(0,260);await expect(act).toHaveClass(/is-entering/);
+  await expect(stage).toHaveClass(/is-titled/);
+  // Early input must be discarded, rather than queued to reveal the workbench later.
+  await page.mouse.wheel(0,2000);
+  await expect(stage).toHaveClass(/is-ready/);
+  await page.waitForTimeout(650);
+  await expect(title).toHaveCSS('scale','1');await expect(title).toHaveCSS('translate','none');
+  await expect(pin).not.toHaveClass(/is-open/);await expect(act).not.toHaveClass(/is-exiting/);
+  expect(await stage.locator('.bench-curtain').evaluate(el=>new DOMMatrixReadOnly(getComputedStyle(el).transform).m42)).toBe(0);
+  expect(Math.abs(await page.evaluate(()=>scrollY)-(top+viewport.height*1.8))).toBeLessThanOrEqual(2);
+  await page.evaluate(()=>{
+   const samples:{scale:number;y:number}[]=[];(window as any).benchRevealSamples=samples;
+   const until=performance.now()+1600;
+   const sample=()=>{
+    samples.push({scale:parseFloat(getComputedStyle(document.querySelector('.act-title')!).scale),y:new DOMMatrixReadOnly(getComputedStyle(document.querySelector('.bench-curtain')!).transform).m42});
+    if(performance.now()<until)requestAnimationFrame(sample);
+   };requestAnimationFrame(sample);
+  });
+  await page.mouse.wheel(0,260);
+  await expect(pin).toHaveClass(/is-open/,{timeout:6000});await expect(act).not.toHaveClass(/is-exiting/);
+  const samples=await page.evaluate(()=>(window as any).benchRevealSamples as {scale:number;y:number}[]);
+  expect(samples.some(s=>s.scale<.99&&s.y===0)).toBe(true);
+  expect(samples.filter(s=>s.y>1).every(s=>Math.abs(s.scale-.92)<.001)).toBe(true);
+  await expect(page.locator('#board .beat').first()).toBeInViewport();
+  await page.getByRole('navigation').getByRole('button',{name:'创作',exact:true}).click();
+  await expect.poll(()=>page.evaluate(()=>scrollY)).toBe(0);
+ }
+});
+
 test('one gesture finishes Music Blocks to workbench and returns through the circles without trapping content',async({page})=>{
  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
  await page.goto('/');
@@ -630,6 +666,7 @@ test('one gesture finishes Music Blocks to workbench and returns through the cir
   await expect.poll(()=>stage.evaluate(el=>parseFloat((el as HTMLElement).style.getPropertyValue('--p')))).toBe(1);
   await expect(stage.locator('.bridge-blocks>span').last()).toHaveCSS('opacity','1');
   await expect(act).not.toHaveClass(/is-entering/);
+  await expect(stage).toHaveClass(/is-ready/);await page.waitForTimeout(650);
   await page.mouse.wheel(0,260);
   await expect(act).toHaveClass(/is-exiting/);
   await expect(pin).toHaveClass(/is-open/,{timeout:6000});await expect(act).not.toHaveClass(/is-exiting/);

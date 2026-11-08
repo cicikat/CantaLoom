@@ -93,7 +93,7 @@
 .act-pin>*{position:sticky;top:0}
 
 /* Act 1 · Music Blocks title on the violet front layer. */
-.act-title{--x:clamp(0,(var(--p,0) - .84)/.16,1);position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px;text-align:center;translate:0 calc(var(--x)*-10vh);scale:calc(1 - var(--x)*.08)}
+.act-title{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px;text-align:center}
 .bridge-kicker{margin:0;font-size:12px;font-weight:900;letter-spacing:2px;color:var(--off);background:var(--ink);padding:8px 14px;border-radius:6px}
 .bridge-word{margin:0;display:flex;flex-direction:column;align-items:center;gap:.1em;font-size:clamp(68px,11.5vw,176px);font-weight:1000;font-style:italic;line-height:.95;letter-spacing:-.04em}
 .bridge-music{display:flex;color:var(--off);-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:.045em .045em 0 var(--ink)}

@@ -112,7 +112,19 @@ function useScrollAct(trackRef:RefObject<HTMLDivElement|null>,build:(track:HTMLD
   const schedule=()=>{if(!frame)frame=requestAnimationFrame(tick)};
   const guardInput=(event:Event,direction:number,delta:number,repeat=false,freshTouch?:boolean)=>{
    const now=performance.now(),beforeInput=lastInput;lastInput=now;navigation=null;
-   if(motion.matches||event.defaultPrevented||entryClock!==null||track.classList.contains('is-exiting'))return;
+   if(motion.matches||event.defaultPrevented||track.classList.contains('is-exiting'))return;
+   if(!guardsBottom&&direction>0){
+    const act=read();
+    // Ignore input during the opener; never queue a reveal for when the title finishes.
+    if(entryClock!==null||act.intro>=1&&act.reveal<1){
+     if(event.cancelable)event.preventDefault();
+     if(entryClock===null&&stage.classList.contains('is-ready')&&workbenchGestureAction(0,delta,now,freshTouch===true?now-WORKBENCH_REST_MS:beforeInput,lastMotion,false,repeat||freshTouch===false)==='leave'){
+      scrollTo({top:Math.ceil(pin.getBoundingClientRect().top+scrollY)+2,behavior:'instant'});schedule();
+     }
+     return;
+    }
+   }
+   if(entryClock!==null)return;
    if(direction!==(guardsBottom?1:-1))return;
    const bounds=workbenchBounds();if(!bounds||scrollY<bounds.top-1||scrollY>bounds.bottom+1)return;
    if(innerCanScroll(event.target,direction))return;
@@ -210,34 +222,34 @@ const DISCS_1=['var(--yellow)','var(--orange)','var(--mint)','var(--blue)','var(
 export const BenchAct=memo(function BenchAct(){
  const track=useRef<HTMLDivElement>(null);
  useScrollAct(track,(el,stage,pin)=>{
-  const curtain=stage.querySelector<HTMLElement>('.bench-curtain')!;
-  const put=writer(),ring=discs(stage,put);let H=0,revealLength=0,titleAt:number|null=null,progress=0,target:0|1=0,clock:number|null=null,requested=false;
+  const curtain=stage.querySelector<HTMLElement>('.bench-curtain')!,title=stage.querySelector<HTMLElement>('.act-title')!;
+  const put=writer(),ring=discs(stage,put);let H=0,revealLength=0,titleAt:number|null=null,progress=0,target:0|1=0,clock:number|null=null;
   return {
    measure(){H=stage.offsetHeight;revealLength=pinReveal(pin)},
    draw(act,now,{down,up,navigating}){
     const {intro:p,reveal:r}=act??{intro:1,reveal:0},revealTop=pin.getBoundingClientRect().top+scrollY;
-    if(!act||p<=.34){progress=0;target=0;clock=null;titleAt=null;requested=false}
-    else if(navigating){progress=r;target=r>=1?1:0;clock=null;requested=false}
+    if(!act||p<=.34){progress=0;target=0;clock=null;titleAt=null}
+    else if(navigating){progress=r;target=r>=1?1:0;clock=null}
     else{
      if(p>.42)titleAt??=now;
-     if(r>=1&&(target===1||progress===0||down)){progress=1;target=1;clock=null;requested=false}
+     if(r>=1&&(target===1||progress===0||down)){progress=1;target=1;clock=null}
      else{
-      if(up){target=0;requested=false}
-      else if(down&&p>=1)requested=true;
-      // Let the original staggered title finish before another gesture opens the workbench.
-      if(requested&&titleAt!==null&&now-titleAt>=1100){target=1;requested=false}
+      if(up)target=0;
+      else if(down&&p>=1&&titleAt!==null&&now-titleAt>=1100)target=1;
      }
     }
     const previous=progress,step=navigating?{progress,running:false}:timedProgress(progress,target,clock===null?0:now-clock,BENCH_REVEAL_MS);
     progress=step.progress;clock=step.running?now:null;
-    const drop=easeInOut(progress);
+    const drop=easeInOut(span(progress,.3,1));
+    put(title,'scale',lerp(1,.92,easeInOut(span(progress,0,.3))).toFixed(4));
+    stage.classList.toggle('is-ready',p>=1&&titleAt!==null&&now-titleAt>=1100);
     ring.draw(p,drop);el.classList.toggle('is-exiting',step.running);
     put(curtain,'transform',move(0,drop*(H+120)));
     if(act){
      if(step.running||progress!==previous)scrollTo({top:Math.ceil(revealTop+revealLength*drop),behavior:'instant'});
      pin.classList.toggle('is-open',progress>=1);
     }
-    return !!act&&!navigating&&(step.running||requested);
+    return !!act&&!navigating&&(step.running||titleAt!==null&&now-titleAt<1100);
    },
   };
  });
