@@ -1,3 +1,11 @@
+<a id="vocal-style-wiring"></a>
+
+## 2026-11-08 · 演唱卡片风格接入实际重唱
+
+关联：[工单 5](../CC-Tasks/5-toge-free-creation.md)、[原型接线](ARCHITECTURE.md#prototype-frontend)、[Hook](../src/hooks/useVocalStyle.ts)、[页面测试](../tests/browser/vocal-style/mock.spec.ts)。原按钮仅接旧元音预设，真实/自由作品被禁用。现显示自然/轻柔/强烈，复用既有调教与歌声 API，重新演唱未锁定句；全部完成后原子应用，保留歌词、旋律、伴奏、高级曲线、逐音符覆盖和锁定内容。切换会恢复四项句级参数为所选预设，保留调教历史。失败、服务未就绪、导入歌声或生成期间工程变化显示原因并保留当前工程；旧元音路径继续保留。没有改后端、音乐算法、共享契约或其他现有工作区改动。
+
+验证：`npm run build` 通过；`E2E_MOCK_PORT=5186 npx playwright test --config playwright.mock.config.ts tests/browser/vocal-style/mock.spec.ts` **4/4**。测试从卡片点击，检查重唱调用、禁止作曲/旋律请求、锁定/逐音符覆盖不变、新资产有效、PCM 有声且变化、保存重载、失败/迟到保护。默认 5184 已占用，未关闭既有服务，隔离使用 5186。首轮夹具在设置表达锁/覆盖后未重建资产导致资产过期，已修正夹具并通过；未修改产品校验规避错误。仅 Mock 测试音，未调用真实声库、未跑真实 WAV/MP4 导出或人工听评，真实验收仍由[工单 6](../CC-Tasks/6-joint-acceptance.md)负责。本轮仅本地提交。
+
 <a id="pr17-integration"></a>
 
 ## 2026-11-08 · 工单 29 前端 PR #17 合并协调
