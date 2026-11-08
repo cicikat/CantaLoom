@@ -392,3 +392,28 @@ MP4 导出使用 loudnorm（I=-14 LUFS、TP=-1.5 dBTP、LRA=11），48kHz AAC 19
 `renderAudio` 让本地 Synth 器乐经过独立 GainNode 再进入原 master；`processed` 时增益为 `mixSettings.bandGain ?? 1`，否则为 1。元音演示与外部人声不进入器乐总线。FluidSynth WAV 继续原 addWav 的平衡/声像/增益路径，不再乘一次总线。原处理默认值（自由模式默认开）、stem、静音、单轨、干声、master 压缩及处理后峰值保护保持不变。
 
 试听、`exportWavFile` 与 `exportPVFile` 仍共用 renderAudio；bandGain=0 的纯器乐 PCM/WAV/PV 输入为零，1 与旧 Synth 基线一致，2 改变实际 PCM。MP4 后续响度归一仍是原策略，不能假定编码后响度与浏览器增益成线性关系。页面控件解禁由 Toge 处理，元音演示的人声 gain/reverb 本期未开放；Groove 事件同步不在本补丁内。验证见[工单 33](../CC-Tasks/已完成/33-browser-synth-band-gain.md)及[日志](iteration-log.md#synth-band-gain-33)。
+
+
+#### 制作任务表现规划状态与公开追溯（工单 34）
+
+沿用 `POST /api/production`，例如请求 `{"intent":"雨后出发","targetSeconds":25}`，启动成功仍为 202 与 `id/state/stage`。`GET /api/production/:id` 与单句 retry 的公开响应使用同一显式投影，不再直接返回内部 job。保留 `id/state/stage/project/composition/phraseId/completedPhrases/error` 和可选 Mock 标记；根级 input、failureContext、performanceTrace、instrumentAssets、内部时间记录及任意后台上下文不在公开契约内。`composition.input` 仍是原 FreeResult 的创作输入，不包含后台配置，原结果应用不变。
+
+新增可选 `performancePlanning`：前序阶段可缺省；disabled 表示未配置该任务路由，running 表示正在规划，succeeded 表示规划返回，skipped 表示没有可规划句（锁定/手工等保护，planner 返回 trace:null），failed 表示配置或规划失败。只有 succeeded 可有可选 trace；没有 trace 时不伪造模型/Token，不从全局 router 历史捞取其他任务的记录。
+
+以下是**契约夹具**，不是实际模型调用；为简洁省略 project/composition：
+
+```json
+{"id":"00000000-0000-4000-8000-000000000001","state":"succeeded","stage":"ready-for-mix","performancePlanning":{"status":"succeeded","trace":{"provider":"fixture-provider","model":"fixture-model","promptVersion":"performance_planning/1/0123456789abcdef","attempts":1,"promptTokens":30,"completionTokens":20,"milliseconds":10,"cost":null,"costCurrency":null}}}
+```
+
+trace 与现有 router 成功字段一致：provider（1–80 字）、model（1–100 字）、promptVersion（任务/版本/16 位哈希）、attempts（1–3）、非负整数 promptTokens/completionTokens/milliseconds、非负 cost 或 null、costCurrency 为 USD 或 null。序列化仅取该白名单，非法追溯整项省略；不返回 task、at、reason、baseUrl、keyRef、systemPrompt、Authorization、原始请求/响应或 stack。未知费用为 null，不能当作零费用。
+
+规划失败示例仍用原 HTTP 200 轮询状态，原中文 error 保留；不会进入器乐/演唱，已有谱面保留，单句 retry 返回原 409，不能跳过规划：
+
+```json
+{"id":"00000000-0000-4000-8000-000000000001","state":"failed","stage":"validated","error":"演唱表现规划失败；未进入演唱，请修正配置后重新制作","errorCode":"PERFORMANCE_PLANNING_FAILED","performancePlanning":{"status":"failed"}}
+```
+
+未启用例为 `"performancePlanning":{"status":"disabled"}`，全锁定跳过为 `{"status":"skipped"}`，均无 trace；旧响应和 Mock 夹具可不提供该新字段。无效创建输入仍 400，无法启动 503，任务不存在/重启 404，非可重试句 409。内存任务边界不变，追溯不写进 SongProject。本轮现有 Client 通过共享 Schema 已能保留字段，Mock/页面是否展示仍由 Toge review。证据见[工单 34](../CC-Tasks/已完成/34-production-trace-contract.md)与[日志](iteration-log.md#production-trace-34)。
+
+工单 34 序列化补充：project.vocalAssets 仅返回既有 VocalAsset 工程字段，剔除引擎返回的 sourceProject 绝对缓存路径与额外诊断，保留 dependency/voice/renderParameters 与成功应用/单句重试所需数据。内部资产不修改。

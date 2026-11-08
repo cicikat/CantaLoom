@@ -70,6 +70,8 @@
 
 - 更新：2026-11-07；来源：[工单 15](CC-Tasks/后端/15-p0.md) P2-B；Blacktea → Toge；状态：后端已推送；等待接入 review 与安排。
 - 已交付：已推送分支 `feature/backend-p1-phoneme` 的 `9718420` 提供 lyrics_planning / melody_composition / performance_planning，Admin 的 `LLM_ROUTES` 配置与 `GET /api/admin/llm` 脱敏追溯。未新增公共创作端点或共享工程字段；该实现通过 [PR #9](https://github.com/cicikat/CantaLoom/pull/9) 交付，页面接入仍需 Toge review。
+- 2026-11-08 工单 34 续接：[制作追溯契约](CC-Tasks/已完成/34-production-trace-contract.md)后端/共享响应已完成；本会话用户确认限定范围。GET/retry 白名单序列化，新增可选 performancePlanning 与 PERFORMANCE_PLANNING_FAILED；现有 Client 共享 Zod 保留字段。分支 feature/backend-production-trace，本地提交，未推送；实际回归与夹具边界见[日志](docs/iteration-log.md#production-trace-34)。
+- Toge 下一步：按[契约与夹具](docs/ARCHITECTURE.md#production)决定轻量状态/错误展示并补 Mock；disabled/skipped/无 trace 不伪装 LLM 调用，费用 null 显示未知，失败仍不进入演唱。没有新增 URL、路由设置或永久工程追溯；本条仍保留等前端 review/接线回执。
 - 对方下一步：确定是否及如何接入后台路由控件和任务追溯；如需将追溯写入工程，另提共享契约确认。不要把当前进程最近 100 次记录当作持久化工程历史；未配置单价或费用未知时显示未知。
 - 验收与回执：已交付分支的独立快照记录为构建通过、72 项通过/3 项跳过，真实三任务使用不同模型 ID 的调用 1/1 通过；这些是前一轮路由证据；本轮整合的回归结果另记迭代日志。review 后补 Mock/页面接入工单及实际验证结果；不把模型输出成功标为页面、真实歌声或人工听感通过。
 

@@ -1,5 +1,15 @@
 # 公共契约变更
 
+## 工单 34 · 制作表现规划公开追溯（2026-11-08）
+
+- Owner Blacktea；本会话针对共享响应 Schema/声明与服务端序列化提出具体范围，用户回复「确认上述限定范围」。不修改 Client、Mock、UI、路由配置、数据库或永久工程追溯。
+- productionJobSchema 新增可选 performancePlanning（status=disabled/running/succeeded/failed/skipped；仅 succeeded 可带 trace）与可选 errorCode=PERFORMANCE_PLANNING_FAILED。旧字段和 Mock 标记继续兼容，旧响应可无新增字段。
+- trace 白名单核对现有 router：provider、model、promptVersion、attempts(1–3)、promptTokens、completionTokens、milliseconds、cost(number|null)、costCurrency(USD|null)；不公开 task/at/reason、URL/keyRef、提示词、请求/响应、stack。仅成功 router trace 可选公开；失败无虚构 trace。
+- disabled=未配置 performance_planning，running=正在调用 planner，skipped=planner 无可规划句而返回 trace:null，succeeded=已返回经校验规划，failed=配置/规划失败；失败仍终止整项制作、不进入器乐/演唱，禁止单句 retry 绕过。queued/前序阶段可无该字段。
+- GET 与 retry 改用显式公开 job 投影并经契约校验，保留 project/composition 与原成功应用/重试所需字段，根级内部 input/failureContext/performanceTrace 等不公开。composition.input 保留原 FreeResult 的创作输入契约，并非后台配置。
+- 工单 34 序列化补充：project.vocalAssets 仅返回既有 VocalAsset 工程字段，剔除引擎返回的 sourceProject 绝对缓存路径与额外诊断，保留 dependency/voice/renderParameters 与成功应用/单句重试所需数据。内部资产不修改。
+- TS/响应示例与错误边界见[架构](../../docs/ARCHITECTURE.md#production)，验证 Owner Blacktea；Toge 后续 review Mock/页面轻量状态展示，沿用 15-P2B-routing。证据见[工单 34](../../CC-Tasks/已完成/34-production-trace-contract.md)和[迭代日志](../../docs/iteration-log.md)。
+
 ## 工单 33 · Synth 伴奏增益路由（2026-11-08）
 
 - Owner Blacktea；本会话针对 src/audio.ts 器乐总线、必要 audio-mix 适配和 PCM/WAV/PV 测试提出具体范围，用户回复「确认上述限定范围」。不修改 UI、Hook、Mock 定义、增益字段、API 或服务端 FluidSynth。

@@ -40,3 +40,5 @@ Owner：Toge / Frontend & UX。状态：高级调教、历史演唱恢复、产�
 2026-11-08 回执：[工单 32](已完成/32-phoneme-explicit-zero.md)已修复首音素显式零偏移，并通过 USTX/依赖回归和真实绮萱 WAV/缓存对照。上文该项问题为历史状态；Toge 待移除原限制提示，沿用 27-phoneme-zero 交接，人工听评仍未执行。
 
 2026-11-08 回执：[工单 33](已完成/33-browser-synth-band-gain.md)已修复 Synth 伴奏增益核心，并完成 PCM/WAV/PV 输入、真实 FluidSynth 与 MP4 编码回归。上文该核心缺口为历史状态；Toge 待解禁现有控件并回归页面，沿用 5-C-synth-mix，元音人声增益/混响和人工听评不在本次范围。
+
+2026-11-08 后端回执：[工单 34](已完成/34-production-trace-contract.md)已提供表现规划五态、可选脱敏 trace 与可选错误码，GET/retry 使用显式公开投影；现有 Client 能通过共享 Schema 保留字段。Mock/页面展示仍由 Toge review，沿用 15-P2B-routing；本轮只有接口夹具验证，无真实模型调用。

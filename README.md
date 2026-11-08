@@ -117,6 +117,8 @@ npm start
 
 本轮品牌与 PR 整合：[工单 30](CC-Tasks/已完成/30-cantaloom-brand-and-pr-integration.md)。
 
+制作表现规划追溯与安全响应：[工单 34](CC-Tasks/已完成/34-production-trace-contract.md)；后端/共享响应完成，Mock/页面展示待 Toge review。
+
 Synth 伴奏增益核心修复：[工单 33](CC-Tasks/已完成/33-browser-synth-band-gain.md)；WAV/PV 已验证，控件待 Toge 解禁。
 
 首音素显式零偏移修复：[工单 32](CC-Tasks/已完成/32-phoneme-explicit-zero.md)；待 Toge 清理旧限制提示。

@@ -1,5 +1,18 @@
 <a id="lets-mv-entry-autoplay"></a>
 
+<a id="production-trace-34"></a>
+
+## 2026-11-08 · 工单 34 制作表现规划追溯与安全响应
+
+- 工单：[34](../CC-Tasks/已完成/34-production-trace-contract.md)；关联[15 P2-B](../CC-Tasks/后端/15-p0.md)、[27](../CC-Tasks/27-frontend-interface-sync.md)；字段确认见[CHANGELOG](../shared/contracts/CHANGELOG.md)，请求/响应/错误夹具见[架构](ARCHITECTURE.md#production)、[接口清单](INTERFACES.md)。Owner Blacktea；用户在本会话针对限定共享响应/序列化范围回复「确认上述限定范围」。
+- 实现：新增可选 performancePlanning 五态、可选成功 trace、可选 PERFORMANCE_PLANNING_FAILED；Schema/TS 同步，旧响应和 Mock 标记兼容。进入 planner 时为 running，实际无可规划句的 trace:null 为 skipped；未配置为 disabled；规划/配置失败为 failed，保留原中文错误与谱面，不进入器乐/演唱，retry 不能绕过。前序阶段允许无该新字段。
+- 脱敏：GET/retry 使用统一 serializeProductionJob，只投影既有公开必要字段；内部根级 input/failureContext/performanceTrace、环境、提示词、原始上下游对象均不直接返回。trace 只取 router 已有成功白名单并校验；未知/非法 trace 省略，费用未知为 null，不借用其他任务历史。project.vocalAssets 仅保留原 VocalAsset 工程字段，去除实际引擎附带 sourceProject 缓存路径及额外诊断；内部数据不修改，dependency/voice/renderParameters 和原结果应用/重试保留。composition.input 仍是原 FreeResult 创作输入，不是后台配置。
+- 验证：初轮定向 production-trace/llm-router/production/production-groove 22 项中 21 通过、1 外部验收跳过；`npm run build` 通过（已有体积/依赖注释警告）；全量 `npm test` 128 项中 120 通过、8 外部验收跳过；`npm run test:e2e` 16/16 通过；`npm run test:e2e:mock -- -g 'planning-failure|A2 page retries missing singing'` 2/2 通过（选定制作失败与重试保护，未重跑 Mock 全套）。
+- 末次安全核查补资产路径白名单后，定向 production-trace/production-groove/production 16 项中 15 通过、1 外部验收跳过；覆盖实际 HTTP、新 Client 字段保留、旧 Schema 兼容、全锁定跳过、运行中状态、规划失败无演唱与不可重试、成功结果完整应用、歌声失败单句重试不重规划/不丢兄弟资产，以及私有根字段/trace/资产诊断不可序列化。`git diff --check` 与修改文档本地链接检查通过。
+- 证据：`temp/task34-targeted.log`、`task34-targeted-final.log`、`task34-build.log`、`task34-unit.log`、`task34-e2e-http.log`、`task34-e2e-mock.log`。路由请求及响应均为显式夹具，未调用真实模型、声库或 MP4，不把成功状态/Token 夹具当作真实 LLM 证明，未做人工听评。
+- 交接：[15-P2B-routing](../CROSS-END-HANDOFF.md#15-p2b-routing)增加本轮字段与夹具入口；Toge 后续决定 Mock/页面轻量展示，null 费用显示未知，disabled/skipped 不装作调用过模型。本轮未改 Client/Hook/Mock/UI，也未改后台配置或路由算法；内存 30 条/重启 404 不变，持久化仍归工单 22。工单后端范围完成归档，本地 feature/backend-production-trace，未推送；保留原两个脚本删除和 BACKEND-EXECUTION-NOTE.md。
+
+
 <a id="synth-band-gain-33"></a>
 
 ## 2026-11-08 · 工单 33 浏览器 Synth 伴奏总增益

@@ -109,7 +109,7 @@ MID 对应器乐渲染轨道，USTX 对应真实演唱缓存源工程，WAV 对�
 
 示例：`groove:{projectId:"project-1",trackId:"track-1",version:1,swingTicks:60,timingTicks:15,velocityAmount:0.08}`。统一 Zod 校验失败返回 400；有效参数和种子进入渲染 hash，相同输入 MIDI 字节一致。鼓仅应用 swing，不额外加 timing/velocity 抖动；vocal 不经此器乐端点。锁定不由后端猜测，调用方须带保护标记。
 
-自由编曲核心已默认采用 backbeat、末小节 fill、踩镲力度分层与 energy 动态；旧模式保持原鼓型/TAP 实现。**可选 groove 尚未由 production/浏览器/Client/Mock 自动传入，也没有页面开关或工程持久化字段**；接线时必须统一保存、试听与导出的参数来源，见[交接 20-groove-render](../CROSS-END-HANDOFF.md#20-groove-render)。
+自由编曲核心已默认采用 backbeat、末小节 fill、踩镲力度分层与 energy 动态；旧模式保持原鼓型/TAP 实现。**工单 31 已接工程 grooveSettings 持久化、production 与 external-audio 的 FluidSynth 输入；Client 制作类型/Mock/页面与浏览器 Synth 仍待 Toge 接线**；接线时必须统一保存、试听与导出的参数来源，见[交接 20-groove-render](../CROSS-END-HANDOFF.md#20-groove-render)。
 
 ## 混音与分轨（main；P0 加拼接淡化）
 
@@ -128,7 +128,7 @@ MID 对应器乐渲染轨道，USTX 对应真实演唱缓存源工程，WAV 对�
 
 ## 制作任务状态（main）
 
-`POST /api/production` → 202 + job；`GET /api/production/:id` 轮询：state＝running/succeeded/failed，stage＝queued/checking/composing/planning/melody/validated/instruments/singing/ready-for-mix；失败时附 error、phraseId、completedPhrases。`POST /:id/retry/:phraseId` 仅重试失败句（610 秒）。**没有百分比进度**；任务为内存最多 30 条，重启 404；ready-for-mix ≠ 已导出 MP4。
+`POST /api/production` → 202 + job；`GET /api/production/:id` 轮询：state＝running/succeeded/failed，stage＝queued/checking/composing/planning/melody/validated/instruments/singing/ready-for-mix；失败时附 error、phraseId、completedPhrases。`POST /:id/retry/:phraseId` 仅重试失败句（610 秒）。工单 34 新增可选 performancePlanning（disabled/running/succeeded/failed/skipped）和 PERFORMANCE_PLANNING_FAILED 错误码；成功可带白名单 trace，费用未知为 null，未调用/跳过不填模型或 Token。GET/retry 经显式公开投影，内部 input/failureContext 不返回；旧 Client/Mock 响应可无新字段。字段、夹具和错误示例见[制作追溯](ARCHITECTURE.md#production)。**没有百分比进度**；任务为内存最多 30 条，重启 404；ready-for-mix ≠ 已导出 MP4。
 
 ## 导出与署名（main）
 
