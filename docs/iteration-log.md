@@ -1,3 +1,13 @@
+<a id="first-run-installer"></a>
+
+## 2026-11-08 · 工单 37 新用户一键安装启动
+
+- [工单 37](../CC-Tasks/已完成/37-first-run-installer.md)新增 [install-and-start.bat](../install-and-start.bat) 与 [PowerShell 安装器](../scripts/install-local.ps1)，Windows x64、无需全局 Node/管理员权限。基础档下载便携 Node 22 并复用 npm/build/启动；演唱档实现 OpenUtau 0.1.576、绮萱 2.7.0、2025.02 声码器、.NET 10 SDK 下载与桥接编译、FFmpeg。资源默认放项目相邻 CantaLoom-resources；不改系统 PATH、.env、已有后台配置；已有根目录设置明确中止，由用户继续原入口。
+- [首次安装与硬件说明](ENGINES.md#first-install)已注明建议 RAM/显存/磁盘预算、CPU 无独显路线、远程 LLM 无需本地权重、许可确认、可选 FluidSynth/SoundFont/Chromium、下载校验和失败重试方式。建议值不是经设备矩阵验证的最低要求。
+- 实测：Windows PowerShell 5.1 语法及 local Plan 通过；新相邻目录下载 Node v22.23.4 并通过官方 SHA256 校验；原 3001 被占用时安全中止，未停止已有服务；改用隔离 3119 后完整 build、页面、JS 资产与 API 就绪检查通过，检查后停止自有服务。npm 依赖沿用本机既有 node_modules，未在空 npm 缓存/全新 Windows 上跑 npm ci。演唱许可拒绝路径确认在下载前退出；声码器 52.8 MB 包实际下载、SHA256 与官方资产一致、ZIP 内根布局符合目标 Dependencies 目录；其余 release 名称/校验元数据与 .NET SDK 元数据已联网核对。
+- 验证边界：尚未执行整套演唱档下载/桥接编译/真实 CPU 或 DirectML 生成、FFmpeg 新安装导出、低内存和 ARM 设备；不将基础启动成功当作真实演唱验收。既有模型推理/音频/前端/公共契约未改，无新增跨端接线。未跟踪的他人说明与两项既有启动文件删除保留，不纳入本轮提交。
+- 补充：中文入口 [一键安装启动.bat](../一键安装启动.bat)复用同一安装器；`node --test tests/launcher.test.mjs tests/launcher-restart.test.mjs` 3/3 通过，含 Windows 真实监听进程身份与安全停止回归。local/singing Plan、文档相对链接、git diff --check 通过。本轮仅本地提交，未推送远端。
+
 <a id="lets-mv-entry-autoplay"></a>
 
 <a id="toge-followup-36"></a>
