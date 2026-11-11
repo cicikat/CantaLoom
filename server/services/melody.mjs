@@ -10,8 +10,8 @@ export function createMelodyComposer({env=process.env,request=fetch}={}){
   const first=Math.min(...input.phrases.map(p=>p.start)),lastEnd=Math.max(...input.phrases.map(p=>p.end)),bars=[];for(let b=Math.floor(first/4)*4;b<lastEnd;b+=4)bars.push(`${b}:${chordClasses(input.songPlan,b).join('/')}`);
   const harmony=`调式音级（MIDI mod 12）：${scaleClasses(input.songPlan).join('/')}。逐小节（每4拍）强拍三和弦音级：${bars.join('，')}。偶数 beat 音符必须落在对应小节这三个音级之一。`;
   const result=await createTaskRouter({env,request}).run('melody_composition',{
-   schema:melodyDraftSchema,input,system:system+'\n'+harmony,promptVersion:'2',attempts:3,timeout:180000,
-   validate:raw=>{const draft=validateMelody(input,raw);if(draft.source!=='llm')throw Error('来源标记错误');return draft},
+   schema:melodyDraftSchema.omit({mock:true}),input,system:system+'\n'+harmony,promptVersion:'2',attempts:3,timeout:180000,
+   validate:raw=>{if(raw?.mock===true)throw Error('真实旋律不能包含 Mock 标记');const draft=validateMelody(input,raw);if(draft.source!=='llm')throw Error('来源标记错误');return draft},
   });
   return melodyResponseSchema.parse({draft:result.value,model:result.model,metrics:{milliseconds:result.trace.milliseconds,promptTokens:result.trace.promptTokens,completionTokens:result.trace.completionTokens}});
  }};

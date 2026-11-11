@@ -68,6 +68,36 @@ AI HTML PV：第三章折叠入口显式调用独立视觉模型；新增可选 
 
 入口测试最终使用隔离目录中的真实 BAT 执行，确认从其他工作目录调用三个中文入口时，都向测试启动器传递 `--restart --check --no-open` 并保留错误退出码 7。首次执行测试时，测试自身的 Node→cmd 引号导致退出码 1；修正测试命令的 Windows 引号后，该项重跑通过，其余三项已通过，产品 BAT 无需额外修改。
 
+<a id="admin-presets-ping"></a>
+## 2026-11-08 · 后台模型连接复用、Ping 与真实旋律来源保护
+
+对应[工单 39](../CC-Tasks/已完成/39-admin-presets-and-ping.md)，使用方法见[引擎与后台](ENGINES.md#管理调试启动与路由)。参考 Emerald-presence 的连接 Presets 与用途分配，资源台新增可复用连接、独立 DPAPI 密钥、四项用途下拉选择及逐连接/任务 Ping。最小聊天测试只表示接口可达，不设置完整规划 verified。
+
+真实旋律此前将含可选 mock:true 的公共 Schema 直接发给模型，存在模型照填并被真实 Client 拒绝的路径；本轮移除上游 Schema 的该字段，污染输出仍校验失败并重试，未放宽客户端拒绝策略。新增夹具回归验证提示、重试、连接密钥加密恢复及 Ping 脱敏。15项后台/路由定向测试通过；前次含Mock来源保护组合20项通过；扩展管理浏览器1项通过，build通过。未重跑真实模型/歌声/MP4或人工听感，也未取得用户报错时的原始响应。
+
+工作区已有其他未提交调试/前端改动及启动器删除，保留并按本轮增量提交；无需跨端接线，未推送远端。
+
+
+## 2026-11-08 · 工单 38 V2 · 空间镜头升级与真实 Alpha
+
+对应[工单 38](../CC-Tasks/38-hackathon-mg-video.md)、[视频工程 V2 说明](../video/mg/README.md#v2--空间镜头与导出)。沿用 V1 配色、102 秒时间轴和渲染链路，新增独立 spatial 模块，用 Three.js 摄像机执行 Dolly / Truck / Roll / Tilt 与小角度 Orbit；SVG 投影多景深图元、逐字挤出近似、音轨和三层波形。实现穿环推进、字片到音轨/音符到波形的连续形变、透视卡片归正，以及有序汇聚后静止落版。V1 源码入口及产物保留，没有改核心前后端。
+
+先实渲 8 秒开场与 6 秒录屏卡片预览，发现并修正侧向文字接近边缘、预览底图与透视四边形不贴合，再推广到完整输出。局部修正版实测约 25.2 / 15.7 秒；全片预览 143.8 秒，全片 Alpha 191.4 秒（本机四路并发）。产物统一在 `temp/mg-video-v2/`：cantaloom-mg-v2-preview.mp4、cantaloom-mg-v2-alpha.mov、五段独立 MG、两段局部 MP4 和 PilotScreenV2.mov。稳定录屏区间不变，开窗提前量改为 2.1 秒，尾余量仍 1.15 秒；替换视频通过四角透视映射跟随卡片，不把平放视频称为空间贴图。
+
+FFprobe 核实全长 1920×1080、30fps、102 秒 / 3060 帧，所有正式 MOV 为 ProRes profile 4、yuva444p12le。最终 MOV 直接解码的 7/7.7/16/29.3/40/56.4/65/90 秒中心 Alpha 均为 0，四段稳定区内窗 Alpha 全为 0；倾斜卡片下层颜色合成已检查。全片与两段局部 MP4 全部解码正常，blackdetect 无整帧黑屏，平均亮度范围 26.48–212.60，无整帧白屏。逐帧映射检查四角最大误差 4.69e-13 像素；同幅摄像机横移的近/远景位移 312.0 / 122.1 像素，确认不是整画面缩放。脚本：video/mg/verify-spatial.ts、verify-v2.py；本机证据：verification-v2.json、encoding-verification.json、spatial-verification.json、contact-v2.jpg。
+
+验证边界：文字的 2.5D 挤出是投影近似，不是实体字网格；视觉抽帧与技术检查不代替用户创意接受度。本轮仍静音，波形程序模拟，无真实录屏、无产品功能验收、无真实音画同步结论。后续通过 [VIDEO-38](../CROSS-END-HANDOFF.md#video-38) 接真实素材、配乐与人工审阅。仅本地提交，保留并行中的后端与启动器改动，未推送。
+
+
+## 2026-11-08 · 工单 38 · 黑客松 MG 视频首版
+
+对应[工单 38](../CC-Tasks/38-hackathon-mg-video.md)与[独立视频工程及录屏替换说明](../video/mg/README.md)。本轮仅建立 video/mg 的 Remotion / React / SVG 工程，保留原 HTML 与产品代码。102 秒、1920×1080、30fps；五段 MG、四段真实 Alpha 窗口，包含文字遮罩、错位纸片、音符至波形形变与开窗/收拢转场。
+
+实际输出位于 `temp/mg-video/`：`cantaloom-mg-preview.mp4`、`cantaloom-mg-alpha.mov` 及 opening / ingredients / singing / showcase / ending 五个 MOV。预览含录屏提示，正式素材没有提示。FFprobe 核实完整文件均 3060 帧、102 秒；透明文件是 ProRes profile 4，解码像素格式 yuva444p12le。直接解码 MOV 在 16/40/65/90 秒的内窗区域 Alpha 极值均为 0，外部 Alpha 为 255；PNG 抽帧与有色下层合成均通过。完整 MP4 全片解码返回 0，blackdetect 未发现整帧黑屏；检查中文、标题安全区、五段构图及转场抽帧。复验脚本在 video/mg/verify.py 和 qa-stills.mjs，本机证据为 `temp/mg-video/verification.json`、`preview-decode.log`、`contact.jpg`。
+
+验证边界：本轮静音，无真实录屏、模型调用或产品验收；波形为程序模拟。未把音画同步、用户审美接受度或不存在的操作演示写成通过。独立工程与素材真实渲染，不运行无关产品构建/引擎测试。交接 [VIDEO-38](../CROSS-END-HANDOFF.md#video-38)：真实录屏、授权配乐、人工观感与后续剪辑；工作区原有启动器删除和未跟踪后端笔记保留。源码本地提交，不推送远端。
+
+
 <a id="pr17-integration"></a>
 
 ## 2026-11-08 · 工单 29 前端 PR #17 合并协调

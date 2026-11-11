@@ -16,6 +16,7 @@
 
 | ID | 来源 | 发起方 → 接收方 | 状态 |
 |---|---|---|---|
+| [VIDEO-38](#video-38) | 工单 38 | 视频制作 Agent → Toge / 剪辑协作者 | 待真实录屏与授权配乐 |
 | [35-ai-html-pv](#35-ai-html-pv) | 工单 35 | Blacktea → Toge | 前端已接；真实页面/共同观感待验 |
 | [27-phoneme-zero](#27-phoneme-zero) | 工单 27 / 15 P1 | Blacktea → Toge | 前端已完成（2026-11-08，证据见回执） |
 | [24-test-review](#24-test-review) | 工单 24 | Blacktea → Toge | 测试审计交付；待浏览器测试语义 review |
@@ -138,3 +139,12 @@
 - 导出：原/api/export旧四PNG/WAV不变；新HTML分支带visualMode、pvProject、pvDesign、inputFingerprint与同一renderAudio混音WAV，不带scenes，不再加ASS。400校验/失效、429占用、503资源缺失、500编码/预算失败；Blob/响度头保留，180s既有Client在本机77.7s基准内足够，复杂设计仍可能触发512MiB/170s预算。Mock设计必须source=mock/mock=true，不伪造trace或MP4。
 - 资源/证据：temp/task35/preview-harness.html、ai-html-pv.mp4、两首设计JSON、render-report.json/frame-check.json；实际模型两次、新设计真实600帧MP4、seek字节稳定、活动歌词视频SSIM约0.9900、FFprobe、黑帧/完整解码、旧Canvas真实导出均通过。两秒采样进程树约1.22GB、临时帧454MB，仅为本机基准。音频是本地规则/元音演示，不是真实中文演唱。
 - 未验边界：产品页面/工程保存接线、跨端字体差异、手机/Safari和人工观感尚未共同验收。请在工单35 P2/工单6留下实际前端证据后再关闭交接；不要因后端动态成片已产出宣布产品端到端完成。
+
+<a id="video-38"></a>
+
+### VIDEO-38 · 黑客松视频真实素材
+
+- 更新时间：2026-11-08；来源：[工单 38](CC-Tasks/38-hackathon-mg-video.md)。发起方：视频制作 Agent；接收方：Toge / 黑客松剪辑协作者；状态：MG 工程交付后待提供素材。
+- 交付：`feature/frontend-mg-demo-video` 的 [独立工程](video/mg/README.md)，102 秒时间轴与透明窗口；V1 产物位于本机 `temp/mg-video/`，V2 空间镜头产物在 `temp/mg-video-v2/`，未上传远端。V2 素材需要首 2.1 秒 / 尾 1.15 秒余量，空间透视替换见工程说明。
+- 下一步：按工程素材清单提供四段真实录屏及授权配乐，保留首尾余量，再做实际功能核对、音画同步与人工观感验收。
+- 不涉及共享业务契约，不授权修改产品代码；回执与实际素材验证写回工单 38 和迭代日志。

@@ -191,11 +191,11 @@ dotnet build scripts/openutau-bridge/SongyuBridge.csproj -p:OpenUtauDirectory="$
 
 双击根目录 `start-admin.bat` 构建并启动本地服务，自动打开 `/admin`。支持 `--no-open`；关闭窗口前使用 Ctrl+C。端口占用时不会关闭已有进程。
 
-在连接与密钥页为歌词规划、旋律作曲、演唱表现分别启用路由，填写服务商、OpenAI 兼容 Base URL、模型 ID 与 API Key，然后保存。接口追加 `/chat/completions`。独立密钥以 Windows DPAPI 保存，留空保留；未设置独立密钥的新路由使用默认密钥。关闭覆盖恢复默认连接。连接检查目前只测试歌词规划路由，不代表三个任务都已通过真实调用。
+资源管理台采用“模型连接 Presets → 任务路由”。新建连接别名，填写服务商、OpenAI 兼容 Base URL、模型 ID 与 API Key 并保存，再为歌词、旋律、演唱表现、PV 下拉选择连接并保存；同一连接可复用到多项用途。高级设置保留旧独立路由。接口追加 `/chat/completions`；独立密钥以 Windows DPAPI 保存，留空保留，默认连接仍向后兼容。每个连接与任务旁都有“Ping / 测试连接”，返回模型、耗时及最小聊天接口可达结果；这不代表 SongPlan、旋律或真实演唱已通过验收。测试可使用尚未保存的 URL、模型与密钥，不持久化测试输入。
 
 管理启动器（「打开吱声机管理面板.bat」或 start-admin.bat）默认先确认并关闭旧 CantaLoom 服务，重新构建、启动后打开 /admin；首页入口「打开吱声机.bat」使用同一重启逻辑。新版管理状态返回 projectRoot/pid 用于精确核对，旧服务需同时匹配 Node 服务命令与资源根目录；停止前再次校验监听 PID/启动时间，其他服务占用时中止。--check 会执行该重启流程并在验证后停止新服务；不改写密钥、资源或工程。详见[启动流程](ARCHITECTURE.md)和[工单 31](../CC-Tasks/已完成/31-launcher-restart.md)。
 
-模型连接和三任务路由统一在资源管理台。填写 URL 和 API Key 后点击“获取模型列表”，选择模型并保存；通过服务端请求兼容的 `/models`，不向浏览器返回密钥。厂商不支持此接口时可手填模型 ID。顶部列出已保存的有效路由；表单修改保存后生效。
+模型连接和四项任务路由统一在资源管理台。填写 URL 和 API Key 后点击“获取模型列表”，选择模型并保存；通过服务端请求兼容的 `/models`，不向浏览器返回密钥。厂商不支持此接口时可手填模型 ID。顶部列出已保存的有效路由；表单修改保存后生效。
 
 
 <a id="html-pv"></a>
@@ -222,3 +222,5 @@ node scripts/check-html-pv.mjs
 ```
 
 输出在 `temp/task35/`：两首真实设计/最小上下文/本地规则工程、离线 sandbox seek harness、实际混音 WAV、动态 MP4、FFprobe/SSIM/耗时/资源报告。音频是当前 Web Audio 本地作曲与元音演示，不是真实中文演唱。真实模型、真实动态编码、快速夹具分别记[日志](iteration-log.md#ai-html-pv-35)；人工观感与正式页面共同验收仍归工单 6。
+
+真实旋律请求使用不含测试专用 `mock` 字段的输出 Schema；上游若仍返回 `mock: true`，服务端按输出校验失败重试，前端继续拒绝污染响应并保留工程。回归与边界见[工单 39](../CC-Tasks/已完成/39-admin-presets-and-ping.md)。

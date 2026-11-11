@@ -139,6 +139,7 @@ Synth 伴奏增益核心修复：[工单 33](CC-Tasks/已完成/33-browser-synth
 
 | 需要了解什么 | 阅读入口 |
 |---|---|
+| 黑客松 MG 视频工程 | [独立动画工程与录屏替换说明](video/mg/README.md)；[工单 38](CC-Tasks/38-hackathon-mg-video.md) |
 | Agent 长期规则 | [AGENTS.md](AGENTS.md) |
 | 待对方确认、接线或联调的跨端事项 | [CROSS-END-HANDOFF.md](CROSS-END-HANDOFF.md)，仅相关任务按需读取，完成后清理 |
 | 分工、联调、Git 与验证规则 | [TEAM_WORKFLOW.md](docs/TEAM_WORKFLOW.md) |
@@ -156,3 +157,5 @@ Synth 伴奏增益核心修复：[工单 33](CC-Tasks/已完成/33-browser-synth
 管理调试：双击 `start-admin.bat`，路由设置见 [管理调试启动与路由](docs/ENGINES.md#管理调试启动与路由)。本轮工单：[25](CC-Tasks/已完成/25-admin-routing.md)。
 
 资源台模型发现：[工单 26](CC-Tasks/已完成/26-admin-model-discovery.md)。
+
+后台模型连接复用与 Ping：[工单 39](CC-Tasks/已完成/39-admin-presets-and-ping.md)，使用方法见[管理路由](docs/ENGINES.md#管理调试启动与路由)。
