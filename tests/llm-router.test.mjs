@@ -29,8 +29,8 @@ test('three tasks call separate HTTP model routes, validate outputs and trace pr
 });
 
 test('bounded validation and transient retries; permanent failures and timeouts remain sanitized',async()=>{
- const schema=z.object({ok:z.literal(true)}).strict(),options={schema,input:{},system:'test'};
- let calls=0;const router=createTaskRouter({env:{LLM_API_KEY:'s'},request:async()=>{calls++;return {ok:true,json:async()=>({choices:[{message:{content:calls===1?'{}':'{"ok":true}'}}],usage:{prompt_tokens:2}})}}});
+ const schema=z.object({ok:z.literal(true)}).strict(),options={schema,input:{},system:'test',attempts:2};
+ let calls=0;const router=createTaskRouter({env:{LLM_API_KEY:'s'},request:async()=>{calls++;return {ok:true,json:async()=>({choices:[{message:{content:calls===1?'{}':'{"ok":true}'}}],usage:{prompt_tokens:2,completion_tokens:1}})}}});
  const result=await router.run('lyrics_planning',options);assert.equal(calls,2);assert.equal(result.trace.promptTokens,4);
  let permanent=0;await assert.rejects(createTaskRouter({env:{LLM_API_KEY:'s'},request:async()=>{permanent++;return {ok:false,status:401,text:async()=>'secret-error'}}}).run('lyrics_planning',options),/上游请求失败/);assert.equal(permanent,1);
  let transient=0;await assert.rejects(createTaskRouter({env:{LLM_API_KEY:'s'},request:async()=>{transient++;return {ok:false,status:503}}}).run('lyrics_planning',options),/上游请求失败/);assert.equal(transient,2);

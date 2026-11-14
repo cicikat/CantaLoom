@@ -94,6 +94,8 @@ npm start
 
 ## 协作工单
 
+- [工单 40 · 一键成歌鲁棒性与低能力模型兼容](CC-Tasks/后端/CantaLoom_40_一键成歌鲁棒性与低能力模型兼容_工单.md)
+
 本项目用 CC-Tasks/数字-任务简述.md 管理计划，checkbox 只在工单中更新；已完成工单归入 [CC-Tasks/已完成/](CC-Tasks/已完成/)，保留编号和文件名；完成记录写入 [docs/iteration-log.md](docs/iteration-log.md)，新记录在上，每条注明工单及相关文档地址。规则见 [AGENTS 项目专属工作流](AGENTS.md#project-workflow)。
 
 | 谁 / 任务 | 应做清单与依赖 |

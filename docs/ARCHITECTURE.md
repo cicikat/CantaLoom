@@ -468,3 +468,36 @@ SongProject 可选 `pvVisual={project:PvProject,result:PvResult}` 与 `pvVisualM
 HtmlPvPreview 复用同一 pvDocument，固定 1280×720 画面整体缩放，iframe 仅 sandbox=allow-scripts；seek/播放/重播向自己持有的 frame 发 time×1000 毫秒。HTML 自带单一字幕与署名，不叠 Landscape；原字幕/换色控件仅 Canvas 可用。exportPVFile 在混音前核对当前设计，HTML 分支不带 scenes，带匹配 pvProject/pvDesign/inputFingerprint 和相同 renderAudio WAV；保留 Canvas 四 PNG、MP4 Blob 与响度报告回调。失败不下载文件，也不静默换画面。
 
 验证入口：[Mock 页面](../tests/browser/interface-sync.spec.js)、[真实模式 HTTP 夹具](../tests/browser/pv-frontend.spec.js)、[单元/兼容性](../tests/frontend-interface36.test.ts)。实际结果与未验边界统一见[迭代日志](iteration-log.md#frontend-interface-36)。
+
+<a id="production-recovery-v1"></a>
+
+## 一键成歌 V1.1 服务端恢复与 WAV
+
+```mermaid
+flowchart LR
+  preflight --> planning --> melody --> score --> performance --> instruments --> singing --> mixing --> qa --> completed
+  performance -. 未配置 .-> instruments
+```
+
+任务详情阶段对应 `checking → planning → melody → validated → performance_planning → instruments → singing → mixing → completed`。QA 作为 mixing 阶段的发布门禁。中断后状态为 `interrupted`，恢复继续使用同一任务 ID。配置过演唱表现规划且该阶段失败时，修正配置后恢复，单句重试不能越过此门禁。
+
+| 接口 | 行为 |
+|---|---|
+| GET /api/production/:id | 兼容原有状态枚举、工程和失败结构，成功仍映射为 ready-for-mix |
+| GET /api/production/:id/details | 返回 phase、state、已完成项目、错误类别、是否可续做、重试可能计费、脱敏追溯、成品 URL 与 SHA-256 |
+| POST /api/production/:id/resume | 202 启动阶段恢复；409 表示已有运行或当前状态不允许恢复；不接收改参 |
+| GET /api/production/:id/wav | 返回经校验的 WAV；加 `?download=1` 作为附件下载 |
+| POST /api/production/:id/retry/:phraseId | 保留单句入口，缺失句补齐后继续总混与验收 |
+
+任务存于外置资源目录的 `runtime/jobs/production`，原子替换 v1 检查点，最多保留 30 个任务，单个服务进程同一时刻只跑一个持久制作任务。运行中重启后可显式恢复。已验收计划、旋律和工程按固定输入继续使用，修改创作输入需新建任务。分轨复用时核对 WAV 内容哈希，人声同时核对引擎版本。成品读取核对输入、分轨和 WAV 指纹。成功阶段不会因网页断开重新发起。若服务在上游完成、写入检查点之前中断，该阶段恢复仍可能计费。停止浏览器等待只停止轮询。外置目录含用户创作内容，备份和授权遵循本机存储策略。
+
+后台模型连接支持 `structuredOutputMode`、`maxOutputTokens`、`requestTimeoutMs`，任务路由可指定 `backupConnection`。旧连接默认 `json_object`；确认兼容 Schema 的端点可选 `json_schema`；纯文本兼容端点可选 `text_json`。默认每请求最多 8192 输出 Token，60 秒单次超时，受阶段累计时限约束；作曲规划默认累计 90 秒，旋律 180 秒。备用必须存在、不同且有密钥。未知 Token 或费率使累计费用为 null。明文响应、提示与密钥均不进入追溯。
+
+| 情况 | 后续决策 |
+|---|---|
+| 空内容、截断、JSON/Schema/音乐规则错误 | 同模型带脱敏诊断纠错，最多三次生成；配置有效备用时最后一次切换 |
+| 明确拒绝 response_format | 预算内至多一次切换纯文本 JSON |
+| 429、网络异常、超时、5xx | 预算内退避，考虑 Retry-After |
+| 密钥/权限/余额、普通 400、内容拒绝 | 结束并报告错误 |
+
+混音使用本机 FFmpeg 的器乐、人声定位、增益、短反射和限幅。成品为 48 kHz 立体声 PCM16，读取时校验 RIFF 结构、时长、非静音与削波，记录 LUFS 和 true peak。浏览器 Web Audio 仍供现有编辑试听，FFmpeg 成品不依赖 Chromium 或 PV 路由。前端接线见 [40-production-wav](../CROSS-END-HANDOFF.md#40-production-wav)。

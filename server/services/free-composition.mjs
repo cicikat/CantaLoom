@@ -1,22 +1,38 @@
-import {createTaskRouter} from './llm-router.mjs';
+import {createTaskRouter,TaskError} from './llm-router.mjs';
 import {randomUUID} from 'node:crypto';
+import {z} from 'zod';
 import {freeInputSchema,freePlanSchema,freeResultSchema} from '../../shared/contracts/free-composition.mjs';
 import {freeTimeline} from '../../shared/free-timeline.mjs';
 import {createMelodyComposer} from './melody.mjs';
+
+const planningDraftV1=freePlanSchema.extend({version:z.literal(1)});
 export function createFreeComposer({env=process.env,request=fetch,melody=createMelodyComposer({env,request})}={}){
- return {async compose(raw,onStage=()=>{}){
-  const input=freeInputSchema.parse(raw);onStage('planning');
-  const planning=await createTaskRouter({env,request}).run('lyrics_planning',{
-   schema:freePlanSchema,input,system:`根据本次自由描述创作原创中文短歌，不使用预设曲风或歌词模板。只输出 Schema：（由任务路由附带的 Schema）。保留用户所有歌词字词和行数。用户给 bpm 时必须使用它，否则结合意图选择60到160。用户 intent 是音乐/情绪/节奏指令，不是歌词，不得直接用作标题或首句，也不要逐字复述指令。未给歌词时自由创作1到8个乐句，长短不齐，可像散文歌，允许跨句、语气转折和自然标点；无工整要求不要强求对仗、押韵或等字数。短歌总字数宜18到38字，允许单字短句与较长句。若意图要求时而悠扬时而激烈，请通过段落能量、旋律轮廓和节奏变化体现，不要把这些形容词写进歌词。phraseWeights 对应每句相对时长，按字数、停顿和句尾长音分配。SongPlan 负责和声与情绪，主副歌能量须体现意图，后续真实旋律将依据它生成。`,promptVersion:'2',validate:raw=>{
-    const plan=freePlanSchema.parse(raw);
-    if(input.bpm&&plan.bpm!==input.bpm)throw Error('规划器修改了用户速度');
-    freeTimeline(input,plan,randomUUID);return plan;
-   },
-  });
-  const plan=planning.value,model=planning.model;
-  const timeline=freeTimeline(input,plan,randomUUID);onStage('melody');
-  const result=await melody.compose({intent:input.intent,bpm:timeline.bpm,songPlan:plan.songPlan,phrases:timeline.phrases,source:'llm'});
-  if(result.draft.source!=='llm')throw Error('正式模式拒绝本地替代结果');onStage('validated');
-  return freeResultSchema.parse({requestId:randomUUID(),source:'llm',model,input,plan,sections:timeline.sections,draft:result.draft});
+ return {async compose(raw,onStage=()=>{},checkpoint={},save=()=>{}){
+  const input=freeInputSchema.parse(raw);
+  if(!checkpoint.plan){
+   onStage('planning');
+   const schema=planningDraftV1.pick({version:true,title:true,mood:true,songPlan:true,phraseWeights:true,bpm:!input.bpm,lyrics:!input.lyrics});
+   const planning=await createTaskRouter({env,request}).run('lyrics_planning',{
+    schema,input,attempts:3,promptVersion:'free-v1',
+    system:'创作原创中文短歌。用户给出的歌词和 BPM 由服务端保留，禁止回显已给字段。未给歌词时创作 1–8 句长短不齐的歌词，总字数宜 18–38。phraseWeights 每句一个，按字数、停顿和长音分配。用调性、和声、段落能量体现意图。不要把意图复述成标题或歌词。',
+    validate:raw=>{
+     const {version,...draft}=raw;
+     const plan=freePlanSchema.parse({...draft,bpm:input.bpm??draft.bpm,lyrics:input.lyrics??draft.lyrics});
+     try{freeTimeline(input,plan,randomUUID)}
+     catch(error){throw new TaskError('SEMANTIC_VALIDATION_FAILED',error.message)}
+     return plan;
+    },
+   });
+   const timeline=freeTimeline(input,planning.value,randomUUID);
+   save(Object.assign(checkpoint,{plan:planning.value,timeline,planningTrace:planning.trace}));
+  }
+  if(!checkpoint.draft){
+   onStage('melody');
+   const result=await melody.compose({intent:input.intent,bpm:checkpoint.timeline.bpm,songPlan:checkpoint.plan.songPlan,phrases:checkpoint.timeline.phrases,source:'llm'},{compact:true});
+   if(result.draft.source!=='llm')throw Error('正式模式拒绝本地替代结果');
+   save(Object.assign(checkpoint,{draft:result.draft,melodyTrace:result.trace}));
+  }
+  onStage('validated');
+  return freeResultSchema.parse({requestId:randomUUID(),source:'llm',model:checkpoint.planningTrace.model,input,plan:checkpoint.plan,sections:checkpoint.timeline.sections,draft:checkpoint.draft});
  }};
 }

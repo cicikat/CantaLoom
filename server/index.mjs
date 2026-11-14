@@ -1,3 +1,4 @@
+import {createProductionMixer} from './services/production-mix.mjs';
 import {mountPv} from './routes/pv.mjs';
 import {mountProduction} from './routes/production.mjs';
 import {mountFreeComposition} from './routes/free-composition.mjs';
@@ -29,7 +30,8 @@ mountInstruments(app);
 mountSinging(app);
 mountQixuan(app);
 const video=await createVideoService(root);
-const production=mountProduction(app,{isPaused:()=>jobs.isPaused(),ffmpegReady:()=>video.ready});
+const production=mountProduction(app,{isPaused:()=>jobs.isPaused(),ffmpegReady:()=>video.ready,
+ directory:path.join(externalRoot,'runtime/jobs/production'),mixer:createProductionMixer({binary:()=>video.binary})});
 jobs.addSource(()=>production.list().map(job=>({...job,type:'自动制作'})));
 let planner=createPlanner();
 mountAdmin(app,{store:settings,jobs,root:externalRoot,projectRoot:root,publicDirectory:path.join(root,'server/public'),previewVideo:bytes=>video.preview(bytes),onConfig:async()=>{planner=createPlanner();await video.refresh()},diagnostics:async()=>{

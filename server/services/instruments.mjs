@@ -23,12 +23,17 @@ export class InstrumentRenderer {
  get binary(){return process.env.FLUIDSYNTH_PATH||path.join(externalRoot,'FluidSynth/fluidsynth-v2.6.2-win10-x64-cpp11/bin/fluidsynth.exe')}
  async soundfonts(){try{return (await readdir(path.join(externalRoot,'soundfonts'))).filter(n=>/\.(sf2|sf3)$/i.test(n));}catch{return []}}
  async status(){const soundfonts=await this.soundfonts();try{return {installed:true,version:(await runProcess(this.binary,['--version'],externalRoot,5000)).split('\n')[0],soundfonts,ready:!!soundfonts.length};}catch{return {installed:false,ready:false,soundfonts}}}
- async render(raw){const parsed=instrumentInput.parse(raw);
+ async resolveRender(raw){const parsed=instrumentInput.parse(raw);
   // Protected tracks keep their effective render input and cache key when groove controls change.
   const {groove,...plain}=parsed;const input=parsed.locked||parsed.manuallyEdited||parsed.notes.some(n=>n.locked)?plain:parsed;
   const fonts=await this.soundfonts();const selected=input.soundfont||process.env.SONGYU_SOUNDFONT||fonts[0];if(!fonts.includes(selected))throw Error('音源缺失：请选择已安装的 SF2/SF3');
   const sf=path.join(externalRoot,'soundfonts',selected);const bytes=await readFile(sf);const engine=await stat(this.binary).catch(()=>{throw Error('FluidSynth 未安装或路径无效')});
   const key=hash(JSON.stringify({input,sf:hash(bytes),engine:[engine.size,engine.mtimeMs],rate:renderRate,revision:renderRevision}));
+  return {input,sf,key,selected};
+ }
+ async render(raw,{expectedKey}={}){
+  const {input,sf,key,selected}=await this.resolveRender(raw);
+  if(expectedKey&&expectedKey!==key)throw Error('器乐资源在准备后发生变化');
   if(this.pending.has(key))return this.pending.get(key);
   const work=this.renderOne(input,sf,key,selected);this.pending.set(key,work);try{return await work}finally{this.pending.delete(key)}
  }
