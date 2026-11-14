@@ -10,7 +10,7 @@ import {createFreeComposer} from '../server/services/free-composition.mjs';
 const plan={title:'接口夹具',mood:'安静',bpm:96,songPlan:localSongPlan('安静','海盐汽水'),lyrics:['风吹过雨后的街口','灯等着未归的旅人'],phraseWeights:[1,2]};
 test('free transaction joins validated planning and melody without presets or templates',async()=>{
  const input={intent:'雨夜等候',lyrics:plan.lyrics,bpm:96};let calls=0;
- const composer=createFreeComposer({env:{LLM_API_KEY:'fixture',LLM_MODEL:'fixture'},request:async()=>{calls++;return Response.json({choices:[{message:{content:JSON.stringify(plan)}}]})},melody:{compose:async(r:Parameters<typeof localMelody>[0])=>({draft:{...localMelody(r),source:'llm'}})}});
+ const composer=createFreeComposer({env:{LLM_API_KEY:'fixture',LLM_MODEL:'fixture'},request:async()=>{calls++;return Response.json({choices:[{message:{content:JSON.stringify({version:1,title:plan.title,mood:plan.mood,songPlan:plan.songPlan,phraseWeights:plan.phraseWeights})}}]})},melody:{compose:async(r:Parameters<typeof localMelody>[0])=>({draft:{...localMelody(r),source:'llm'}})}});
  const stages:string[]=[],result=await composer.compose(input,(s:string)=>stages.push(s)),p=projectFromComposition(result);
  assert.equal(calls,1);assert.deepEqual(stages,['planning','melody','validated']);assert.equal(p.style,'自由创作');assert.equal(p.mode,'free');assert.deepEqual(p.lyrics.map(l=>l.text),input.lyrics);assert.ok(p.creationRequestId);validateProject(JSON.parse(JSON.stringify(p)));
  assert.ok(p.tracks.filter(t=>t.kind==='melody'&&p.lyrics.some(l=>l.sectionId===t.sectionId)).every(t=>t.notes.length===0));

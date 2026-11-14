@@ -1,3 +1,15 @@
+<a id="production-40"></a>
+
+## 2026-11-14 · 工单 40 后端生产恢复与 WAV
+
+关联 [工单 40](../CC-Tasks/后端/CantaLoom_40_一键成歌鲁棒性与低能力模型兼容_工单.md)、[架构与迁移](ARCHITECTURE.md#production-recovery-v1)、[前端交接](../CROSS-END-HANDOFF.md#40-production-wav)。
+
+- 模型夹具成功示例：主模型明确拒绝 Schema，第二次纯文本 JSON 的 phrases[0].duration 类型错误，第三次预配备用模型返回带围栏的有效 JSON。追溯记录三次尝试、模式、诊断分类、备用和修复标记。未报告 usage，费用为 null。
+- 模型夹具失败示例：401/403 归类 UPSTREAM_AUTH，一次结束。制作夹具在混音失败时归类 MIX_FAILED，重启后恢复同一任务并复用已保存词曲与分轨。成品损坏归类 ARTIFACT_INVALID，可续做。
+- 验证命令为 npm run build、npm test 和 npx tsx --test tests/production-recovery.test.mjs。已用本机 FFmpeg 将确定性测试分轨合成为 25 秒立体声 PCM16，并通过非静音、时长和 true peak 检查。
+- 快速 Node 回归 143 通过、8 个外部验收跳过；新增 HTTP 用例验证同 ID 恢复、附件下载和损坏后 409。另以明确标注的本地规则词曲夹具跑通实际 FluidSynth（15 分轨）、绮萱（2 句）和 FFmpeg，输出 25 秒、48 kHz 立体声 PCM16，-22.9 LUFS、-9.4 dBTP，无削波告警。作业 bc7125eb-2f22-419e-a19b-a92749f53772，WAV SHA-256 44d6c4e4ab0911c228c3442dc51b5de2818bf8d8723c3504ae986c6e32e6311a，产物位于 temp/，未入 Git。
+- 页面/Mock 新契约接线、真实供应商样本和一句灵感到真实演唱成品均待验收。测试分轨是合成夹具。继续生产只接受原始输入，同进程单任务，后端中止推理与多实例协调未实施。
+
 <a id="local-deepseek-configuration"></a>
 
 ## 2026-11-08 · 本机音乐后台配置 DeepSeek Flash 并通过真实作曲

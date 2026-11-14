@@ -16,6 +16,7 @@
 
 | ID | 来源 | 发起方 → 接收方 | 状态 |
 |---|---|---|---|
+| [40-production-wav](#40-production-wav) | 工单 40 | Blacktea → Toge | 待契约确认与前端接线 |
 | [VIDEO-38](#video-38) | 工单 38 | 视频制作 Agent → Toge / 剪辑协作者 | 待真实录屏与授权配乐 |
 | [35-ai-html-pv](#35-ai-html-pv) | 工单 35 | Blacktea → Toge | 前端已接；真实页面/共同观感待验 |
 | [27-phoneme-zero](#27-phoneme-zero) | 工单 27 / 15 P1 | Blacktea → Toge | 前端已完成（2026-11-08，证据见回执） |
@@ -148,3 +149,11 @@
 - 交付：`feature/frontend-mg-demo-video` 的 [独立工程](video/mg/README.md)，102 秒时间轴与透明窗口；V1 产物位于本机 `temp/mg-video/`，V2 空间镜头产物在 `temp/mg-video-v2/`，未上传远端。V2 素材需要首 2.1 秒 / 尾 1.15 秒余量，空间透视替换见工程说明。
 - 下一步：按工程素材清单提供四段真实录屏及授权配乐，保留首尾余量，再做实际功能核对、音画同步与人工观感验收。
 - 不涉及共享业务契约，不授权修改产品代码；回执与实际素材验证写回工单 38 和迭代日志。
+
+<a id="40-production-wav"></a>
+
+### 40-production-wav · 生产恢复与成品
+
+2026-11-14 · [工单 40](CC-Tasks/后端/CantaLoom_40_一键成歌鲁棒性与低能力模型兼容_工单.md) · Blacktea → Toge · 等待契约确认及前端接线。后端分支 `feature/backend-production-40` 提供详情、恢复与 WAV 路由，旧调用方兼容。
+
+按[接口](docs/ARCHITECTURE.md#production-recovery-v1)确认共享契约，再补 Client、Mock、刷新恢复、来源/失败展示、试听与下载。保留当前工程应用的代次防护。回执放回工单和迭代日志，共同验收包括刷新、续做、迟到响应隔离和真实引擎成品。

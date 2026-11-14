@@ -202,3 +202,6 @@ toge接入：通过共享客户端 melody(request) 获取完整验证结果，�
 
 原工单3未随本仓库保存；历史授权不延伸为后续修改许可。此阶段后端已合并，前端/Mock与共同验收仍见当前计划。
 Performance 增加可选 mode=auto/manual、energy、locked、逐音符 overrides；无新字段仍走旧参数映射。SongProject 增加可选混音设置和调教历史。共享类型/校验/客户端由红茶维护，UI/Mock 仍交接toge。新增制作任务接口复用 compose、FluidSynth、绮萱无窗口桥接；ready-for-mix 不表示浏览器导出完成。主题为创作意图而非歌词原文，允许自由歌体。
+# 工单 40 契约提案
+
+Blacktea 提供向后兼容的恢复、成品与状态详情端点，保留现有任务状态和字段。Toge 负责 Client、Mock、刷新恢复与下载接线。共享运行时和类型暂不修改，等待 Toge 确认新增端点。后端独立测试覆盖新增端点及旧投影。关联工单 40。
