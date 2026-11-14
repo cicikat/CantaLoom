@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import express from 'express';
-import {mkdtemp,readFile,rm} from 'node:fs/promises';
+import {mkdir,mkdtemp,readFile,rm} from 'node:fs/promises';
 import path from 'node:path';
 import {createConfigStore} from '../server/admin-config.mjs';
 import {mountAdmin,createJobs} from '../server/admin.mjs';
@@ -16,6 +16,7 @@ test('real melody prompt excludes fixture flag and retries contaminated outputs'
  const result=await composer.compose(input);assert.equal(calls,2);assert.equal(result.draft.mock,undefined);
 });
 test('connections encrypt independent keys, survive reload and ping without leaking provider output',async()=>{
+ await mkdir(path.resolve('temp'),{recursive:true});
  const directory=await mkdtemp(path.resolve('temp/admin-connections-test-')),env={};
  const options={directory,env,protect:async s=>Buffer.from(s).toString('base64'),unprotect:async s=>Buffer.from(s,'base64').toString()};
  const route={provider:'fixture',baseUrl:'https://example.invalid/v1',model:'fixture-model',keyRef:'SONGYU_CONNECTION_MAIN'};
