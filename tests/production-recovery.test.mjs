@@ -1,3 +1,5 @@
+import express from 'express';
+import {mountProduction} from '../server/routes/production.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp,readFile,rm,writeFile} from 'node:fs/promises';
@@ -118,15 +120,26 @@ test('restart keeps validated planning and rejects concurrent resume; failed mix
   assert.equal(melodies,2);
   const rendered=bands;
   failMix=false;
-  const final=createProduction(options);
-  await settled(final.resume(started.id));
-  assert.equal(final.get(started.id).phase,'completed');
-  assert.equal(serializeProductionJob(final.get(started.id)).stage,'ready-for-mix');
-  assert.deepEqual([plans,melodies,sings,bands,mixes],[1,2,2,rendered,2]);
-  assert.ok(await final.artifact(started.id));
-  await writeFile(checkpoint.artifact(started.id),'corrupted');
-  assert.equal(await final.artifact(started.id),null);
-  assert.equal(productionDetails(final.get(started.id)).errorCode,'ARTIFACT_INVALID');
+  const app=express();
+  const final=mountProduction(app,options);
+  const server=app.listen(0,'127.0.0.1');
+  try{
+   await new Promise(resolve=>server.once('listening',resolve));
+   const url='http://127.0.0.1:'+server.address().port+'/api/production/'+started.id;
+   assert.equal((await fetch(url+'/details')).status,200);
+   assert.equal((await fetch(url+'/resume',{method:'POST'})).status,202);
+   await settled(final.get(started.id));
+   assert.equal(final.get(started.id).phase,'completed');
+   assert.equal(serializeProductionJob(final.get(started.id)).stage,'ready-for-mix');
+   assert.deepEqual([plans,melodies,sings,bands,mixes],[1,2,2,rendered,2]);
+   const download=await fetch(url+'/wav?download=1');
+   assert.equal(download.status,200);
+   assert.match(download.headers.get('content-disposition'),/attachment/);
+   assert.equal(await download.text(),'fixture artifact');
+   await writeFile(checkpoint.artifact(started.id),'corrupted');
+   assert.equal((await fetch(url+'/wav')).status,409);
+   assert.equal(productionDetails(final.get(started.id)).errorCode,'ARTIFACT_INVALID');
+  }finally{await new Promise(resolve=>server.close(resolve))}
  }finally{await rm(directory,{recursive:true,force:true})}
 });
 
