@@ -34,7 +34,7 @@ function Install-Release($Repository, $Tag, $Name, $Target) {
     Install-Zip $asset[0].browser_download_url ($Name -replace '\.oudep$', '.zip') $checksum $Target
 }
 try {
-    if ($env:PROCESSOR_ARCHITECTURE -ne 'AMD64') { throw 'This installer supports Windows x64 only.' }
+    if ([Runtime.InteropServices.RuntimeInformation]::OSArchitecture -ne 'X64') { throw 'This installer supports Windows x64 only.' }
     Write-Host "CantaLoom first-run installer. Resource directory: $resources"
     Write-Host 'Local creation: suggested 8 GB RAM, integrated graphics, 3 GB free disk.'
     Write-Host 'Chinese singing (CPU): suggested 16 GB RAM, 8 GB free disk. Dedicated GPU not required.'

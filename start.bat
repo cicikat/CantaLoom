@@ -4,11 +4,9 @@ title CantaLoom - Local Studio
 cd /d "%~dp0"
 if errorlevel 1 goto directory_error
 
-where node.exe >nul 2>&1
-if errorlevel 1 goto node_error
-
 node.exe "%~dp0scripts\start-local.mjs" %*
 set "CANTALOOM_EXIT=%errorlevel%"
+if "%CANTALOOM_EXIT%"=="9009" goto node_error
 for %%A in (%*) do if /i "%%~A"=="--check" exit /b %CANTALOOM_EXIT%
 echo.
 if not "%CANTALOOM_EXIT%"=="0" echo [ERROR] Startup failed. Read the message above.
