@@ -1,6 +1,6 @@
 # 接口与可调数据清单
 
-面向 `03_patchlab_playful.html` 的 LOOP! 原型接线的翻阅参考（[设计与实现边界](ARCHITECTURE.md#prototype-frontend)）：**后端与音乐核心真实存在、设计上允许 UI 暴露并会真实生效的数据和开关**，以及看似能开但实际不存在的功能。流程与调用方法（代次保护、原子应用、失败语义）见 [ARCHITECTURE](ARCHITECTURE.md)，本文不重复；字段权威定义以 `shared/contracts/` 为准，新增或改义字段先走 [CHANGELOG 提案](../shared/contracts/CHANGELOG.md)。
+面向 `docs/prototypes/loop-playful.html` 的 LOOP! 原型接线的翻阅参考（[设计与实现边界](ARCHITECTURE.md#prototype-frontend)）：**后端与音乐核心真实存在、设计上允许 UI 暴露并会真实生效的数据和开关**，以及看似能开但实际不存在的功能。流程与调用方法（代次保护、原子应用、失败语义）见 [ARCHITECTURE](ARCHITECTURE.md)，本文不重复；字段权威定义以 `shared/contracts/` 为准，新增或改义字段先走 [CHANGELOG 提案](../shared/contracts/CHANGELOG.md)。
 
 状态标记：**main**＝已合并（含工单 15 P1 / v0.4.0，基线 `003f4c5`）；下文历史 P0/P1 标记均已进入该 main。**新增（2026-11-07，工单 19/20）**＝本轮交付，新增端点与字段在对应节标出，实际合并状态见[迭代日志](iteration-log.md#quality-interface-delivery)。接口存在不代表新页面/Mock 已接通，页面进度见 [Toge 工单](../CC-Tasks/5-toge-free-creation.md)。
 

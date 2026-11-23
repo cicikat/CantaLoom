@@ -1,6 +1,6 @@
 # Windows PowerShell 5.1 compatible; no admin rights or global PATH changes.
 [CmdletBinding()]
-param([ValidateSet('menu','local','singing')][string]$Mode='menu', [switch]$Check, [switch]$Plan)
+param([ValidateSet('menu','local','singing')][string]$Mode='menu', [switch]$Check, [switch]$Plan, [switch]$Restart, [switch]$Admin, [switch]$NoOpen)
 $ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $project = Split-Path $PSScriptRoot -Parent
@@ -73,11 +73,11 @@ try {
     $env:PATH = "$nodeBin;$env:PATH"
     # Explicit existing configuration wins. Do not rewrite .env or DPAPI settings.
     if ($env:SONGYU_EXTERNAL_ROOT -and ([IO.Path]::GetFullPath($env:SONGYU_EXTERNAL_ROOT) -ne [IO.Path]::GetFullPath($resources))) {
-        throw 'SONGYU_EXTERNAL_ROOT already selects a different resource root. Use start.bat for that installation.'
+        throw 'SONGYU_EXTERNAL_ROOT already selects a different resource root. Use the studio launcher for that installation.'
     }
     $envFile = Join-Path $project '.env'
     if ((Test-Path -LiteralPath $envFile) -and (Select-String -LiteralPath $envFile -Pattern '^\s*(export\s+)?SONGYU_EXTERNAL_ROOT\s*=' -Quiet)) {
-        throw '.env already selects a resource root. Use start.bat for that installation, or reconcile the setting before retrying.'
+        throw '.env already selects a resource root. Use the studio launcher for that installation, or reconcile the setting before retrying.'
     }
     $env:SONGYU_EXTERNAL_ROOT = $resources
     if ($Mode -eq 'singing') {
@@ -103,6 +103,9 @@ try {
     Write-Host 'LLM URL/model/key must be configured in /admin. No local LLM weights are needed for a remote API.'
     Write-Host 'MP4 additionally needs FFmpeg (libx264/libass); FluidSynth/SoundFont are optional. See docs/ENGINES.md.'
     $arguments = @((Join-Path $project 'scripts/start-local.mjs'))
+    if ($Restart) { $arguments += '--restart' }
+    if ($Admin) { $arguments += '--admin' }
+    if ($NoOpen) { $arguments += '--no-open' }
     if ($Check) { $arguments += '--check' }
     & (Join-Path $nodeBin 'node.exe') @arguments
     if ($LASTEXITCODE -ne 0) { throw "Startup failed ($LASTEXITCODE)." }

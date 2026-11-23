@@ -35,5 +35,5 @@ test('unavailable services show a recoverable connection state while the current
 });
 
 test('original sample links to the wired LOOP homepage',async({page})=>{
- await page.goto('/03_patchlab_playful.html');await expect(page).toHaveTitle(/原始静态样稿/);await expect(page.getByLabel('原始样稿说明')).toContainText('实际创作已接入正式首页');
+ await page.goto('/docs/prototypes/loop-playful.html');await expect(page).toHaveTitle(/原始静态样稿/);await page.getByRole('link',{name:'打开创作首页'}).click();await expect(page.getByRole('button',{name:'制作新作品',exact:true})).toBeVisible();
 });

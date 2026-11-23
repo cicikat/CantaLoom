@@ -4,16 +4,16 @@
 
 ## 新电脑一键安装与硬件预算
 
-Windows x64 双击根目录 [install-and-start.bat](../install-and-start.bat)。PowerShell 5.1 随 Windows 提供，无需预装 Node、Python、CUDA 或管理员权限。首次联网下载；下载失败保留 `.partial`，重试重新下载该文件；已校验压缩包可复用，不支持断点续传。已完成目录有安装标记；遇到没有标记的同名目录会中止，由用户保留/改名后重试，避免覆盖手动安装。
+Windows x64 双击根目录 [打开织声机.bat](../打开织声机.bat)。PowerShell 5.1 随 Windows 提供，无需预装 Node、Python、CUDA 或管理员权限。首次联网下载；下载失败保留 `.partial`，重试重新下载该文件；已校验压缩包可复用，不支持断点续传。已完成目录有安装标记；遇到没有标记的同名目录会中止，由用户保留/改名后重试，避免覆盖手动安装。
 
 | 选项 | 自动准备 | 仍需用户配置 |
 |---|---|---|
 | 1 本地创作 | 便携 Node.js 22 当前维护版、npm 锁定依赖、构建并启动工作台 | 可用本地搭建与浏览器合成；自由 AI 制作需要后台 LLM 服务/模型/Key |
 | 2 中文演唱 | 选项 1 + OpenUtau 0.1.576、绮萱 v2.7.0、2025.02 声码器、.NET 10 SDK、编译无窗口桥接、FFmpeg essentials | 先阅读并接受各资源条款；后台配置 LLM；真正生成后才算引擎验收 |
 
-资源统一放项目相邻 `../CantaLoom-resources/`：`tools/` 为 Node/FFmpeg，`OpenUtau/` 为引擎及 Dependencies，`voicebanks/` 为声库，`runtime/dotnet/` 为 SDK，`runtime/` 为配置/缓存，`downloads/` 为复用下载包。项目内仅保留 `node_modules/` 与构建产物。可移动整套仓库与相邻资源目录；已有安装通过 start.bat 继续使用原资源位置。
+资源统一放项目相邻 `../CantaLoom-resources/`：`tools/` 为 Node/FFmpeg，`OpenUtau/` 为引擎及 Dependencies，`voicebanks/` 为声库，`runtime/dotnet/` 为 SDK，`runtime/` 为配置/缓存，`downloads/` 为复用下载包。项目内仅保留 `node_modules/` 与构建产物。可移动整套仓库与相邻资源目录；已有安装通过 打开织声机.bat 继续使用原资源位置。
 
-安装入口只给本次进程设置 `SONGYU_EXTERNAL_ROOT`、PATH、DOTNET_ROOT，不写系统环境变量，不改 `.env`、后台 DPAPI 配置或工程。若 `.env` 已指定资源根目录，或进程指定了不同根目录，安装入口明确停止，继续使用原 start.bat；不要混用两套配置。新安装后日常仍使用 install-and-start.bat 并选 1，可复用已装 Node/歌声/FFmpeg；原 start.bat 需要自行提供 Node 与资源根目录。已有 Node 安装不会自动升级，后续安全更新需维护便携工具版本。
+安装与日常启动只设置当前进程环境。日常入口优先复用相邻安装器的便携 Node，保留显式配置的资源根目录。需要从本地创作升级到中文演唱时，运行下面的安装脚本并选 singing。
 
 | 使用场景 | 内存建议 | 显卡/显存建议 | 空间预算 |
 |---|---|---|---|
@@ -95,7 +95,7 @@ npm ci
 npm run build
 npm start
 # Windows 启动入口
-.\start.bat
+.\打开织声机.bat
 ```
 
 `SONGYU_EXTERNAL_ROOT` 可在启动前指定外部根目录，默认 `D:\ai\hacson\external`；根目录属于启动配置，面板不在线移动第三方文件。其他路径字段允许在线配置。`OPENUTAU_PATH` 仅用于诊断，不启动 GUI。
@@ -189,11 +189,11 @@ dotnet build scripts/openutau-bridge/SongyuBridge.csproj -p:OpenUtauDirectory="$
 
 ## 管理调试启动与路由
 
-双击根目录 `start-admin.bat` 构建并启动本地服务，自动打开 `/admin`。支持 `--no-open`；关闭窗口前使用 Ctrl+C。端口占用时不会关闭已有进程。
+双击根目录「打开管理面板.bat」进入 /admin；支持 --no-open，Ctrl+C 停止服务。
 
 资源管理台采用“模型连接 Presets → 任务路由”。新建连接别名，填写服务商、OpenAI 兼容 Base URL、模型 ID 与 API Key 并保存，再为歌词、旋律、演唱表现、PV 下拉选择连接并保存；同一连接可复用到多项用途。高级设置保留旧独立路由。接口追加 `/chat/completions`；独立密钥以 Windows DPAPI 保存，留空保留，默认连接仍向后兼容。每个连接与任务旁都有“Ping / 测试连接”，返回模型、耗时及最小聊天接口可达结果；这不代表 SongPlan、旋律或真实演唱已通过验收。测试可使用尚未保存的 URL、模型与密钥，不持久化测试输入。
 
-管理启动器（「打开吱声机管理面板.bat」或 start-admin.bat）默认先确认并关闭旧 CantaLoom 服务，重新构建、启动后打开 /admin；首页入口「打开吱声机.bat」使用同一重启逻辑。新版管理状态返回 projectRoot/pid 用于精确核对，旧服务需同时匹配 Node 服务命令与资源根目录；停止前再次校验监听 PID/启动时间，其他服务占用时中止。--check 会执行该重启流程并在验证后停止新服务；不改写密钥、资源或工程。详见[启动流程](ARCHITECTURE.md)和[工单 31](../CC-Tasks/已完成/31-launcher-restart.md)。
+管理启动器（「打开管理面板.bat」）默认先确认并关闭旧 CantaLoom 服务，重新构建、启动后打开 /admin；首页入口「打开织声机.bat」使用同一重启逻辑。新版管理状态返回 projectRoot/pid 用于精确核对，旧服务需同时匹配 Node 服务命令与资源根目录；停止前再次校验监听 PID/启动时间，其他服务占用时中止。--check 会执行该重启流程并在验证后停止新服务；不改写密钥、资源或工程。详见[启动流程](ARCHITECTURE.md)和[工单 31](../CC-Tasks/已完成/31-launcher-restart.md)。
 
 模型连接和四项任务路由统一在资源管理台。填写 URL 和 API Key 后点击“获取模型列表”，选择模型并保存；通过服务端请求兼容的 `/models`，不向浏览器返回密钥。厂商不支持此接口时可手填模型 ID。顶部列出已保存的有效路由；表单修改保存后生效。
 

@@ -428,7 +428,7 @@ test('LOOP tap uses recorded timing; the PV chapter follows the project clock an
 });
 
 test('LOOP keeps the prototype pieces in three chapters on desktop and phone and opens the selected lyric card',async({page})=>{
- await page.goto('/03_patchlab_playful.html');await page.getByLabel('原始样稿说明').evaluate(el=>el.remove());
+ await page.goto('/docs/prototypes/loop-playful.html');await page.getByLabel('原始样稿说明').evaluate(el=>el.remove());
  const original=await page.evaluate(()=>({lyric:document.querySelector('.lyric')!.getBoundingClientRect().height}));
 
  await page.goto('/');const actual=await page.evaluate(()=>{const top=(s:string)=>document.querySelector(s)!.getBoundingClientRect().top+scrollY;return {heroBottom:document.querySelector('.hero')!.getBoundingClientRect().bottom+scrollY,viewport:innerHeight,board:top('#board'),lyricsInFlow:document.querySelector('#lyrics')!.getClientRects().length>0,pv:top('#pv')}});

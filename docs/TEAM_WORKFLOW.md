@@ -4,7 +4,7 @@
 
 ## 开发入口与依赖
 
-日常使用从 [README 的双击入口](../README.md#launch) 进入。中文启动器复用既有 start.bat；开发命令与 Mock 留在开发说明，不要求使用者靠命令分辨原型与工作台。制作前准备检查只读资源配置，不代替真实引擎验收。
+日常使用从 [README 的双击入口](../README.md#launch) 进入。两个中文启动器共用 scripts/launch-windows.ps1；开发命令与 Mock 留在开发说明，不要求使用者靠命令分辨原型与工作台。制作前准备检查只读资源配置，不代替真实引擎验收。
 
 需要 Node.js 22.12+，两人各自 clone 仓库并在根目录执行 `npm ci`。前端默认无需引擎：
 
@@ -23,7 +23,7 @@ Mock 已覆盖旧工作台及 compose / melody / production 的 API 夹具、任
 
 ## 前端设计与实现边界
 
-以 `03_patchlab_playful.html` 的 LOOP! 视觉与交互为前端接线基础，保留原型的版式、积木操作、歌词卡片和 PV 入口。现有 React 四页工作台有可复用的工程、播放和 API 接线，但其存在或测试通过不构成替换原型设计的授权。技术框架和演示脚本需要调整，不等于需要重做视觉；涉及布局、导航或主流程替换时先向 toge 说明具体变化并确认，不能由 Agent 自行把原型降为参考、废弃或历史页面。
+以 `docs/prototypes/loop-playful.html` 的 LOOP! 视觉与交互为前端接线基础，保留原型的版式、积木操作、歌词卡片和 PV 入口。现有 React 四页工作台有可复用的工程、播放和 API 接线，但其存在或测试通过不构成替换原型设计的授权。技术框架和演示脚本需要调整，不等于需要重做视觉；涉及布局、导航或主流程替换时先向 toge 说明具体变化并确认，不能由 Agent 自行把原型降为参考、废弃或历史页面。
 
 当前入口已按 toge 本轮明确要求改为 LOOP! 单页并重新接线，见[原型接线边界](ARCHITECTURE.md#prototype-frontend)和[工单 5](../CC-Tasks/5-toge-free-creation.md)。历史“新页面”指当时四页接线；本轮已在 LOOP! 重跑 Mock、本地创作及失败保护，真实制作和人工听感仍须工单 6 验收。
 
@@ -88,7 +88,7 @@ npm test
 npx playwright install chromium
 npm run test:e2e:mock
 npm run test:e2e
-.\start.bat --check
+.\打开织声机.bat --check
 ```
 
 E2E 自动启动隔离服务，不必预先启动 dev；默认真实前端 5183、API 3101、Mock 前端 5184，可用 E2E_FRONTEND_PORT / E2E_API_PORT / E2E_MOCK_PORT 调整，不复用运行中实例。默认套件为下述快速回归；真实资源验收需显式选择，绮萱页面工程通过 SONGYU_ACCEPTANCE_PROJECT 指定。缺资源的 skip 必须报告，不等于真实生成验收。

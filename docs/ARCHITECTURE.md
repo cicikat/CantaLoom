@@ -30,14 +30,14 @@
 | docs/ | 协作流程、架构与接口、引擎与后台、迭代日志 |
 | CC-Tasks/数字-任务简述.md | 本项目计划/工单，含清单、Owner、依赖、验收和 checkbox；旧工单标明历史范围 |
 | `.github/`、根目录配置 | CI、npm 命令、Vite/TS/Playwright 配置与环境示例 |
-| `03_patchlab_playful.html` | LOOP! 布局、样式与交互的设计源；正式接线在 App / PatchlabCreation / patchlab.css；文件自身保留原始演示 |
+| `docs/prototypes/loop-playful.html` | LOOP! 布局、样式与交互的设计源；正式接线在 App / PatchlabCreation / patchlab.css；文件自身保留原始演示 |
 | `dist/`、`node_modules/`、测试输出 | 可生成的本机产物，忽略提交；不自行清理他人文件 |
 
 <a id="prototype-frontend"></a>
 
 ## LOOP! 原型作为前端的接线边界
 
-2026-11-07，toge 明确要求删掉当前接线、重新接入 `03_patchlab_playful.html`。`index.html` → `src/main.tsx` → `App.tsx` 现在加载 LOOP! 单页，停止挂载原四页工作台及 style.css / plan.css。`src/patchlab.css` 提取原型样式并补实际控件；保留船、日落、贴纸、主题按钮、TAP、积木、歌词与 PV 区域。旧样式和可复用模块留在仓库，旧四页 App 可从 Git 历史查询，存档没有迁移或清除。
+2026-11-07，toge 明确要求删掉当前接线、重新接入 `docs/prototypes/loop-playful.html`。`index.html` → `src/main.tsx` → `App.tsx` 现在加载 LOOP! 单页，停止挂载原四页工作台及 style.css / plan.css。`src/patchlab.css` 提取原型样式并补实际控件；保留船、日落、贴纸、主题按钮、TAP、积木、歌词与 PV 区域。旧样式和可复用模块留在仓库，旧四页 App 可从 Git 历史查询，存档没有迁移或清除。
 
 | 原型区域 | 当前实际接线 |
 |---|---|
@@ -73,7 +73,7 @@
 
 ## 日常启动与制作准备
 
-「打开吱声机.bat」和「打开吱声机管理面板.bat」调用 start.bat --restart，管理入口另加 --admin。scripts/restart-studio.mjs 通过 Windows 监听 PID、进程启动时间、Node 可执行文件/服务入口及仅本机管理状态确认旧服务；新版管理状态提供 projectRoot/pid，旧版需匹配资源根目录和服务命令。停止前再次核对进程代次与端口归属，拒绝其他应用、其他项目路径、watch 进程或无法确认身份的服务，不按进程名批量终止或杀进程树。等待端口释放后由 scripts/start-local.mjs 检查依赖、构建并启动绝对路径的 server/index.mjs，再打开首页或 /admin。--check 不开浏览器，检查后停止本次服务；--no-open 保持新服务。scripts/reuse-studio.mjs 保留既有独立复用能力，两个中文入口不再经过复用分支。重启清空服务端内存任务，磁盘工程、浏览器存档、缓存与加密配置不删除；真实制作中的任务不会跨进程恢复。启动与重启证据见[工单 31](../CC-Tasks/已完成/31-launcher-restart.md)。
+「打开织声机.bat」和「打开管理面板.bat」通过 scripts/launch-windows.ps1 调用启动器并传入 --restart，管理入口另加 --admin。scripts/restart-studio.mjs 通过 Windows 监听 PID、进程启动时间、Node 可执行文件/服务入口及仅本机管理状态确认旧服务；新版管理状态提供 projectRoot/pid，旧版需匹配资源根目录和服务命令。停止前再次核对进程代次与端口归属，拒绝其他应用、其他项目路径、watch 进程或无法确认身份的服务，不按进程名批量终止或杀进程树。等待端口释放后由 scripts/start-local.mjs 检查依赖、构建并启动绝对路径的 server/index.mjs，再打开首页或 /admin。--check 不开浏览器，检查后停止本次服务；--no-open 保持新服务。scripts/reuse-studio.mjs 保留既有独立复用能力，两个中文入口不再经过复用分支。重启清空服务端内存任务，磁盘工程、浏览器存档、缓存与加密配置不删除；真实制作中的任务不会跨进程恢复。启动与重启证据见[工单 31](../CC-Tasks/已完成/31-launcher-restart.md)。
 
 useProductionReadiness 通过既有 health / engines / qixuan Client 只读检查本机配置与资源；在进入页面、回到窗口及点击「重新检查」时刷新，使用代次保护丢弃过期检查结果。它接管原 useStudio 的 health 刷新，不新增 API 或改服务端设置。当前 production 服务要求 LLM、伴奏音源、歌声服务和 FFmpeg；缺项/未连接时「一键开工」仍可点击，打开已有创作设置并聚焦其入口，列出缺项、本机设置与本地积木选项；不提交 production 请求。只有正在操作、任务运行中或主题为空时禁用按钮；不为缺项新增常驻说明栏。
 
